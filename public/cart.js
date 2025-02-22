@@ -192,7 +192,7 @@ async function checkout() {
 
   try {
       // Send test email before proceeding to payment
-      await fetch("https://your-railway-app.up.railway.app/send-test-email", {
+      await fetch("https://bascom-bread-co-production.up.railway.app/send-test-email", { 
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ cart, email, pickupDay, pickupTime }),

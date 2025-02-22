@@ -9,14 +9,13 @@ const app = express(); // <-- Define app BEFORE you use it
 
 const API_BASE = "https://bascom-bread-co-production.up.railway.app";
 
-const corsOptions = {
-  origin: "https://bascom-bread-co-production.up.railway.app", // Allow only your frontend
-  methods: "GET,POST",
-  allowedHeaders: "Content-Type",
-};
-
-app.use(cors(corsOptions));
-
+app.use(
+  cors({
+    origin: "*", // Allow all origins (useful for debugging, restrict later)
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type"],
+  })
+);
 
 app.use(express.json());
 app.use(express.static("public"));
