@@ -68,8 +68,8 @@ app.post("/create-checkout-session", async (req, res) => {
             payment_method_types: ["card"],
             line_items,
             mode: "payment",
-            success_url: `${process.env.API_BASE}/success.html`,
-            cancel_url: `${process.env.API_BASE}/cancel.html`,
+            success_url: "https://bascom-bread-co-production.up.railway.app/success.html",
+            cancel_url: "https://bascom-bread-co-production.up.railway.app/cancel.html",
             customer_email: email,
             metadata: { cart: JSON.stringify(cart), pickupDay, pickupTime },
         });
