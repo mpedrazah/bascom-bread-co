@@ -1,27 +1,27 @@
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+console.log("✅ STRIPE_SECRET_KEY:", process.env.STRIPE_SECRET_KEY); // Debugging
+
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY); // ✅ Ensure API Key is Set
 const nodemailer = require("nodemailer");
 const fs = require("fs");
 const path = require("path");
-require("dotenv").config();
-const app = express(); // <-- Define app BEFORE you use it
-
-const API_BASE = "https://bascom-bread-co-production.up.railway.app";
-
-// ✅ CORS SETUP - Place this before your routes
-app.use(
-  cors({
-    origin: "*", // Allow all origins for testing (later restrict to your domain)
-    methods: ["GET", "POST"],
-    allowedHeaders: ["Content-Type"],
-  })
-);
-
-app.use(express.json()); // Enable JSON parsing
-app.use(express.static("public")); // Serve static files
 
 
+const app = express();
+
+const corsOptions = {
+    origin: "http://localhost:3000", // ✅ ONLY Allow Localhost Now
+    methods: "GET,POST",
+    allowedHeaders: "Content-Type",
+};
+
+app.use(cors(corsOptions)); // ✅ Apply CORS Fix
+app.use(express.json());
+app.use(express.static("public"));
+
+console.log("✅ STRIPE_SECRET_KEY:", process.env.STRIPE_SECRET_KEY);
 // ✅ Nodemailer Setup
 const transporter = nodemailer.createTransport({
     service: "gmail",
@@ -73,8 +73,8 @@ app.post("/create-checkout-session", async (req, res) => {
             payment_method_types: ["card"],
             line_items,
             mode: "payment",
-            success_url: "https://bascom-bread-co-production.up.railway.app/success.html",
-            cancel_url: "https://bascom-bread-co-production.up.railway.app/cancel.html",
+            success_url: "http://localhost:3000/success.html",
+            cancel_url: "http://localhost:3000/cancel.html",
             customer_email: email,
             metadata: { cart: JSON.stringify(cart), pickupDay, pickupTime },
         });
@@ -130,7 +130,7 @@ app.post("/webhook", express.raw({ type: "application/json" }), async (req, res)
             if (error) {
                 console.error("❌ Error sending confirmation email:", error);
             } else {
-                console.log("✅ Confirmation email sent:", info.response);
+              console.log("✅ Email Content:", mailOptions);
             }
         });
     }
@@ -147,33 +147,6 @@ app.get("/orders", async (req, res) => {
         console.error("❌ Error fetching orders:", error);
         res.status(500).json({ error: "Failed to load orders." });
     }
-});
-
-app.post("/send-test-email", async (req, res) => {
-  try {
-    const { email, cart, pickupDay, pickupTime } = req.body;
-    
-    if (!email) {
-      return res.status(400).json({ error: "Email is required." });
-    }
-
-    // Sample email body
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: "Test Email - Bascom Bread Co",
-      text: `This is a test email to confirm your order. \n\nCart: ${JSON.stringify(cart)} \nPickup: ${pickupDay} at ${pickupTime}`,
-    };
-
-    // Send email
-    await transporter.sendMail(mailOptions);
-
-    console.log("✅ Test email sent successfully!");
-    res.json({ success: "Test email sent!" });
-  } catch (error) {
-    console.error("❌ Error sending test email:", error);
-    res.status(500).json({ error: error.message });
-  }
 });
 
 
