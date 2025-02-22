@@ -9,16 +9,17 @@ const app = express(); // <-- Define app BEFORE you use it
 
 const API_BASE = "https://bascom-bread-co-production.up.railway.app";
 
+// ✅ CORS SETUP - Place this before your routes
 app.use(
   cors({
-    origin: "*", // Allow all origins (useful for debugging, restrict later)
+    origin: "*", // Allow all origins for testing (later restrict to your domain)
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type"],
   })
 );
 
-app.use(express.json());
-app.use(express.static("public"));
+app.use(express.json()); // Enable JSON parsing
+app.use(express.static("public")); // Serve static files
 
 
 // ✅ Nodemailer Setup
@@ -150,31 +151,31 @@ app.get("/orders", async (req, res) => {
 
 app.post("/send-test-email", async (req, res) => {
   try {
-      const { cart, email, pickupDay, pickupTime } = req.body;
-      
-      if (!email) {
-          return res.status(400).json({ error: "Missing email address." });
-      }
+    const { email, cart, pickupDay, pickupTime } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ error: "Email is required." });
+    }
 
-      const orderSummary = cart.map(item =>
-          `- ${item.quantity} x ${item.name}: $${(item.price * item.quantity).toFixed(2)}`
-      ).join("\n");
+    // Sample email body
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Test Email - Bascom Bread Co",
+      text: `This is a test email to confirm your order. \n\nCart: ${JSON.stringify(cart)} \nPickup: ${pickupDay} at ${pickupTime}`,
+    };
 
-      const mailOptions = {
-          from: "mpedrazash@gmail.com",
-          to: email,
-          subject: "TEST: Your Order Confirmation - Bascom Bread",
-          text: `Hello,\n\nThis is a test email to verify email functionality before processing payments.\n\nYour order:\n\n${orderSummary}\n\nScheduled for pickup on ${pickupDay} at ${pickupTime}.\n\nBest,\nBascom Bread`,
-      };
+    // Send email
+    await transporter.sendMail(mailOptions);
 
-      await transporter.sendMail(mailOptions);
-      console.log("✅ Test email sent successfully");
-      res.json({ success: "Test email sent!" });
+    console.log("✅ Test email sent successfully!");
+    res.json({ success: "Test email sent!" });
   } catch (error) {
-      console.error("❌ Error sending test email:", error);
-      res.status(500).json({ error: "Failed to send test email." });
+    console.error("❌ Error sending test email:", error);
+    res.status(500).json({ error: error.message });
   }
 });
+
 
 // ✅ Serve Success & Cancel Pages
 app.get("/success.html", (req, res) => res.sendFile(path.join(__dirname, "public/success.html")));
