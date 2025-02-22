@@ -1,4 +1,4 @@
-const API_BASE = "https://your-railway-app.up.railway.app";
+const API_BASE = "https://bascom-bread-co-production.up.railway.app/";
 
 // Fetch and parse CSV data
 async function fetchPickupSlotsCSV() {
