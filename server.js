@@ -1,27 +1,16 @@
-require("dotenv").config();
 const express = require("express");
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const cors = require("cors");
-const allowedOrigins = [
-  'http://localhost:3000',
-  'https://your-production-frontend-domain.com'
-];
-
-app.use(cors({
-  origin: allowedOrigins,
-  methods: ['GET', 'POST'],
-  allowedHeaders: ['Content-Type']
-}));
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const nodemailer = require("nodemailer");
-
-
+const fs = require("fs");
 const path = require("path");
+require("dotenv").config();
 
-const app = express();
+const app = express(); // <-- Define app BEFORE you use it
+
+app.use(cors()); // <-- Use cors after app definition
 app.use(express.json());
-app.use(cors());
 app.use(express.static("public"));
-
 
 
 // ✅ Nodemailer Setup
