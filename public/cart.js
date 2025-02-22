@@ -1,4 +1,5 @@
-const API_BASE = "https://bascom-bread-co-production.up.railway.app";
+//const API_BASE = "https://bascom-bread-co-production.up.railway.app";
+const API_BASE = "http://localhost:3000"; // ✅ Use Local Server Instead of Railway
 
 // Fetch and parse CSV data
 async function fetchPickupSlotsCSV() {
@@ -112,111 +113,65 @@ function renderCartItems() {
   const cartContainer = document.getElementById("cart-items");
   const totalContainer = document.getElementById("cart-total");
 
-  if (!cartContainer || !totalContainer) {
-      console.error("❌ Cart elements not found!");
-      return;
-  }
+  if (!cartContainer || !totalContainer) return;
 
   cartContainer.innerHTML = "";
   let total = 0;
 
-  console.log("🛒 Rendering Cart Items:", cart); // ✅ Debugging log
-
   cart.forEach((item, index) => {
       total += item.price * item.quantity;
       cartContainer.innerHTML += `
-          <div class="cart-item">
-              <p>${item.name} - $${item.price.toFixed(2)}</p>
-              <input type="number" min="1" value="${item.quantity}" onchange="updateQuantity(${index}, this.value)">
-              <button onclick="removeFromCart(${index})">Remove</button>
-          </div>
+      <div class="cart-item">
+          <p>${item.name} - $${item.price.toFixed(2)}</p>
+          <input type="number" min="1" value="${item.quantity}" 
+              onchange="updateQuantity(${index}, this.value)">
+          <button onclick="removeFromCart(${index})">Remove</button>
+      </div>
       `;
   });
 
-  console.log("🛒 Cart Total:", total); // ✅ Debugging log
   totalContainer.innerText = `Total: $${total.toFixed(2)}`;
 }
+
 
 // ✅ Ensure it's globally accessible
 window.renderCartItems = renderCartItems;
 
 
-// // Real Checkout function that only sends email after successful payment
-// async function checkout() {
-//     if (cart.length === 0) {
-//         alert("Your cart is empty!");
-//         return;
-//     }
-
-//     const email = document.getElementById("email").value.trim();
-//     const pickupDay = document.getElementById("pickup-day").value;
-//     const pickupTime = document.getElementById("pickup-time").value;
-
-//     if (!email || !pickupDay || !pickupTime) {
-//         alert("Please enter your email and select pickup time.");
-//         return;
-//     }
-
-//     try {
-//         const response = await fetch(`${API_BASE}/create-checkout-session`, {
-//             method: "POST",
-//             headers: { "Content-Type": "application/json" },
-//             body: JSON.stringify({ cart, email, pickupDay, pickupTime }),
-//         });
-
-//         const session = await response.json();
-//         if (session.url) {
-//             window.location.href = session.url;
-//         } else {
-//             console.error("Stripe session failed:", session);
-//         }
-//     } catch (error) {
-//         console.error("Checkout Error:", error);
-//     }
-// }
-
+// Checkout function
 async function checkout() {
-  if (cart.length === 0) {
-      alert("Your cart is empty!");
-      return;
-  }
+    if (cart.length === 0) {
+        alert("Your cart is empty!");
+        return;
+    }
 
-  const email = document.getElementById("email").value.trim();
-  const pickupDay = document.getElementById("pickup-day").value;
-  const pickupTime = document.getElementById("pickup-time").value;
+    const email = document.getElementById("email").value.trim();
+    const pickupDay = document.getElementById("pickup-day").value;
+    const pickupTime = document.getElementById("pickup-time").value;
 
-  if (!email || !pickupDay || !pickupTime) {
-      alert("Please enter your email and select pickup time.");
-      return;
-  }
+    if (!email || !pickupDay || !pickupTime) {
+        alert("Please enter your email and select pickup time.");
+        return;
+    }
 
-  try {
-      // Send test email before proceeding to payment
-      await fetch("https://bascom-bread-co-production.up.railway.app/send-test-email", { 
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ cart, email, pickupDay, pickupTime }),
-      });
+    try {
+        const response = await fetch(`${API_BASE}/create-checkout-session`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ cart, email, pickupDay, pickupTime }),
+        });
 
-      console.log("✅ Test email request sent successfully");
-
-      // Now, proceed to Stripe checkout
-      const response = await fetch("https://your-railway-app.up.railway.app/create-checkout-session", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ cart, email, pickupDay, pickupTime }),
-      });
-
-      const session = await response.json();
-      if (session.url) {
-          window.location.href = session.url; // Redirect to Stripe checkout
-      } else {
-          console.error("Stripe session failed:", session);
-      }
-  } catch (error) {
-      console.error("Checkout Error:", error);
-  }
+        const session = await response.json();
+        if (session.url) {
+            window.location.href = session.url;
+        } else {
+            console.error("Stripe session failed:", session);
+        }
+    } catch (error) {
+        console.error("Checkout Error:", error);
+    }
 }
+
 
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -232,6 +187,26 @@ function updateCartCount() {
         cartCountElem.innerText = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
     }
 }
+
+// ✅ Update Quantity for a Cart Item
+function updateQuantity(index, newQuantity) {
+  cart[index].quantity = parseInt(newQuantity);
+  localStorage.setItem("cart", JSON.stringify(cart));
+  renderCartItems();
+  updateCartCount();
+}
+
+// ✅ Remove Item from Cart
+function removeFromCart(index) {
+  cart.splice(index, 1);
+  localStorage.setItem("cart", JSON.stringify(cart));
+  renderCartItems();
+  updateCartCount();
+}
+
+// ✅ Ensure functions are accessible globally
+window.updateQuantity = updateQuantity;
+window.removeFromCart = removeFromCart;
 
 // Ensure it's globally accessible
 window.updateCartCount = updateCartCount;
