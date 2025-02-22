@@ -144,6 +144,34 @@ app.get("/orders", async (req, res) => {
     }
 });
 
+app.post("/send-test-email", async (req, res) => {
+  try {
+      const { cart, email, pickupDay, pickupTime } = req.body;
+      
+      if (!email) {
+          return res.status(400).json({ error: "Missing email address." });
+      }
+
+      const orderSummary = cart.map(item =>
+          `- ${item.quantity} x ${item.name}: $${(item.price * item.quantity).toFixed(2)}`
+      ).join("\n");
+
+      const mailOptions = {
+          from: "mpedrazash@gmail.com",
+          to: email,
+          subject: "TEST: Your Order Confirmation - Bascom Bread",
+          text: `Hello,\n\nThis is a test email to verify email functionality before processing payments.\n\nYour order:\n\n${orderSummary}\n\nScheduled for pickup on ${pickupDay} at ${pickupTime}.\n\nBest,\nBascom Bread`,
+      };
+
+      await transporter.sendMail(mailOptions);
+      console.log("✅ Test email sent successfully");
+      res.json({ success: "Test email sent!" });
+  } catch (error) {
+      console.error("❌ Error sending test email:", error);
+      res.status(500).json({ error: "Failed to send test email." });
+  }
+});
+
 // ✅ Serve Success & Cancel Pages
 app.get("/success.html", (req, res) => res.sendFile(path.join(__dirname, "public/success.html")));
 app.get("/cancel.html", (req, res) => res.sendFile(path.join(__dirname, "public/cancel.html")));
