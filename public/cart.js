@@ -141,40 +141,82 @@ function renderCartItems() {
 window.renderCartItems = renderCartItems;
 
 
-// Checkout function
+// // Real Checkout function that only sends email after successful payment
+// async function checkout() {
+//     if (cart.length === 0) {
+//         alert("Your cart is empty!");
+//         return;
+//     }
+
+//     const email = document.getElementById("email").value.trim();
+//     const pickupDay = document.getElementById("pickup-day").value;
+//     const pickupTime = document.getElementById("pickup-time").value;
+
+//     if (!email || !pickupDay || !pickupTime) {
+//         alert("Please enter your email and select pickup time.");
+//         return;
+//     }
+
+//     try {
+//         const response = await fetch(`${API_BASE}/create-checkout-session`, {
+//             method: "POST",
+//             headers: { "Content-Type": "application/json" },
+//             body: JSON.stringify({ cart, email, pickupDay, pickupTime }),
+//         });
+
+//         const session = await response.json();
+//         if (session.url) {
+//             window.location.href = session.url;
+//         } else {
+//             console.error("Stripe session failed:", session);
+//         }
+//     } catch (error) {
+//         console.error("Checkout Error:", error);
+//     }
+// }
+
 async function checkout() {
-    if (cart.length === 0) {
-        alert("Your cart is empty!");
-        return;
-    }
+  if (cart.length === 0) {
+      alert("Your cart is empty!");
+      return;
+  }
 
-    const email = document.getElementById("email").value.trim();
-    const pickupDay = document.getElementById("pickup-day").value;
-    const pickupTime = document.getElementById("pickup-time").value;
+  const email = document.getElementById("email").value.trim();
+  const pickupDay = document.getElementById("pickup-day").value;
+  const pickupTime = document.getElementById("pickup-time").value;
 
-    if (!email || !pickupDay || !pickupTime) {
-        alert("Please enter your email and select pickup time.");
-        return;
-    }
+  if (!email || !pickupDay || !pickupTime) {
+      alert("Please enter your email and select pickup time.");
+      return;
+  }
 
-    try {
-        const response = await fetch(`${API_BASE}/create-checkout-session`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ cart, email, pickupDay, pickupTime }),
-        });
+  try {
+      // Send test email before proceeding to payment
+      await fetch("https://your-railway-app.up.railway.app/send-test-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ cart, email, pickupDay, pickupTime }),
+      });
 
-        const session = await response.json();
-        if (session.url) {
-            window.location.href = session.url;
-        } else {
-            console.error("Stripe session failed:", session);
-        }
-    } catch (error) {
-        console.error("Checkout Error:", error);
-    }
+      console.log("✅ Test email request sent successfully");
+
+      // Now, proceed to Stripe checkout
+      const response = await fetch("https://your-railway-app.up.railway.app/create-checkout-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ cart, email, pickupDay, pickupTime }),
+      });
+
+      const session = await response.json();
+      if (session.url) {
+          window.location.href = session.url; // Redirect to Stripe checkout
+      } else {
+          console.error("Stripe session failed:", session);
+      }
+  } catch (error) {
+      console.error("Checkout Error:", error);
+  }
 }
-
 
 
 document.addEventListener("DOMContentLoaded", () => {
