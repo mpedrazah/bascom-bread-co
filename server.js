@@ -2,6 +2,16 @@ require("dotenv").config();
 const express = require("express");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const cors = require("cors");
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://your-production-frontend-domain.com'
+];
+
+app.use(cors({
+  origin: allowedOrigins,
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type']
+}));
 const nodemailer = require("nodemailer");
 
 
