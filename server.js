@@ -5,10 +5,12 @@ const nodemailer = require("nodemailer");
 const fs = require("fs");
 const path = require("path");
 require("dotenv").config();
-
 const app = express(); // <-- Define app BEFORE you use it
 
-app.use(cors()); // <-- Use cors after app definition
+app.use(cors({
+  origin: ["https://bascom-bread-co-production.up.railway.app"]
+}));
+
 app.use(express.json());
 app.use(express.static("public"));
 
