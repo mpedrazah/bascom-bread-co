@@ -1,0 +1,573 @@
+
+
+/* Navigation Bar (Fix to Top Without Pushing Content) */
+/* Navigation Styles */
+header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.95);
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 0;
+    z-index: 1000;
+  }
+  /* General Styles */
+body {
+  font-family: 'Open Sans', sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #fff;
+  color: #333;
+  padding-top: 80px; /* Push down the content to make space for navbar */
+}
+  
+  nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+  }
+  
+  nav ul li {
+    margin: 0 15px;
+  }
+  
+  nav ul li a {
+    text-decoration: none;
+    color: #333;
+    font-weight: 600;
+    text-transform: uppercase;
+    transition: color 0.3s ease;
+    font-weight: normal !important;
+  }
+  
+  nav ul li a:hover {
+    color: #b8860b;
+  }
+  
+
+.logo-container {
+    text-align: center;
+}
+
+.logo {
+    width: 120px;
+    height: auto;
+}
+
+
+/* Hero Section */
+.hero {
+    background-image: url('images/hero-image.jpg');
+    background-size: cover;
+    background-position: center;
+    height: 80vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: white;
+    position: relative;
+}
+
+.hero::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.3); /* Dark overlay */
+}
+
+.hero-text {
+    position: relative;
+    z-index: 1;
+    max-width: 600px;
+}
+
+.hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 3rem;
+    margin-bottom: 10px;
+}
+
+.hero p {
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+}
+
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #b8860b;
+    color: white;
+    text-decoration: none;
+    font-size: 18px;
+    font-weight: bold;
+    text-transform: uppercase;
+    border-radius: 5px;
+    transition: background 0.3s;
+}
+
+.btn:hover {
+    background-color: #8b6508;
+}
+
+/* Image Grid Layout */
+/* Image Grid Layout */
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* Three columns */
+  gap: 15px;
+  padding: 20px;
+}
+
+.grid-item {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease-in-out;
+}
+
+/* Default state for all images */
+.grid-item img {
+  width: 100%;
+  display: block;
+  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+}
+
+/* Hover Effect: Make hovered image bigger */
+.grid-item:hover img {
+  transform: scale(1.1); /* Enlarges hovered image */
+  z-index: 2;
+}
+
+/* When hovering over an image, make others slightly transparent */
+.image-grid:hover .grid-item img {
+  opacity: 0.5; /* Makes all images slightly opaque */
+}
+
+/* Keep hovered image fully visible */
+.grid-item:hover img {
+  opacity: 1 !important;
+}
+
+/* Caption Styling */
+.caption {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 5px 10px;
+  font-size: 14px;
+  border-radius: 5px;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+  pointer-events: none;
+  text-align: center;
+  width: 80%;
+}
+
+/* Show the caption when hovering over the image */
+.grid-item:hover .caption {
+  opacity: 1;
+}
+
+
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .image-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .hero h1 {
+        font-size: 2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .image-grid {
+        grid-template-columns: repeat(1, 1fr);
+    }
+
+    .hero h1 {
+        font-size: 1.8rem;
+    }
+}
+
+/* Product Grid Styling */
+/* Product Grid - Gallery View */
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    padding: 20px;
+    justify-items: center;
+}
+
+/* Product Image Zoom Effect */
+.product-card {
+  position: relative;
+  overflow: hidden;
+  display: inline-block;
+}
+
+.product-card img {
+  width: 100%;
+  transition: transform 0.3s ease-in-out;
+}
+
+/* Zoom in effect on hover */
+.product-card:hover img {
+  transform: scale(1.1); /* Increases size by 10% */
+}
+.product-card p {
+    font-size: 16px;
+    font-weight: bold;
+    color: #b8860b;
+}
+
+/* Resize Product Image */
+.product-details img {
+    width: 80%;  /* Reduce size */
+    max-width: 400px; /* Prevent it from getting too big */
+    display: block;
+    margin: 0 auto; /* Center the image */
+    border-radius: 10px;
+}
+
+/* Checkout Page */
+.checkout-container {
+    margin-top: 100px; /* Ensure content is below navbar */
+    text-align: center;
+    padding: 20px;
+}
+
+.cart-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 400px;
+    margin: 10px auto;
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.cart-item input {
+    width: 50px;
+    padding: 5px;
+    text-align: center;
+    font-size: 16px;
+}
+
+.cart-item button {
+    background-color: red;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.cart-item button:hover {
+    background-color: darkred;
+}
+
+button {
+    background-color: #b8860b;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 18px;
+    cursor: pointer;
+    margin-top: 20px;
+}
+
+button:hover {
+    background-color: #8b6508;
+}
+
+/* --- Contact Section Styles --- */
+.contact-section {
+    padding: 60px 20px;
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: center;
+    font-family: 'Open Sans', sans-serif;
+  }
+  
+  .contact-section h2 {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+  }
+  
+  .contact-section p {
+    font-size: 1rem;
+    color: #555;
+    margin-bottom: 40px;
+  }
+  
+  /* Contact Form Styles */
+  .contact-form {
+    text-align: left;
+    margin-bottom: 40px;
+  }
+  
+  .contact-form .form-group {
+    margin-bottom: 20px;
+  }
+  
+  .contact-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+  }
+  
+  .contact-form input,
+  .contact-form textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+  }
+  
+  /* Button Styles */
+  .btn {
+    display: inline-block;
+    padding: 12px 30px;
+    background-color: #b8860b;
+    color: #fff;
+    text-decoration: none;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .btn:hover {
+    background-color: #8b6508;
+  }
+  
+  /* Contact Information */
+  .contact-info {
+    text-align: left;
+    margin-top: 40px;
+  }
+  
+  .contact-info h3 {
+    font-size: 1.8rem;
+    margin-bottom: 10px;
+  }
+  
+  .contact-info p {
+    font-size: 1rem;
+    margin: 5px 0;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 600px) {
+    .contact-section {
+      padding: 40px 10px;
+    }
+    
+    .contact-section h2 {
+      font-size: 2rem;
+    }
+  }
+  
+/* About Us Section Layout */
+#about {
+    padding: 40px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  #about h2 {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  
+  /* Flex container for text and image */
+  .about-content {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  
+  /* Left side: text */
+  .about-text {
+    flex: 1 1 50%;
+    padding-right: 20px;
+  }
+  
+  /* Right side: image */
+  .about-image {
+    flex: 1 1 50%;
+    padding-left: 20px;
+  }
+  
+  /* Styling the image */
+  .about-image img {
+    width: 100%;
+    max-width: 600px;  /* Adjust as needed */
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .two-column-layout {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  /* Left Column remains at 1 part */
+  .left-column {
+    flex: 2;
+  }
+  
+  /* Right Column is now 3 parts wide */
+  .right-column {
+    flex: 3;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  /* Image Styling for Left Column */
+  .left-column img {
+    width: 100%;
+    max-width: 600px; /* Adjust as needed */
+    height: auto;
+    display: block;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  }
+  
+  /* Modern Hyperlink Styling */
+a {
+    color: #b8860b;           /* A warm gold tone */
+    text-decoration: none;    /* Remove underline by default */
+    transition: color 0.3s ease, text-decoration 0.3s ease;
+  }
+  
+  a:hover,
+  a:focus {
+    color: #8b6508;           /* Darker shade on hover */
+    text-decoration: underline;
+  }
+  
+  /* Toast Notification Styles */
+.toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 15px 30px;
+    border-radius: 5px;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    z-index: 2000;
+  }
+  
+  .toast.visible {
+    opacity: 1;
+  }
+  
+  #pickup-scheduler {
+    padding: 20px;
+    margin: 20px auto;
+    max-width: 600px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    text-align: center;
+  }
+  
+  #pickup-scheduler h3 {
+    margin-bottom: 20px;
+    font-family: 'Open Sans', sans-serif;
+  }
+  
+  #pickup-scheduler label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+  }
+  
+  #pickup-scheduler select {
+    width: 80%;
+    padding: 8px;
+    font-size: 1rem;
+    margin-bottom: 15px;
+  }
+  
+  .checkout-wrapper {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: flex-start;  /* Align columns at the top */
+    gap: 10px;
+    max-width: 1200px;
+    margin: 80px auto 0; /* Overall top margin for the wrapper */
+    padding: 10px;
+    box-sizing: border-box;
+  }
+  
+  #pickup-scheduler,
+  .checkout-container {
+    flex: 1 1 50%;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-sizing: border-box;
+    margin-top: 0; /* Ensure no extra margin at top */
+  }
+  
+  /* Remove default top margin on headings and adjust email container spacing */
+  #pickup-scheduler h3,
+  .checkout-container h2,
+  .email-container {
+    margin-top: 0;
+  }
+  
+  /* Optionally, reduce bottom margins if needed */
+  #pickup-scheduler h3,
+  .checkout-container h2 {
+    margin-bottom: 10px;
+  }
+  
+  /* Right Column: Order Review & Payment */
+  .checkout-container {
+    flex: 1 1 50%;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+  }
+  
+  /* Email container at the top */
+  .email-container {
+    margin-bottom: 20px;
+  }
+  
+  /* (Existing styles for cart items, totals, etc. remain) */
+  /* Ensure main content is below the navigation bar */
+.admin-orders-container {
+  margin-top: 100px; /* Adjust this value based on the navbar height */
+  padding: 20px;
+}
