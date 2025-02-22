@@ -1,10 +1,12 @@
 const express = require("express");
-const stripe = require("stripe")("sk_test_51Qv1XDBAyEkiqLBXhQDeQd6VSmE0XkkVLocYlT6yBJd6fowMBh6NXFluvYHGwAxsIgsnzwtXSkOpwALm1MpvrTT600VyPIdeOC");
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const cors = require("cors");
 const nodemailer = require("nodemailer");
 const fs = require("fs");
 
 const app = express();
+// Use the database connection
+const MONGO_URI = process.env.MONGO_URI;
 
 // For non-webhook routes: use JSON parser
 app.use(express.json());
@@ -15,9 +17,9 @@ app.use(express.static("public"));
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: "mpedrazash@gmail.com",         // Replace with your Gmail address
-    pass: "fwup cfbb pacz dvzs",     // Use your generated app-specific password
-  },
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+    },
 });
 
 // Simple order storage using a JSON file
