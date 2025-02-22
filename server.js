@@ -7,6 +7,8 @@ const path = require("path");
 require("dotenv").config();
 const app = express(); // <-- Define app BEFORE you use it
 
+const API_BASE = "https://bascom-bread-co-production.up.railway.app";
+
 app.use(cors({
   origin: ["https://bascom-bread-co-production.up.railway.app"]
 }));
@@ -66,8 +68,8 @@ app.post("/create-checkout-session", async (req, res) => {
             payment_method_types: ["card"],
             line_items,
             mode: "payment",
-            success_url: `${process.env.BASE_URL}/success.html`,
-            cancel_url: `${process.env.BASE_URL}/cancel.html`,
+            success_url: `${process.env.API_BASE}/success.html`,
+            cancel_url: `${process.env.API_BASE}/cancel.html`,
             customer_email: email,
             metadata: { cart: JSON.stringify(cart), pickupDay, pickupTime },
         });
