@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
 
     try {
-        const response = await fetch("/orders"); // Fetch orders from server
+        const response = await fetch("/orders");
         const orders = await response.json();
 
         if (orders.length === 0) {
@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", async function () {
             return;
         }
 
-        ordersList.innerHTML = ""; // Clear any previous content
+        ordersList.innerHTML = ""; // Clear previous content
 
         orders.forEach(order => {
             const orderDiv = document.createElement("div");
