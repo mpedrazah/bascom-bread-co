@@ -23,6 +23,7 @@
         </nav>
     </header>
 
+    
     <!-- Orders Section -->
     <section class="admin-orders-container">
         <h2>Customer Orders</h2>
@@ -30,6 +31,15 @@
             <p>Loading orders...</p> <!-- Placeholder until data loads -->
         </div>
     </section>
+
+    <button onclick="exportOptedInEmails()">Download Opted-in Emails 📩</button>
+    <button id="export-orders-btn">Export Orders</button>
+
+    <script>
+    function exportOptedInEmails() {
+        window.location.href = "/export-email-optins";
+    }
+    </script>
 
     <script src="admin-orders.js"></script>
 </body>

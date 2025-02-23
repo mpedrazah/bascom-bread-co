@@ -1,5 +1,5 @@
 //const API_BASE = "https://bascom-bread-co-production.up.railway.app";
-const API_BASE = "https://3aa0-2603-8080-c6f0-a660-581e-6698-dc36-63c3.ngrok-free.app"; // ✅ Use Local Server Instead of Railway
+const API_BASE = "https://safe-feline-evident.ngrok-free.app"; // ✅ Use Local Server Instead of Railway
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
 let pickupSlots = {}; // Define pickupSlots to avoid reference errors
 // Predefined discount codes
@@ -163,38 +163,61 @@ window.applyDiscount = applyDiscount;
 
 
 // Checkout function
-// ✅ Checkout Function (Updated with Discount Handling)
+// Ensure the checkbox state is remembered
+document.addEventListener("DOMContentLoaded", function () {
+  const emailOptIn = document.getElementById("email-opt-in");
+  const emailInput = document.getElementById("email");
+
+  // Load stored preference when the email field changes
+  emailInput.addEventListener("input", () => {
+      const savedPreference = localStorage.getItem(`email-opt-in-${emailInput.value}`);
+      if (savedPreference !== null) {
+          emailOptIn.checked = JSON.parse(savedPreference);
+      }
+  });
+
+  // Save preference when checkbox is clicked
+  emailOptIn.addEventListener("change", () => {
+      if (emailInput.value.trim()) {
+          localStorage.setItem(`email-opt-in-${emailInput.value}`, emailOptIn.checked);
+      }
+  });
+});
+
+// Checkout function with email opt-in
 async function checkout() {
   if (cart.length === 0) {
-    alert("Your cart is empty!");
-    return;
+      alert("Your cart is empty!");
+      return;
   }
 
   const email = document.getElementById("email").value.trim();
   const pickupDay = document.getElementById("pickup-day").value;
+  const emailOptIn = document.getElementById("email-opt-in").checked; // ✅ Capture opt-in value
 
   if (!email || !pickupDay) {
-    alert("Please enter your email and select a pickup date.");
-    return;
+      alert("Please enter your email and select pickup date.");
+      return;
   }
 
   try {
-    const response = await fetch(`${API_BASE}/create-checkout-session`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ cart, email, pickupDay, discountAmount }),
-    });
+      const response = await fetch(`${API_BASE}/create-checkout-session`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ cart, email, pickupDay, emailOptIn }), // ✅ Send opt-in data
+      });
 
-    const session = await response.json();
-    if (session.url) {
-      window.location.href = session.url;
-    } else {
-      console.error("Stripe session failed:", session);
-    }
+      const session = await response.json();
+      if (session.url) {
+          window.location.href = session.url;
+      } else {
+          console.error("Stripe session failed:", session);
+      }
   } catch (error) {
-    console.error("Checkout Error:", error);
+      console.error("Checkout Error:", error);
   }
 }
+
 
 function updateCartCount() {
   const cartCountElem = document.getElementById("cart-count");

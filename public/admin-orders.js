@@ -48,3 +48,13 @@ document.addEventListener("DOMContentLoaded", async function () {
         ordersList.innerHTML = "<p>Error loading orders. Please try again later.</p>";
     }
 });
+
+document.addEventListener("DOMContentLoaded", function () {
+    const exportOrdersBtn = document.getElementById("export-orders-btn");
+
+    if (exportOrdersBtn) {
+        exportOrdersBtn.addEventListener("click", function () {
+            window.location.href = "/export-orders"; // Initiates file download
+        });
+    }
+});

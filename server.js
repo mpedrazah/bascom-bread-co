@@ -7,12 +7,12 @@ const nodemailer = require("nodemailer");
 const fs = require("fs");
 const path = require("path");
 const ordersFilePath = path.join(__dirname, "orders.json");
-
-
+const csvFilePath = "email_subscribers.csv"; // ✅ Opt-in email list
+const createCsvWriter = require("csv-writer").createObjectCsvWriter;
 
 const app = express();
 const corsOptions = {
-    origin: "https://3aa0-2603-8080-c6f0-a660-581e-6698-dc36-63c3.ngrok-free.app", // ✅ ONLY Allow Localhost Now
+    origin: "https://safe-feline-evident.ngrok-free.app", // ✅ ONLY Allow Localhost Now
     methods: "GET,POST",
     allowedHeaders: "Content-Type",
 };
@@ -30,28 +30,131 @@ const transporter = nodemailer.createTransport({
 });
 
 
+// ✅ Load orders if file exists
+let orders = fs.existsSync(ordersFilePath) ? JSON.parse(fs.readFileSync(ordersFilePath)) : [];
+
+// ✅ Save order function
 function saveOrder(order) {
   let orders = [];
 
-  // Check if the file exists
   if (fs.existsSync(ordersFilePath)) {
-      try {
-          const fileData = fs.readFileSync(ordersFilePath, "utf-8");
-          orders = JSON.parse(fileData);
-      } catch (error) {
-          console.error("❌ Error reading orders file:", error);
-      }
+      orders = JSON.parse(fs.readFileSync(ordersFilePath));
   }
 
-  // Add new order and save
   orders.push(order);
+  fs.writeFileSync(ordersFilePath, JSON.stringify(orders, null, 2));
+
+  // ✅ Update Orders CSV
+  appendOrderToCSV(order);
+}
+
+
+const emailCsvWriter = createCsvWriter({
+  path: "email_subscribers.csv",
+  header: [
+    { id: "email", title: "Email" },
+    { id: "date", title: "Date Opted In" },
+  ],
+  append: true,
+});
+
+const exportCsvWriter = createCsvWriter({
+  path: csvFilePath,
+  header: [
+      { id: "email", title: "Email" },
+      { id: "date", title: "Date Opted In" },
+  ],
+});
+
+
+async function saveEmailSubscriber(email) {
+  if (!email) return;
+
   try {
-      fs.writeFileSync(ordersFilePath, JSON.stringify(orders, null, 2));
-      console.log("✅ Order saved successfully:", order);
+      await emailCsvWriter.writeRecords([{ email, date: new Date().toISOString() }]);
+      console.log(`✅ Email saved: ${email}`);
   } catch (error) {
-      console.error("❌ Error saving order:", error);
+      console.error("❌ Error saving email:", error);
   }
 }
+
+
+
+// ✅ Get unique opted-in customers
+function getUniqueOptedInEmails() {
+    const uniqueEmails = new Set();
+    orders.forEach(order => {
+        if (order.emailOptIn) {
+            uniqueEmails.add(order.email);
+        }
+    });
+    return Array.from(uniqueEmails);
+}
+
+app.get("/export-email-optins", (req, res) => {
+  if (!fs.existsSync("email_subscribers.csv")) {
+      return res.status(404).json({ message: "No opted-in emails found." });
+  }
+
+  res.download("email_subscribers.csv");
+});
+const ordersCsvWriter = createCsvWriter({
+  path: "orders_export.csv",
+  header: [
+      { id: "email", title: "Email" },
+      { id: "pickupDay", title: "Pickup Day" },
+      { id: "cart", title: "Cart Items" },
+      { id: "totalAmount", title: "Total Amount ($)" },
+      { id: "discountCode", title: "Discount Code" },
+      { id: "date", title: "Order Date" },
+  ],
+  append: true, // ✅ Append orders instead of overwriting
+});
+
+function appendOrderToCSV(order) {
+  const csvData = [{
+      email: order.email,
+      pickupDay: order.pickupDay,
+      cart: order.cart.map(item => `${item.quantity}x ${item.name} ($${item.price})`).join("; "),
+      totalAmount: order.totalAmount || "0.00",
+      discountCode: order.discountCode || "None",
+      date: new Date(order.date).toLocaleString(),
+  }];
+
+  ordersCsvWriter.writeRecords(csvData)
+      .then(() => console.log(`✅ Order saved to CSV: ${order.email}`))
+      .catch(err => console.error("❌ Error saving order to CSV:", err));
+}
+
+// ✅ Export Orders as CSV
+app.get("/export-orders", (req, res) => {
+  if (!fs.existsSync(ordersFilePath)) {
+      return res.status(404).json({ message: "No orders found." });
+  }
+
+  const orders = JSON.parse(fs.readFileSync(ordersFilePath, "utf-8"));
+
+  if (orders.length === 0) {
+      return res.status(404).json({ message: "No orders found." });
+  }
+
+  const csvData = orders.map(order => ({
+      email: order.email,
+      pickupDay: order.pickupDay,
+      cart: order.cart.map(item => `${item.quantity}x ${item.name} ($${item.price})`).join("; "),
+      totalAmount: order.totalAmount || "0.00",
+      discountCode: order.discountCode || "None",
+      date: new Date(order.date).toLocaleString(),
+  }));
+
+  ordersCsvWriter.writeRecords(csvData).then(() => {
+      res.download("orders_export.csv");
+  }).catch(err => {
+      console.error("❌ Error exporting orders CSV:", err);
+      res.status(500).json({ error: "Failed to export orders." });
+  });
+});
+
 
 // Function to load the CSV and populate pickupSlots
 async function loadPickupSlots() {
@@ -192,21 +295,21 @@ async function sendOrderConfirmationEmail(email, cart, pickupDay) {
 // Checkout API Endpoint
 app.post("/create-checkout-session", async (req, res) => {
   try {
-      const { cart, email, pickupDay } = req.body;
+      const { cart, email, pickupDay, emailOptIn, discountCode } = req.body;
 
-      // Calculate total quantity of items in cart
-      const totalQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
-
-      // Check available pickup slots
-      const { available, remaining } = await checkRemainingSlots(pickupDay);
-      console.log(`🔍 Checking slots for ${pickupDay} - Requested: ${totalQuantity}, Remaining: ${remaining}`);
-
-      if (!available || totalQuantity > remaining) {
-          console.error("❌ Not enough slots available");
-          return res.status(400).json({ error: `No available slots for selected day. Remaining slots: ${remaining}` });
+      // ✅ If user opted in, save email
+      if (emailOptIn) {
+          await saveEmailSubscriber(email);
       }
 
-      // Create Stripe Checkout Session
+      // ✅ Continue with order processing...
+      const totalQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
+      const { available, remaining } = await checkRemainingSlots(pickupDay);
+
+      if (!available || totalQuantity > remaining) {
+          return res.status(400).json({ error: `No available slots. Remaining slots: ${remaining}` });
+      }
+
       const session = await stripe.checkout.sessions.create({
           payment_method_types: ["card"],
           line_items: cart.map(item => ({
@@ -218,27 +321,24 @@ app.post("/create-checkout-session", async (req, res) => {
               quantity: item.quantity || 1,
           })),
           mode: "payment",
-          success_url: "https://3aa0-2603-8080-c6f0-a660-581e-6698-dc36-63c3.ngrok-free.app/success.html",
-          cancel_url: "https://3aa0-2603-8080-c6f0-a660-581e-6698-dc36-63c3.ngrok-free.app/cancel.html",
+          success_url: "https://safe-feline-evident.ngrok-free.app/success.html",
+          cancel_url: "https://safe-feline-evident.ngrok-free.app/cancel.html",
           customer_email: email,
-          metadata: { cart: JSON.stringify(cart), pickupDay },
+          metadata: { cart: JSON.stringify(cart), pickupDay, emailOptIn, discountCode },
       });
 
-      console.log("✅ Stripe Checkout Session Created:", session);
-
-      // Save order to file
-      const newOrder = { email, pickupDay, cart, date: new Date().toISOString() };
+      // ✅ Save Order
+      const newOrder = { email, pickupDay, cart, date: new Date().toISOString(), emailOptIn, discountCode };
       saveOrder(newOrder);
 
-      // Update booked slots
+      // ✅ Update booked slots
       await updateBookedSlots(pickupDay, totalQuantity);
-      console.log(`✅ Updated booked slots for ${pickupDay} - Now remaining: ${remaining - totalQuantity}`);
 
-      // Send confirmation email
-      await sendOrderConfirmationEmail(email, cart, pickupDay);
-      console.log(`📧 Order confirmation email sent to ${email}`);
+      // ✅ Send confirmation email if opted-in
+      if (emailOptIn) {
+          await sendOrderConfirmationEmail(email, cart, pickupDay);
+      }
 
-      // Return the session URL for checkout
       res.json({ url: session.url });
 
   } catch (error) {
@@ -246,7 +346,6 @@ app.post("/create-checkout-session", async (req, res) => {
       res.status(500).json({ error: error.message });
   }
 });
-
 
 
 // Fetch orders for the admin panel
