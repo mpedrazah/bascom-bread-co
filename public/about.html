@@ -5,37 +5,50 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>About Us - Bascom Bread</title>
   <link rel="stylesheet" href="style.css">
+  <!-- Optional: Google Fonts for a modern look -->
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- Navigation Bar -->
-    <header>
-        <div class="logo-container">
-            <img src="images/bread-logo.PNG" alt="Bascom Bread Logo" class="logo">
-        </div>
-        <nav>
-            <ul>
-                <li><a href="index.html">Home</a></li>
-                <li><a href="products.html">Our Products</a></li>
-                <li><a href="about.html">About Us</a></li>
-                <li><a href="contact.html">Contact</a></li>
-            </ul>
-        </nav>
-    </header>
+  <!-- Navigation Bar -->
+  <header>
+    <div class="logo-container">
+      <img src="images/bread-logo.PNG" alt="Bascom Bread Logo" class="logo">
+    </div>
+    <nav>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="products.html">Our Products</a></li>
+        <li><a href="about.html">About Us</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="checkout.html">Cart 🛒 (<span id="cart-count">0</span>)</a></li>
+      </ul>
+    </nav>
+  </header>
 
   <!-- About Us Section -->
-  <section id="about">
+  <section id="about" class="about-section">
     <h2>About Bascom Bread</h2>
     <div class="about-content">
       <div class="about-text">
-        <p>The Bascom Bread Co. is our family oriented, home bakery dedicated to crafting exceptional sourdough bread with simple recipes and natural ingredients. My name is Margaret, and together with my husband, John, and children, Dave and Joan, I am hoping to bring our love of fresh bread to our neighbors.</p>
-        <p>Using ingredients that are fresh and organic is important to me. I freshly mill my flour to ensure that my bread is more nutritious than your average loaf. The mix of fresh milled and regular flour results in a rich and hearty flavor and a soft, delicate texture.</p>
+        <p>
+          At Bascom Bread Co., our family’s passion for baking is at the heart of everything we do.
+          As a home bakery dedicated to crafting exceptional sourdough, we use simple recipes and natural ingredients 
+          to create delicious, artisanal bread that brings people together.
+        </p>
+        <p>
+          I’m Margaret, and alongside my husband John and our children, Dave and Joan, we blend tradition with innovation.
+          By freshly milling our flour, we ensure that every loaf is not only wholesome and nutritious but also bursting with flavor.
+          Our commitment to organic, fresh ingredients results in a rich, hearty flavor and a soft, delicate texture that sets our bread apart.
+        </p>
       </div>
+    </div>
   </section>
 
+  <!-- Two-Column Layout for Additional Info (Image and Facebook Widget) -->
   <section class="two-column-layout">
     <!-- Left Column: Image -->
     <div class="left-column">
-      <img src="images/bascoms.jpg" alt="Bascom Bread" />
+      <img src="images/bascoms.jpg" alt="Bascom Bread" class="about-image">
     </div>
     
     <!-- Right Column: Facebook Widget -->
@@ -43,7 +56,6 @@
       <!-- Load Facebook SDK for JavaScript -->
       <div id="fb-root"></div>
       <script async defer crossorigin="anonymous" src="https://connect.facebook.net/es_LA/sdk.js#xfbml=1&version=v22.0"></script>
-      
       <!-- Facebook Page Plugin -->
       <div class="fb-page" 
            data-href="https://www.facebook.com/profile.php?id=61572686411579" 
@@ -60,8 +72,6 @@
       </div>
     </div>
   </section>
-  
-
 
   <script src="script.js"></script>
 </body>

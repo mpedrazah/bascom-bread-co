@@ -24,18 +24,25 @@
         </nav>
     </header>
 
-    <!-- Product Details -->
-    <section class="product-details">
-        <img src="images/honey-loaf.jpg" alt="Honey Wheat Sandwich Loaf">
-        <div class="product-info">
-            <h1>Honey Wheat Sandwich Loaf</h1>
-            <p>A high ratio of freshly ground flour gives a complex flavor to this loaf. Perfect for a PB & J or grilled cheese.
-                (Note: contains milk).</p>
-            <p><strong>Price: $12.00</strong></p>
-            <button onclick="addToCart('Honey Wheat Sandwich Loaf', 12.00)">Add to Cart</button>
+    <!-- Product Details Section -->
+    <section class="product-container">
+        <div class="product-card">
+            <img src="images/honey-loaf.jpg" alt="Honey Wheat Sandwich Loaf" class="product-image">
+            <div class="product-info">
+                <h1>Honey Wheat Sandwich Loaf</h1>
+                <p class="product-description">
+                    A high ratio of freshly ground flour gives a complex flavor to this loaf. 
+                    Perfect for a PB & J or grilled cheese. (Note: contains milk).
+                </p>
+                <p class="product-price"><strong>$12.00</strong></p>
+                <button class="add-to-cart" onclick="addToCart('Honey Wheat Sandwich Loaf', 12.00)">
+                    Add to Cart 🛒
+                </button>
+            </div>
         </div>
     </section>
 
     <script src="cart.js"></script>
+
 </body>
 </html>

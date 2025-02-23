@@ -203,35 +203,88 @@ body {
 }
 
 /* Product Grid Styling */
-/* Product Grid - Gallery View */
-.grid-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    padding: 20px;
-    justify-items: center;
-}
 
 /* Product Image Zoom Effect */
+/* Center Product Container */
+.product-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 80vh;
+}
+
+/* Product Grid */
+.product-grid {
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.product-grid h2 {
+  font-size: 28px;
+  margin-bottom: 30px;
+  color: #333;
+}
+
+/* Grid Container */
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+/* Modern Product Card */
 .product-card {
-  position: relative;
-  overflow: hidden;
-  display: inline-block;
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  max-width: 400px;
+  transition: transform 0.2s ease-in-out;
 }
 
-.product-card img {
+.product-card:hover {
+  transform: scale(1.03);
+}
+
+/* Product Image */
+.product-image {
   width: 100%;
-  transition: transform 0.3s ease-in-out;
+  border-radius: 10px;
 }
 
-/* Zoom in effect on hover */
-.product-card:hover img {
-  transform: scale(1.1); /* Increases size by 10% */
+/* Text Styling */
+.product-info h1 {
+  font-size: 24px;
+  margin: 15px 0;
+  color: #333;
 }
-.product-card p {
-    font-size: 16px;
-    font-weight: bold;
-    color: #b8860b;
+
+.product-description {
+  font-size: 16px;
+  color: #555;
+  margin-bottom: 15px;
+}
+
+.product-price {
+  font-size: 20px;
+  color: #d35400;
+  font-weight: bold;
+}
+
+/* Add to Cart Button */
+.add-to-cart {
+  background-color: #ff914d;
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.add-to-cart:hover {
+  background-color: #e86c1a;
 }
 
 /* Resize Product Image */
@@ -383,78 +436,63 @@ button:hover {
     }
   }
   
-/* About Us Section Layout */
-#about {
-    padding: 40px 20px;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-  
-  #about h2 {
-    text-align: center;
-    margin-bottom: 30px;
-  }
-  
-  /* Flex container for text and image */
-  .about-content {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    flex-wrap: wrap;
-  }
-  
-  /* Left side: text */
-  .about-text {
-    flex: 1 1 50%;
-    padding-right: 20px;
-  }
-  
-  /* Right side: image */
-  .about-image {
-    flex: 1 1 50%;
-    padding-left: 20px;
-  }
-  
-  /* Styling the image */
-  .about-image img {
-    width: 100%;
-    max-width: 600px;  /* Adjust as needed */
-    height: auto;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  }
-  
+/* About Us Section */
+.about-section {
+  padding: 60px 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.about-section h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 36px;
+  margin-bottom: 30px;
+  color: #444;
+}
+
+.about-content {
+  background: #fff;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.about-text p {
+  font-size: 18px;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+/* Two-Column Layout for Additional Info */
+.two-column-layout {
+  display: flex;
+  flex-wrap: wrap;
+  max-width: 1200px;
+  margin: 40px auto;
+  gap: 20px;
+  padding: 0 20px;
+}
+
+.left-column, .right-column {
+  flex: 1;
+  min-width: 300px;
+}
+
+.left-column img {
+  width: 100%;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
   .two-column-layout {
-    display: flex;
-    gap: 20px;
-    align-items: flex-start;
-    padding: 20px;
-    max-width: 1200px;
-    margin: 0 auto;
+    flex-direction: column;
   }
-  
-  /* Left Column remains at 1 part */
-  .left-column {
-    flex: 2;
-  }
-  
-  /* Right Column is now 3 parts wide */
-  .right-column {
-    flex: 3;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  
-  /* Image Styling for Left Column */
-  .left-column img {
-    width: 100%;
-    max-width: 600px; /* Adjust as needed */
-    height: auto;
-    display: block;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  }
+}
   
   /* Modern Hyperlink Styling */
 a {
