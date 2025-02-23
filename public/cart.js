@@ -193,10 +193,16 @@ async function checkout() {
 
   const email = document.getElementById("email").value.trim();
   const pickupDay = document.getElementById("pickup-day").value;
-  const emailOptIn = document.getElementById("email-opt-in").checked; // ✅ Capture opt-in value
+  const discountCode = document.getElementById("discount-code").value.trim().toUpperCase();
 
   if (!email || !pickupDay) {
-      alert("Please enter your email and select pickup date.");
+      alert("Please enter your email and select a pickup date.");
+      return;
+  }
+
+  // If user applies VENMO10, redirect to Venmo QR Code
+  if (discountCode === "VENMO10") {
+      window.location.href = "https://venmo.com/code?user_id=@Margaret-Smillie"; // Replace with your actual Venmo QR Code URL
       return;
   }
 
@@ -204,7 +210,7 @@ async function checkout() {
       const response = await fetch(`${API_BASE}/create-checkout-session`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ cart, email, pickupDay, emailOptIn }), // ✅ Send opt-in data
+          body: JSON.stringify({ cart, email, pickupDay, discountCode }),
       });
 
       const session = await response.json();
