@@ -9,9 +9,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
 <body>
-  <!-- Navigation (reuse your header styling) -->
- <!-- Navigation Bar -->
- <header>
+  <!-- Navigation -->
+  <header>
     <div class="logo-container">
         <img src="images/bread-logo.PNG" alt="Bascom Bread Logo" class="logo">
     </div>
@@ -23,43 +22,46 @@
             <li><a href="contact.html">Contact</a></li>
         </ul>
     </nav>
-</header>
+  </header>
 
   <!-- Contact Section -->
   <section class="contact-section">
-    <h2>Contact Bascom Bread</h2>
-    <p>
-        If you would like to stock your café, deli or shop with our breads, please contact us on:
-    </p>
-    <form action="contact-form-handler.php" method="POST" class="contact-form">
-      <div class="form-group">
-        <label for="name">Your Name</label>
-        <input type="text" id="name" name="name" placeholder="Your Name" required>
+    <div class="contact-container">
+      <!-- Left Column: Contact Form -->
+      <div class="contact-form-column">
+        <h2>Contact Bascom Bread</h2>
+        <p>If you would like to stock your café, deli, or shop with our breads, please contact us below:</p>
+
+        <form action="contact-form-handler.php" method="POST" class="contact-form">
+          <div class="form-group">
+            <label for="name">Your Name</label>
+            <input type="text" id="name" name="name" placeholder="Your Name" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="email">Your Email</label>
+            <input type="email" id="email" name="email" placeholder="you@example.com" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="phone">Your Phone</label>
+            <input type="tel" id="phone" name="phone" placeholder="(123) 456-7890">
+          </div>
+          
+          <div class="form-group">
+            <label for="message">Your Message</label>
+            <textarea id="message" name="message" rows="5" placeholder="How can we help you?" required></textarea>
+          </div>
+          
+          <button type="submit" class="btn">Send Message</button>
+        </form>
       </div>
-      
-      <div class="form-group">
-        <label for="email">Your Email</label>
-        <input type="email" id="email" name="email" placeholder="you@example.com" required>
+
+      <!-- Right Column: Contact Info -->
+      <div class="contact-info-column">
+        <h3>Our Contact Information</h3>
+        <p><strong>Email:</strong> Bascombreadco@gmail.com</p>
       </div>
-      
-      <div class="form-group">
-        <label for="phone">Your Phone</label>
-        <input type="tel" id="phone" name="phone" placeholder="(123) 456-7890">
-      </div>
-      
-      <div class="form-group">
-        <label for="message">Your Message</label>
-        <textarea id="message" name="message" rows="5" placeholder="How can we help you?" required></textarea>
-      </div>
-      
-      <button type="submit" class="btn">Send Message</button>
-    </form>
-    
-    <div class="contact-info">
-      <h3>Our Contact Information</h3>
-      <p><strong>Email:</strong> info@bascombread.com</p>
-      <p><strong>Phone:</strong> (123) 456-7890</p>
-      <p><strong>Address:</strong> 123 Bread Street, City, State, ZIP</p>
     </div>
   </section>
 </body>

@@ -1,0 +1,15 @@
+[
+  {
+    "email": "a@test.com",
+    "pickupDay": "02/25 Tues",
+    "cart": [
+      {
+        "name": "Fresh Milled Sourdough Loaf",
+        "price": 12,
+        "quantity": 1,
+        "image": "https://3aa0-2603-8080-c6f0-a660-581e-6698-dc36-63c3.ngrok-free.app/images/freshmillloaf.jpg"
+      }
+    ],
+    "date": "2025-02-23T15:12:00.341Z"
+  }
+]

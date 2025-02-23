@@ -29,39 +29,38 @@
   <section id="about" class="about-section">
     <h2>About Bascom Bread</h2>
     <div class="about-content">
+      <!-- Left Column: Image -->
+      <div class="about-image">
+        <img src="images/bascoms.jpg" alt="Bascom Bread" class="about-image">
+      </div>
+
+      <!-- Right Column: About Text -->
       <div class="about-text">
         <p>
-          At Bascom Bread Co., our family’s passion for baking is at the heart of everything we do.
-          As a home bakery dedicated to crafting exceptional sourdough, we use simple recipes and natural ingredients 
-          to create delicious, artisanal bread that brings people together.
+          My name is Margaret, and together with my husband, John, and children, Dave and Joan, I am hoping to bring our love of fresh bread to you.
         </p>
         <p>
-          I’m Margaret, and alongside my husband John and our children, Dave and Joan, we blend tradition with innovation.
-          By freshly milling our flour, we ensure that every loaf is not only wholesome and nutritious but also bursting with flavor.
-          Our commitment to organic, fresh ingredients results in a rich, hearty flavor and a soft, delicate texture that sets our bread apart.
+          My sourdough journey started back in 2018, when I got a random whim to make my own starter. After years of perfecting my craft, I began using fresh-milled flour and got hooked on the flavor! As bread is a major staple in our home, I take pride in knowing that the bread we are eating is nourishing my family with the best possible ingredients.
+        </p>
+        <p>Thank you for being here! 
+          You can see more behind the scenes on Instagram or Facebook @BascomBreadCo
         </p>
       </div>
     </div>
   </section>
 
-  <!-- Two-Column Layout for Additional Info (Image and Facebook Widget) -->
-  <section class="two-column-layout">
-    <!-- Left Column: Image -->
-    <div class="left-column">
-      <img src="images/bascoms.jpg" alt="Bascom Bread" class="about-image">
-    </div>
-    
-    <!-- Right Column: Facebook Widget -->
-    <div class="right-column">
-      <!-- Load Facebook SDK for JavaScript -->
+  <!-- Two-Column Layout for Social Media -->
+  <section class="social-media-layout">
+    <!-- Facebook Column -->
+    <div class="social-column">
+      <h3>Follow Us on Facebook</h3>
       <div id="fb-root"></div>
       <script async defer crossorigin="anonymous" src="https://connect.facebook.net/es_LA/sdk.js#xfbml=1&version=v22.0"></script>
-      <!-- Facebook Page Plugin -->
       <div class="fb-page" 
            data-href="https://www.facebook.com/profile.php?id=61572686411579" 
            data-tabs="timeline" 
-           data-width="600" 
-           data-height="1000" 
+           data-width="400" 
+           data-height="500" 
            data-small-header="false" 
            data-adapt-container-width="false" 
            data-hide-cover="false" 
@@ -71,8 +70,15 @@
         </blockquote>
       </div>
     </div>
-  </section>
+
+   <!-- Instagram Column -->
+   <div class="social-column">
+    <h3>Follow Us on Instagram</h3>
+    <iframe src="https://www.instagram.com/bascombreadco/embed/" width="400" height="500" frameborder="0" scrolling="no" allowtransparency="true"></iframe>
+  </div>
+</section>
 
   <script src="script.js"></script>
 </body>
 </html>
+
