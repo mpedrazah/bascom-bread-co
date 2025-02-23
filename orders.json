@@ -113,5 +113,19 @@
     ],
     "date": "2025-02-23T16:23:54.691Z",
     "emailOptIn": true
+  },
+  {
+    "email": "x@g.com",
+    "pickupDay": "02/25 Tues",
+    "cart": [
+      {
+        "name": "Chocolate Chunk Loaf",
+        "price": 14,
+        "quantity": 1,
+        "image": "https://safe-feline-evident.ngrok-free.app/images/chocolateloaf.jpg"
+      }
+    ],
+    "date": "2025-02-23T17:18:05.530Z",
+    "discountCode": ""
   }
 ]
