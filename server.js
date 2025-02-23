@@ -12,7 +12,7 @@ const path = require("path");
 const app = express();
 
 const corsOptions = {
-    origin: "http://localhost:3000", // ✅ ONLY Allow Localhost Now
+    origin: "https://a1a8-2603-8080-c6f0-a660-581e-6698-dc36-63c3.ngrok-free.app", // ✅ ONLY Allow Localhost Now
     methods: "GET,POST",
     allowedHeaders: "Content-Type",
 };
