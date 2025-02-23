@@ -1,40 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chocolate Sourdough - Bascom Bread</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chocolate Chunk Loaf - Bascom Bread</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Optional: Include Google Fonts for improved typography -->
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
 <body>
+  <!-- Navigation -->
+  <header>
+    <div class="logo-container">
+      <img src="images/bread-logo.PNG" alt="Bascom Bread Logo" class="logo">
+    </div>
+    <nav>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="products.html">Our Products</a></li>
+        <li><a href="about.html">About Us</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="checkout.html">Cart 🛒 (<span id="cart-count">0</span>)</a></li>
+      </ul>
+    </nav>
+  </header>
 
-    <!-- Navigation -->
-    <header>
-        <div class="logo-container">
-            <img src="images/bread-logo.PNG" alt="Bascom Bread Logo" class="logo">
-        </div>
-        <nav>
-            <ul>
-                <li><a href="index.html">Home</a></li>
-                <li><a href="products.html">Our Products</a></li>
-                <li><a href="about.html">About Us</a></li>
-                <li><a href="contact.html">Contact</a></li>
-                <li><a href="checkout.html">Cart 🛒 (<span id="cart-count">0</span>)</a></li>
-            </ul>
-        </nav>
-    </header>
+  <!-- Product Details Section -->
+  <section class="product-container">
+    <div class="product-card">
+      <img src="images/chocolateloaf.jpg" alt="Chocolate Chunk Loaf" class="product-image">
+      <div class="product-info">
+        <h1>Chocolate Chunk Loaf</h1>
+        <p class="product-description">
+          This decadent chocolate loaf is bursting with flavor and chocolate chunks. Pairs perfectly with a cup of coffee.
+        </p>
+        <p class="product-price"><strong>$14.00</strong></p>
+        <button class="add-to-cart" onclick="addToCart('Chocolate Chunk Loaf', 14.00)">Add to Cart 🛒</button>
+      </div>
+    </div>
+  </section>
 
-    <!-- Product Details -->
-    <section class="product-details">
-        <img src="images/chocolateloaf.jpg" alt="Chocolate Chunk Loaf">
-        <div class="product-info">
-            <h1>Chocolate Chunk Loaf</h1>
-            <p>This decadent chocolate loaf is bursting with flavor and chocolate chunks. Pairs perfectly with a cup of coffee.</p>
-            <p><strong>Price: $14.00</strong></p>
-            <button onclick="addToCart('Chocolate Chunk Loaf', 14.00)">Add to Cart</button>
-        </div>
-    </section>
-
-    <script src="cart.js"></script>
+  <script src="cart.js"></script>
 </body>
 </html>
