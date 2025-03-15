@@ -1,11 +1,16 @@
 /* General Styles */
+* {
+  font-weight: inherit;
+}
+
+
 body {
   font-family: 'Open Sans', sans-serif;
   margin: 0;
   padding: 0;
   background-color: #fff;
   color: #333;
-  padding-top: 150px; /* Adjust this padding to account for the fixed nav bar */
+  padding-top: 90px; /* Adjust this padding to account for the fixed nav bar */
   height: 100vh;
   box-sizing: border-box;
 }
@@ -99,7 +104,7 @@ header {
   flex-direction: column;
   align-items: center;
   padding: 10px 0;
-  z-index: 1000;
+  z-index: 999;
 }
 
 nav ul {
@@ -109,17 +114,18 @@ nav ul {
   display: flex;
 }
 
-nav ul li {
-  margin: 0 15px;
+
+
+header {
+  max-width: 100%;
+  overflow: hidden;
+}
+nav {
+  max-width: 100%;
 }
 
-nav ul li a {
-  text-decoration: none;
-  color: #333;
-  font-weight: 600;
-  text-transform: uppercase;
-  transition: color 0.3s ease;
-}
+
+
 
 nav ul li a:hover {
   color: #b8860b;
@@ -693,4 +699,237 @@ button:hover {
   max-width: 500px;
   margin-left: auto;
   margin-right: auto;
+}
+
+/* Venmo Button */
+#venmo-button {
+  background-color: #3D95CE; /* Venmo blue */
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s ease-in-out;
+  width: 100%;
+  max-width: 250px;
+  margin: 10px auto;
+}
+
+#venmo-button:hover {
+  background-color: #2C7BBF; /* Slightly darker blue */
+}
+
+.venmo-logo {
+  width: 24px;
+  height: auto;
+  margin-right: 8px;
+}
+
+/* Stripe Button */
+#stripe-button {
+  background-color: #635BFF; /* Stripe purple */
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s ease-in-out;
+  width: 100%;
+  max-width: 250px;
+  margin: 10px auto;
+}
+
+#stripe-button:hover {
+  background-color: #5047E5; /* Slightly darker purple */
+}
+
+.stripe-logo {
+  width: 24px;
+  height: auto;
+  margin-right: 8px;
+}
+
+/* Seasonal Specials */
+.seasonal {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+}
+
+.seasonal h3 {
+  color: #d9534f;
+  font-size: 1.5em;
+}
+
+/* Easter Theme */
+#mardigras-specials {
+  background-color: #fbe6f3;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+/* St. Patrick’s Theme */
+/* St. Patrick's Specials */
+#stpatricks-specials {
+  background: linear-gradient(90deg, #008f39, #004d1a);
+  color: #19170f;  /* Gold text */
+  padding: 15px;
+  border-radius: 10px;
+  text-align: center;
+  margin-top: 20px;
+}
+
+#stpatricks-specials h3 {
+  color: #090909;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Easter Specials */
+#mardigras-specials {
+  background: linear-gradient(90deg, #6a0dad, #ffcc00, #32cd32);
+  padding: 15px;
+  border-radius: 10px;
+  text-align: center;
+  margin-top: 20px;
+}
+
+#mardigras-specials h3 {
+  color: #ae78d1;  /* Gold text */
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+
+.hidden {
+  display: none;
+}
+
+/* Specials Banner - Shorter & More Stylish */
+/*DEFAULT BANNER:background: linear-gradient(90deg, #ff9800, #ff5722); */
+#specials-banner {
+  display: block;
+  background: linear-gradient(90deg, #008f39, #004d1a);
+  color: white;
+  font-size: 1.1rem;
+  font-weight: bold;
+  text-align: center;
+  padding: 10px;  /* Reduced padding */
+  padding-top: 20px;  /* Reduced padding */
+  text-decoration: none;
+  border-radius: 6px;
+  box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+#specials-banner:hover {
+  transform: scale(1.02);
+  box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.3);
+}
+
+
+/* Ensure Seasonal Specials follow the same grid layout */
+#seasonal-specials .grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+  gap: 20px;
+  justify-content: center;
+}
+
+/* Ensure each seasonal product card is structured properly */
+.seasonal .product-card {
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+  text-align: center;
+  width: 100%;  /* Ensure uniform width */
+  max-width: 400px; /* Ensure it doesn't stretch too much */
+}
+
+.seasonal .product-card:hover {
+  transform: scale(1.05);
+}
+
+/* Ensure seasonal specials are aligned properly */
+.seasonal {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  width: 100%;
+}
+
+/* Fix grid issue for St. Patrick’s and Mardi Gras */
+#mardigras-specials .grid-container,
+#stpatricks-specials .grid-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+}
+
+/* Fix product card width within seasonal specials */
+#mardigras-specials .product-card,
+#stpatricks-specials .product-card {
+  flex: 1 1 280px; /* Flexible width but maintains grid */
+  max-width: 300px;
+}
+
+/* Adjustments for responsiveness */
+@media (max-width: 768px) {
+  .grid-container {
+    grid-template-columns: repeat(2, 1fr); /* 2 columns on smaller screens */
+  }
+}
+
+@media (max-width: 480px) {
+  .grid-container {
+    grid-template-columns: 1fr; /* 1 column on mobile */
+  }
+}
+
+#specials-banner {
+  margin-top: 80px; /* Adjust this based on your navbar height */
+}
+
+#specials-banner {
+  position: relative;
+  top: 0;
+  z-index: 800;
+}
+
+/*only for phones*/
+
+
+
+
+
+nav ul li a {
+  font-size: 18px;
+  letter-spacing: 0.5px;
+  padding: 5px 10px;
+  text-decoration: none;
+  color: #333;
+  font-weight: 600;  /* Ensure same weight everywhere */
+  text-transform: uppercase;
+  transition: color 0.3s ease;
+}
+
+@media (max-width: 768px) {  
+  nav ul li a {
+    font-size: 14px; /* Adjust size */
+    font-weight: 600; /* Keep consistent with desktop */
+  }
 }

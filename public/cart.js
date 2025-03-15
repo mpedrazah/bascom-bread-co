@@ -1,32 +1,39 @@
 //const API_BASE = "https://bascom-bread-co-production.up.railway.app";
 const API_BASE = "https://safe-feline-evident.ngrok-free.app"; // ✅ Use Local Server Instead of Railway
-let cart = JSON.parse(localStorage.getItem("cart")) || [];
-let pickupSlots = {}; // Define pickupSlots to avoid reference errors
 // Predefined discount codes
 const discountCodes = {
   "ICON10": 0.10,  // 10% off
   "VENMO10": 0.10,  // 10% off
-  "BREAD5": 0.05 // 5% off
+  "BREAD5": 0.05, // 5% off
+  "TEST90": 0.50 // 50% off for test purposes
 };
+
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
+let pickupSlots = {}; // Define pickupSlots to avoid reference errors
+
 
 let discountAmount = 0; // Stores the applied discount
 
 // Fetch and parse CSV data
-// Function to fetch pickup slots from CSV and store them in memory
-// Function to fetch pickup slots from CSV and store them in memory
 async function fetchPickupSlotsCSV() {
   try {
-    const response = await fetch('/pickupSlots.csv');  // Ensure correct path
+    const response = await fetch('/pickupSlots.csv');  
     if (!response.ok) throw new Error("Failed to fetch pickup slots");
 
     const csvText = await response.text();
-    const rows = csvText.trim().split('\n').slice(1); // Skip the header row
+    const rows = csvText.trim().split('\n').slice(1); // Skip header row
+
     rows.forEach(row => {
-      const [date, _, amount] = row.split(','); // Ignore time, only use date and amount
+      const [date, amount, booked] = row.split(','); // Extract all three columns
+
       if (!pickupSlots[date]) {
-        pickupSlots[date] = { available: parseInt(amount), booked: 0 };
+        pickupSlots[date] = { 
+          available: parseInt(amount), 
+          booked: parseInt(booked) || 0  // Ensure booked count is properly assigned
+        };
       }
     });
+
     console.log("✅ Pickup slots loaded:", pickupSlots); // Debugging log
   } catch (error) {
     console.error("❌ Error loading pickup slots:", error);
@@ -40,24 +47,31 @@ fetchPickupSlotsCSV().then(() => {
   checkCartAvailability(); // Ensure warning message updates when slots load
 });
 
-// Function to populate the Pickup Day dropdown
-// Function to populate the Pickup Day dropdown
 function populatePickupDayDropdown() {
   const pickupDayElement = document.getElementById("pickup-day");
   if (!pickupDayElement) return;
 
-  pickupDayElement.innerHTML = ''; // Clear existing options
+  pickupDayElement.innerHTML = ""; // Clear existing options
 
   Object.keys(pickupSlots).forEach(date => {
-    const remainingSlots = pickupSlots[date]?.available - pickupSlots[date]?.booked || 0;
+    const slot = pickupSlots[date];
+    if (!slot) return; // Skip if slot data is missing
+
+    const remainingSlots = slot.available - slot.booked;
     const option = document.createElement("option");
     option.value = date;
-    option.textContent = `${date} - ${remainingSlots} slots available`;
+    option.textContent = remainingSlots < 6 ? `${date} - ${remainingSlots} slots left` : date;
+
     pickupDayElement.appendChild(option);
   });
 
   pickupDayElement.addEventListener("change", checkCartAvailability);
 }
+
+
+
+// ✅ Call this function when the checkout page loads
+document.addEventListener("DOMContentLoaded", populatePickupDayDropdown);
 
 
 // ✅ Toast Notification Function
@@ -117,6 +131,83 @@ function applyDiscount() {
 
   renderCartItems(); // Update total price after discount
 }
+
+
+async function payWithVenmo() {
+  if (cart.length === 0) {
+      alert("Your cart is empty!");
+      return;
+  }
+
+  const email = document.getElementById("email").value.trim();
+  const pickupDay = document.getElementById("pickup-day").value;
+
+  if (!email || !pickupDay) {
+      alert("Please enter your email and select a pickup date.");
+      return;
+  }
+
+  // Apply $1 discount per item
+  let discountAmount = cart.reduce((total, item) => total + item.quantity, 0); 
+
+  // Create discounted cart
+  let discountedCart = cart.map(item => ({
+      ...item,
+      price: item.price - 1  // Apply $1 discount per item
+  }));
+
+  // Calculate new total
+  let totalPrice = discountedCart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+  try {
+      // Log the order before redirecting to Venmo
+      const response = await fetch(`${API_BASE}/log-venmo-order`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ cart: discountedCart, email, pickupDay, discountCode: "VENMO_DISCOUNT", totalAmount: totalPrice }),
+      });
+
+      const result = await response.json();
+      if (result.success) {
+          // Venmo Payment URL
+          const venmoDeepLink = `venmo://paycharge?txn=pay&recipients=Margaret-Smillie&amount=${totalPrice.toFixed(2)}&note=Bascom%20Bread%20Order%20-%20Pickup%20on%20${encodeURIComponent(pickupDay)}`;
+          const venmoWebProfile = `https://venmo.com/Margaret-Smillie?txn=pay&amount=${totalPrice.toFixed(2)}&note=Bascom%20Bread%20Order%20-%20Pickup%20on%20${encodeURIComponent(pickupDay)}`;
+
+          // Detect mobile device
+          const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+          if (isMobile) {
+              // Try to open Venmo app
+              window.location.href = venmoDeepLink;
+
+              // Set a fallback in case Venmo app doesn't open
+              setTimeout(() => {
+                  window.location.href = venmoWebProfile;
+              }, 2000); // Wait 2 seconds before falling back to web
+          } else {
+              // If on desktop, open Venmo web profile
+              window.open(venmoWebProfile, "_blank");
+          }
+      } else {
+          alert("Failed to process Venmo payment.");
+      }
+  } catch (error) {
+      console.error("Venmo payment error:", error);
+      alert("There was an issue processing your Venmo payment.");
+  }
+}
+
+
+// ✅ Make function accessible globally
+window.payWithVenmo = payWithVenmo;
+
+let paymentMethod = "Stripe"; // Default to Stripe
+
+// Function to set payment method
+function setPaymentMethod(method) {
+    paymentMethod = method;
+}
+
 
 // ✅ Renders Cart Items with Image Support and Discount Application
 function renderCartItems() {
@@ -186,51 +277,95 @@ document.addEventListener("DOMContentLoaded", function () {
 
 // Checkout function with email opt-in
 async function checkout() {
-  if (cart.length === 0) {
-      alert("Your cart is empty!");
-      return;
-  }
-
-  const email = document.getElementById("email").value.trim();
+  const email = document.getElementById("email").value;
   const pickupDay = document.getElementById("pickup-day").value;
-  const discountCode = document.getElementById("discount-code").value.trim().toUpperCase();
+  const emailOptIn = document.getElementById("email-opt-in").checked;
+  const discountCode = document.getElementById("discount-code") ? document.getElementById("discount-code").value.trim().toUpperCase() : null;
 
-  if (!email || !pickupDay) {
-      alert("Please enter your email and select a pickup date.");
-      return;
-  }
+  let totalDiscountedAmount = 0;
+  let updatedCart = cart.map(item => {
+      let discountedPrice = item.price;
 
-  // If user applies VENMO10, redirect to Venmo QR Code
-  if (discountCode === "VENMO10") {
-      window.location.href = "https://venmo.com/code?user_id=@Margaret-Smillie"; // Replace with your actual Venmo QR Code URL
-      return;
-  }
+      // ✅ Apply $1 discount per item if paying with Venmo
+      if (paymentMethod === "Venmo") {
+          discountedPrice = Math.max(0, item.price - 1);
+      }
+
+      // ✅ Apply additional discount if discount code is used
+      if (discountCodes[discountCode]) {
+          discountedPrice = discountedPrice - (discountedPrice * discountCodes[discountCode]);
+      }
+
+      totalDiscountedAmount += discountedPrice * item.quantity;
+
+      return {
+          name: item.name,
+          price: discountedPrice, // ✅ Send discounted price
+          quantity: item.quantity
+      };
+  });
 
   try {
       const response = await fetch(`${API_BASE}/create-checkout-session`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ cart, email, pickupDay, discountCode }),
+          body: JSON.stringify({
+              cart: updatedCart, // ✅ Send updated cart with discount applied
+              email,
+              pickupDay,
+              emailOptIn,
+              discountCode,
+              totalAmount: totalDiscountedAmount, // ✅ Send total after discount
+              paymentMethod // ✅ Send selected payment method
+          })
       });
 
-      const session = await response.json();
-      if (session.url) {
-          window.location.href = session.url;
+      const data = await response.json();
+      if (data.url) {
+          window.location.href = data.url;
       } else {
-          console.error("Stripe session failed:", session);
+          alert("Error: " + data.error);
       }
   } catch (error) {
-      console.error("Checkout Error:", error);
+      console.error("❌ Stripe Checkout Error:", error);
+      alert("Payment failed. Please try again.");
   }
 }
+
 
 
 function updateCartCount() {
-  const cartCountElem = document.getElementById("cart-count");
-  if (cartCountElem) {
-    cartCountElem.innerText = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+  console.log("🔄 Running updateCartCount()...");
+
+  let cart = JSON.parse(localStorage.getItem("cart")) || [];
+  let totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  
+  let cartCountElement = document.getElementById("cart-count");
+
+  if (cartCountElement) {
+      cartCountElement.textContent = totalCount;
+      console.log("✅ Cart count updated:", totalCount);
+  } else {
+      console.warn("❌ `#cart-count` element not found. Retrying in 100ms...");
+      setTimeout(updateCartCount, 100);  // Retry after 100ms
   }
 }
+
+// ✅ Ensure the function runs after the page loads
+document.addEventListener("DOMContentLoaded", function () {
+  console.log("✅ DOM fully loaded. Updating cart count...");
+  updateCartCount();  // Run once when page loads
+
+  setInterval(updateCartCount, 3000);  // ✅ Ensure it updates every 3 seconds
+});
+
+
+
+// ✅ Ensure the cart count updates after DOM is fully loaded
+document.addEventListener("DOMContentLoaded", function () {
+  setTimeout(updateCartCount, 100); // Small delay to ensure elements are available
+});
+
 
 // ✅ Update Quantity for a Cart Item
 function updateQuantity(index, newQuantity) {
@@ -286,3 +421,86 @@ window.updateCartCount = updateCartCount;
 window.checkCartAvailability = checkCartAvailability;
 window.addToCart = addToCart;
 window.fetchPickupSlotsCSV = fetchPickupSlotsCSV;
+
+
+document.addEventListener("DOMContentLoaded", function () {
+  console.log("✅ DOM fully loaded. Running updateCartCount()...");
+
+  // Ensure cart count is updated when the page loads
+  updateCartCount();
+
+  // Debugging logs
+  console.log("🛒 Cart on load:", localStorage.getItem("cart"));
+  console.log("🔄 Cart count updated to:", document.getElementById("cart-count")?.textContent);
+
+  // Ensure cart buttons exist before adding event listeners
+  const stripeButton = document.getElementById("stripe-button");
+  const venmoButton = document.getElementById("venmo-button");
+
+  if (stripeButton) {
+      stripeButton.addEventListener("click", function () {
+          setPaymentMethod("Stripe");
+          checkout();
+      });
+  } else {
+      console.warn("⚠️ `#stripe-button` not found on this page.");
+  }
+
+  if (venmoButton) {
+      venmoButton.addEventListener("click", function () {
+          setPaymentMethod("Venmo");
+          checkout();
+      });
+  } else {
+      console.warn("⚠️ `#venmo-button` not found on this page.");
+  }
+});
+
+// Ensure updateCartCount() works globally
+function updateCartCount() {
+  console.log("🔄 Running updateCartCount()...");
+
+  let cart = JSON.parse(localStorage.getItem("cart")) || [];
+  let totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  
+  const cartCountElement = document.getElementById("cart-count");
+  if (cartCountElement) {
+      cartCountElement.textContent = totalCount;
+      console.log("✅ Cart count updated:", totalCount);
+  } else {
+      console.warn("❌ `#cart-count` element not found.");
+  }
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  console.log("✅ cart.js has loaded!");
+
+  updateCartCount();  // Ensure cart count updates
+
+  // 🔍 Get button elements
+  const stripeButton = document.getElementById("stripe-button");
+  const venmoButton = document.getElementById("venmo-button");
+
+  // ✅ Add event listener only if element exists
+  if (stripeButton) {
+      stripeButton.addEventListener("click", function () {
+          setPaymentMethod("Stripe");
+          checkout();
+      });
+  } else {
+      console.warn("⚠️ `#stripe-button` not found on this page. Skipping event listener.");
+  }
+
+  if (venmoButton) {
+      venmoButton.addEventListener("click", function () {
+          setPaymentMethod("Venmo");
+          checkout();
+      });
+  } else {
+      console.warn("⚠️ `#venmo-button` not found on this page. Skipping event listener.");
+  }
+
+  // Debugging logs
+  console.log("🛒 Cart on load:", localStorage.getItem("cart"));
+  console.log("🔄 Running updateCartCount()...");
+});

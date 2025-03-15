@@ -5,42 +5,48 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Our Products - Bascom Bread</title>
   <link rel="stylesheet" href="style.css">
-  <!-- Optional: Google Fonts for modern typography -->
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+  <script defer src="cart.js"></script>
+  <script defer src="toggleSpecials.js"></script>
 </head>
 <body>
-  <!-- Navigation -->
   <header>
     <div class="logo-container">
-      <img src="images/bread-logo.PNG" alt="Bascom Bread Logo" class="logo">
+        <img src="images/bread-logo.PNG" alt="Bascom Bread Logo" class="logo">
     </div>
     <nav>
       <ul>
         <li><a href="index.html">Home</a></li>
-        <li><a href="products.html">Our Products</a></li>
-        <li><a href="about.html">About Us</a></li>
+        <li><a href="products.html">Shop</a></li>
+        <li><a href="about.html">About</a></li>
         <li><a href="contact.html">Contact</a></li>
-        <li><a href="checkout.html">Cart 🛒 (<span id="cart-count">0</span>)</a></li>
+        <li><a href="checkout.html">Cart (<span id="cart-count">0</span>)</a></li>
       </ul>
     </nav>
   </header>
 
-  <!-- Product Catalog -->
+  <!-- Specials Banner (Clickable) -->
+<a id="specials-banner" href="products.html#seasonal-specials" class="hidden">
+  ☘️ Check out our St.Patrick's specials! ☘️
+</a>
+
   <section class="product-grid">
     <h2>Our Breads</h2>
-    <div class="grid-container">
+    <div class="grid-container" id="regular-products">
+      <!-- Regular product listings -->
+      <!-- Product Catalog -->
       <!-- Fresh Milled Sourdough Loaf -->
       <div class="product-card">
-        <img src="images/freshmillloaf.jpg" alt="Fresh Milled Sourdough Loaf" class="product-image">
+        <img src="images/freshmillloaf.jpg" alt="Sourdough Boule" class="product-image">
         <div class="product-info">
-          <h3>Fresh Milled Sourdough Loaf</h3>
+          <h3>Sourdough Boule</h3>
           <p class="product-description">
-            Our original sourdough features a perfectly balanced blend of freshly milled flour and organic all-purpose flour. Enjoy a hearty, soft, and delicious loaf!
+            Our original loaf, made with fresh-milled hard red wheat and organic all purpose flour. Hearty, soft and delicious!
           </p>
           <p>Organic AP Flour, Hard Red Wheat Flour, Baja Gold Salt, Water
           </p>
-          <p class="price">$12.00</p>
-          <button class="add-to-cart" onclick="addToCart('Fresh Milled Sourdough Loaf', 12.00)">Add to Cart 🛒</button>
+          <p class="price">$13.00</p>
+          <button class="add-to-cart" onclick="addToCart('Sourdough Boule', 13.00)">Add to Cart 🛒</button>
         </div>
       </div>
 
@@ -54,8 +60,8 @@
           </p>
           <p>Organic AP Flour, Hard Red Wheat Flour, Organic Honey, Organic Cocoa Powder, Salt, Water
           </p>
-          <p class="price">$14.00</p>
-          <button class="add-to-cart" onclick="addToCart('Chocolate Chunk Loaf', 14.00)">Add to Cart 🛒</button>
+          <p class="price">$15.00</p>
+          <button class="add-to-cart" onclick="addToCart('Chocolate Chunk Loaf', 15.00)">Add to Cart 🛒</button>
         </div>
       </div>
 
@@ -70,13 +76,70 @@
           <p> </p>
           <p>Hard Red Wheat Flour, Organic AP Flour, Honey, Milk, Salt, Water
           </p>
-          <p class="price">$12.00</p>
-          <button class="add-to-cart" onclick="addToCart('Honey Wheat Sandwich Loaf', 12.00)">Add to Cart 🛒</button>
+          <p class="price">$13.00</p>
+          <button class="add-to-cart" onclick="addToCart('Honey Wheat Sandwich Loaf', 13.00)">Add to Cart 🛒</button>
+        </div>
+      </div>
+
+    <!-- Einkorn Loaf -->
+    <div class="product-card">
+      <img src="images/einkorn-loaf.png" alt="Einkorn Loaf" class="product-image">
+      <div class="product-info">
+        <h3>Einkorn Loaf</h3>
+        <p class="product-description">
+          This loaf is made with 100 percent Einkorn Flour, giving it a hearty and nutty flavor. 
+        </p>
+        <p>Fresh milled Einkorn Wheat, Honey, Salt, Water
+        </p>
+        <p class="price">$15.00</p>
+        <button class="add-to-cart" onclick="addToCart('Einkorn Loaf', 15.00)">Add to Cart 🛒</button>
+      </div>
+    </div>
+    </div>
+  </section>
+      
+  
+
+  <!-- Seasonal Specials Section -->
+  <section id="seasonal-specials" class="hidden">
+    <h2>Seasonal Specials</h2>
+    <div class="grid-container">
+      <!-- Mardi Gras Specials -->
+      <div class="seasonal" id="mardigras-specials" class="hidden">
+        <h3>Mardi Gras Specials</h3>
+         <div class="product-card">
+          <img src="images/cinammon-babka.png" alt="Cinnamon Babka" class="product-image">
+          <div class="product-info">
+            <h3>Cinammon Babka</h3>
+            <p class="price">$15.00</p>
+            <button onclick="addToCart('Cinammon Babka', 15.00)">Add to Cart 🛒</button>
+          </div>
+        </div>
+        <div class="product-card">
+          <img src="images/almond-babka.png" alt="Almond Babka" class="product-image">
+          <div class="product-info">
+            <h3>Almond Babka</h3>
+            <p class="price">$15.00</p>
+            <button onclick="addToCart('Almond Babka', 15.00)">Add to Cart 🛒</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- St. Patrick's Specials -->
+      <div class="seasonal" id="stpatricks-specials" class="hidden">
+        <h3>☘️ St. Patrick's Specials ☘️</h3>
+        <div class="product-card">
+          <img src="images/beer-bread.jpg" alt="Guinness Sourdough" class="product-image">
+          <div class="product-info">
+            <h3>Guinness Sourdough</h3>
+            <p>Fresh milled Hard Red Wheat, Organic AP Flour, Guinness, Salt
+            </p>
+            <p class="price">$15.00</p>
+            <button onclick="addToCart('Guinness Sourdough', 15.00)">Add to Cart 🛒</button>
+          </div>
         </div>
       </div>
     </div>
   </section>
-
-  <script src="cart.js"></script>
 </body>
 </html>
