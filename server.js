@@ -13,6 +13,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.use(express.static(path.join(__dirname, "public")));
+
 
 
 const ordersFilePath = "orders.csv"; // Store orders here
@@ -69,19 +71,22 @@ setupDatabase();
 
 // ✅ Function to Save Orders in PostgreSQL
 async function saveOrderToDatabase(order) {
-    const query = `
-        INSERT INTO orders (name, email, pickupDate, items, totalPrice, paymentMethod)
-        VALUES ($1, $2, $3, $4, $5, $6)
-    `;
-    const values = [order.name, order.email, order.pickupDate, order.items, order.totalPrice, order.paymentMethod];
+  const query = `
+      INSERT INTO orders (email, pickup_day, items, total_price, payment_method, order_date)
+      VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING *;
+  `;
+  const values = [order.email, order.pickupDay, order.items, order.totalPrice, order.paymentMethod];
 
-    try {
-        await pool.query(query, values);
-        console.log("✅ Order saved to PostgreSQL successfully!");
-    } catch (err) {
-        console.error("❌ Error saving order to PostgreSQL:", err);
-    }
+  try {
+      const result = await pool.query(query, values);
+      console.log("✅ Order saved to PostgreSQL successfully!", result.rows[0]);
+      return result.rows[0];
+  } catch (err) {
+      console.error("❌ Error saving order to PostgreSQL:", err);
+      throw err;
+  }
 }
+
 
 // ✅ API Endpoint to Save Orders
 
@@ -90,8 +95,8 @@ app.post("/save-order", async (req, res) => {
     const { email, pickupDay, items, totalPrice, paymentMethod } = req.body;
 
     const query = `
-      INSERT INTO orders (email, pickupDate, items, total_price, payment_method)
-      VALUES ($1, $2, $3, $4, $5) RETURNING *;
+      INSERT INTO orders (email, pickup_day, items, total_price, payment_method, order_date)
+      VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING *;
     `;
 
     const values = [email, pickupDay, items, totalPrice, paymentMethod];
@@ -107,10 +112,11 @@ app.post("/save-order", async (req, res) => {
 });
 
 
+
 // ✅ API Endpoint to Fetch Orders
 app.get("/get-orders", async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM orders ORDER BY timestamp DESC");
+    const result = await pool.query("SELECT * FROM orders ORDER BY id DESC");
     res.json(result.rows);
   } catch (error) {
     console.error("❌ Error fetching orders:", error);
