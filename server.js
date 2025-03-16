@@ -42,33 +42,37 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false }, // Required for Railway
 });
 
-// ✅ Ensure Orders Table Exists
-async function setupDatabase() {
-    const client = await pool.connect();
-    await client.query(`
-        CREATE TABLE IF NOT EXISTS orders (
-            id SERIAL PRIMARY KEY,
-            timestamp TIMESTAMP DEFAULT NOW(),
-            name TEXT,
-            email TEXT,
-            pickupDate TEXT,
-            items TEXT,
-            totalPrice NUMERIC(10,2),
-            paymentMethod TEXT
-        )
-    `);
-    client.release();
-}
-async function startServer() {
-  try {
-      await setupDatabase(); // ✅ Ensure Database is Ready
-      app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
-  } catch (error) {
-      console.error("❌ Database connection failed. Shutting down...");
-      process.exit(1); // 🔴 Stop server if database fails
+// ✅ Retry connecting to PostgreSQL before failing
+async function setupDatabase(retries = 5, delay = 5000) {
+  for (let i = 0; i < retries; i++) {
+      try {
+          const client = await pool.connect();
+          console.log("✅ Database connected successfully!");
+          await client.query(`
+              CREATE TABLE IF NOT EXISTS orders (
+                  id SERIAL PRIMARY KEY,
+                  timestamp TIMESTAMP DEFAULT NOW(),
+                  name TEXT,
+                  email TEXT,
+                  pickupDate TEXT,
+                  items TEXT,
+                  totalPrice NUMERIC(10,2),
+                  paymentMethod TEXT
+              )
+          `);
+          client.release();
+          return; // ✅ Exit if successful
+      } catch (err) {
+          console.error(`❌ Database connection attempt ${i + 1} failed. Retrying in ${delay / 1000} seconds...`);
+          await new Promise((resolve) => setTimeout(resolve, delay)); // Wait before retrying
+      }
   }
+  console.error("🚨 Database connection failed after multiple attempts. Exiting.");
+  process.exit(1); // Stop the app so Railway doesn't keep restarting it
 }
-startServer();
+
+// ✅ Call the function to initialize the DB
+setupDatabase();
 
 
 // ✅ Function to Save Orders in PostgreSQL
