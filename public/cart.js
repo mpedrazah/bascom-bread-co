@@ -65,27 +65,47 @@ async function payWithVenmo() {
   }
 
   let orderData = {
-    name: email.split("@")[0],
     email,
-    pickupDate: pickupDay,
+    pickupDay,
     items: cart.map(item => `${item.name} (x${item.quantity})`).join(", "),
     totalPrice: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
-    paymentMethod: "Venmo"
+    paymentMethod: "Venmo",
   };
 
-  await saveOrderToCSV(orderData);
+  console.log("📤 Sending Venmo order to Railway Backend:", orderData);
 
-  let totalPrice = orderData.totalPrice;
-  const venmoLink = `venmo://paycharge?txn=pay&recipients=Margaret-Smillie&amount=${totalPrice.toFixed(2)}&note=Bascom%20Bread%20Order%20-%20Pickup%20on%20${encodeURIComponent(pickupDay)}`;
+  try {
+    const response = await fetch("bascom-bread-co-production.up.railway.app/save-order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(orderData),
+    });
 
-  window.location.href = venmoLink;
-  setTimeout(() => {
-    window.location.href = `https://venmo.com/Margaret-Smillie?txn=pay&amount=${totalPrice.toFixed(2)}&note=Bascom%20Bread%20Order%20-%20Pickup%20on%20${encodeURIComponent(pickupDay)}`;
-  }, 2000);
+    const result = await response.json();
+    if (result.success) {
+      console.log("✅ Order saved successfully!");
 
-  localStorage.removeItem("cart");
-  updateCartCount();
+      // Redirect to Venmo for payment
+      const totalPrice = orderData.totalPrice;
+      const venmoLink = `venmo://paycharge?txn=pay&recipients=Margaret-Smillie&amount=${totalPrice.toFixed(2)}&note=Bascom%20Bread%20Order%20-%20Pickup%20on%20${encodeURIComponent(pickupDay)}`;
+      
+      window.location.href = venmoLink;
+      setTimeout(() => {
+        window.location.href = `https://venmo.com/Margaret-Smillie?txn=pay&amount=${totalPrice.toFixed(2)}&note=Bascom%20Bread%20Order%20-%20Pickup%20on%20${encodeURIComponent(pickupDay)}`;
+      }, 2000);
+
+      localStorage.removeItem("cart");
+      updateCartCount();
+    } else {
+      alert("❌ Failed to save order.");
+    }
+  } catch (error) {
+    console.error("❌ Venmo order submission failed:", error);
+    alert("There was an error processing your order.");
+  }
 }
+
+
 
 window.payWithVenmo = payWithVenmo;
 document.addEventListener("DOMContentLoaded", fetchPickupSlotsFromGoogleSheets);
@@ -199,7 +219,6 @@ function applyDiscount() {
   renderCartItems(); // Update total price after discount
 }
 
-
 async function payWithVenmo() {
   if (cart.length === 0) {
     alert("Your cart is empty!");
@@ -215,21 +234,30 @@ async function payWithVenmo() {
   }
 
   let orderData = {
-    name: email.split("@")[0],
+    name: email.split("@")[0], // Use email prefix as name
     email,
     pickupDate: pickupDay,
     items: cart.map(item => `${item.name} (x${item.quantity})`).join(", "),
     totalPrice: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
-    paymentMethod: "Venmo",
-    timestamp: serverTimestamp(),
+    paymentMethod: "Venmo"
   };
 
-  console.log("📤 Sending Venmo order to Firestore:", orderData);
+  console.log("📤 Sending Venmo order to server:", orderData);
 
   try {
-    await addDoc(collection(db, "orders"), orderData);
-    console.log("✅ Order saved successfully in Firestore!");
+    // ✅ Send order to backend
+    const response = await fetch(`${API_BASE}/save-order`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(orderData),
+    });
 
+    const result = await response.json();
+    if (!result.success) throw new Error("Failed to save order");
+
+    console.log("✅ Order saved successfully to CSV!");
+
+    // ✅ Redirect user to Venmo
     let totalPrice = orderData.totalPrice;
     const venmoLink = `venmo://paycharge?txn=pay&recipients=Margaret-Smillie&amount=${totalPrice.toFixed(2)}&note=Bascom%20Bread%20Order%20-%20Pickup%20on%20${encodeURIComponent(pickupDay)}`;
     
@@ -238,14 +266,76 @@ async function payWithVenmo() {
       window.location.href = `https://venmo.com/Margaret-Smillie?txn=pay&amount=${totalPrice.toFixed(2)}&note=Bascom%20Bread%20Order%20-%20Pickup%20on%20${encodeURIComponent(pickupDay)}`;
     }, 2000);
 
-    localStorage.removeItem("cart"); // ✅ Clear cart after order
-    updateCartCount(); // ✅ Update cart count
+    // ✅ Clear cart after successful order
+    localStorage.removeItem("cart");
+    updateCartCount();
 
   } catch (error) {
     console.error("❌ Venmo order submission failed:", error);
     alert("There was an error processing your Venmo payment. Please try again.");
   }
 }
+
+// ✅ Make function globally accessible
+window.payWithVenmo = payWithVenmo;
+
+
+async function checkout() {
+  if (cart.length === 0) {
+    alert("Your cart is empty!");
+    return;
+  }
+
+  const email = document.getElementById("email").value.trim();
+  const pickupDay = document.getElementById("pickup-day").value;
+
+  if (!email || !pickupDay) {
+    alert("Please enter your email and select a pickup date.");
+    return;
+  }
+
+  let orderData = {
+    email,
+    pickupDay,
+    items: cart.map(item => `${item.name} (x${item.quantity})`).join(", "),
+    totalPrice: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+    paymentMethod: "Stripe",
+  };
+
+  console.log("📤 Sending Stripe order to Railway Backend:", orderData);
+
+  try {
+    const saveOrderResponse = await fetch("bascom-bread-co-production.up.railway.app/save-order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(orderData),
+    });
+
+    const saveResult = await saveOrderResponse.json();
+    if (!saveResult.success) throw new Error("Failed to save order");
+
+    // Proceed with Stripe Checkout
+    const stripeResponse = await fetch("bascom-bread-co-production.up.railway.app/create-checkout-session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(orderData),
+    });
+
+    const stripeData = await stripeResponse.json();
+    if (stripeData.url) {
+      window.location.href = stripeData.url;
+    } else {
+      alert("❌ Error processing payment.");
+    }
+  } catch (error) {
+    console.error("❌ Checkout error:", error);
+    alert("Payment failed. Please try again.");
+  }
+}
+
+
+// ✅ Make function globally accessible
+window.checkout = checkout;
 
 
 // ✅ Make function accessible globally
@@ -326,21 +416,27 @@ document.addEventListener("DOMContentLoaded", function () {
 
 // Checkout function with email opt-in
 async function checkout() {
-  const email = document.getElementById("email").value;
-  const pickupDay = document.getElementById("pickup-day").value;
-  const emailOptIn = document.getElementById("email-opt-in").checked;
-  const discountCode = document.getElementById("discount-code") ? document.getElementById("discount-code").value.trim().toUpperCase() : null;
+  if (cart.length === 0) {
+      alert("Your cart is empty!");
+      return;
+  }
 
+  const email = document.getElementById("email")?.value.trim();
+  const pickupDay = document.getElementById("pickup-day")?.value;
+  const emailOptIn = document.getElementById("email-opt-in")?.checked || false;
+  const discountCode = document.getElementById("discount-code")?.value.trim().toUpperCase() || null;
+
+  if (!email || !pickupDay) {
+      alert("Please enter your email and select a pickup date.");
+      return;
+  }
+
+  // ✅ Apply discounts if available
   let totalDiscountedAmount = 0;
   let updatedCart = cart.map(item => {
       let discountedPrice = item.price;
 
-      // ✅ Apply $1 discount per item if paying with Venmo
-      if (paymentMethod === "Venmo") {
-          discountedPrice = Math.max(0, item.price - 1);
-      }
-
-      // ✅ Apply additional discount if discount code is used
+      // ✅ Apply discount if a valid code is entered
       if (discountCodes[discountCode]) {
           discountedPrice = discountedPrice - (discountedPrice * discountCodes[discountCode]);
       }
@@ -354,32 +450,62 @@ async function checkout() {
       };
   });
 
+  // ✅ Construct order data
+  let orderData = {
+      name: email.split("@")[0], // Extract name from email
+      email,
+      pickupDate: pickupDay,
+      items: updatedCart.map(item => `${item.name} (x${item.quantity})`).join(", "),
+      totalPrice: totalDiscountedAmount.toFixed(2),
+      paymentMethod: "Stripe",
+      emailOptIn,
+      discountCode
+  };
+
+  console.log("📤 Sending Stripe order to Railway Backend:", orderData);
+
   try {
-      const response = await fetch(`${API_BASE}/create-checkout-session`, {
+      const response = await fetch("bascom-bread-co-production.up.railway.app/save-order", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(orderData)
+      });
+
+      const result = await response.json();
+      if (!result.success) {
+          throw new Error("Failed to save order.");
+      }
+
+      console.log("✅ Order saved successfully!");
+
+      // ✅ Proceed with Stripe payment
+      const stripeResponse = await fetch("bascom-bread-co-production.up.railway.app/create-checkout-session", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-              cart: updatedCart, // ✅ Send updated cart with discount applied
+              cart: updatedCart,
               email,
               pickupDay,
               emailOptIn,
               discountCode,
-              totalAmount: totalDiscountedAmount, // ✅ Send total after discount
-              paymentMethod // ✅ Send selected payment method
+              totalAmount: totalDiscountedAmount,
+              paymentMethod: "Stripe"
           })
       });
 
-      const data = await response.json();
-      if (data.url) {
-          window.location.href = data.url;
+      const stripeData = await stripeResponse.json();
+      if (stripeData.url) {
+          window.location.href = stripeData.url;
       } else {
-          alert("Error: " + data.error);
+          alert("Error processing payment: " + stripeData.error);
       }
+
   } catch (error) {
-      console.error("❌ Stripe Checkout Error:", error);
-      alert("Payment failed. Please try again.");
+      console.error("❌ Checkout process failed:", error);
+      alert("There was an error processing your payment. Please try again.");
   }
 }
+
 
 
 
@@ -456,7 +582,7 @@ function checkCartAvailability() {
 document.addEventListener("DOMContentLoaded", () => {
   renderCartItems();
   updateCartCount();
-  fetchPickupSlotsFromGoogleSheets()().then(() => {
+  fetchPickupSlotsFromGoogleSheets().then(() => {
     populatePickupDayDropdown();
     checkCartAvailability();
   });
@@ -552,40 +678,3 @@ document.addEventListener("DOMContentLoaded", function () {
   console.log("🛒 Cart on load:", localStorage.getItem("cart"));
   console.log("🔄 Running updateCartCount()...");
 });
-
-
-
-
-// Call this function in your checkout process
-async function checkout() {
-  const email = document.getElementById("email")?.value.trim();
-  const pickupDay = document.getElementById("pickup-day")?.value;
-
-  if (!email || !pickupDay) {
-    alert("Please enter your email and select a pickup date.");
-    return;
-  }
-
-  let orderData = {
-    name: email.split("@")[0], // Extract name from email
-    email,
-    pickupDate: pickupDay,
-    items: cart.map(item => `${item.name} (x${item.quantity})`).join(", "),
-    totalPrice: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
-    timestamp: new Date(),
-  };
-
-  console.log("📤 Sending order to Firestore:", orderData);
-
-  try {
-    await addDoc(collection(db, "orders"), orderData);
-    console.log("✅ Order saved successfully in Firestore!");
-
-    alert("Order placed successfully! You will receive a confirmation email.");
-    localStorage.removeItem("cart"); // Clear cart after order
-    updateCartCount(); // Update cart count
-  } catch (error) {
-    console.error("❌ Failed to save order:", error);
-    alert("There was an error processing your order. Please try again.");
-  }
-}

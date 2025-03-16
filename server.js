@@ -1,20 +1,22 @@
 require("dotenv").config();
-const express = require("express");
-const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
 const nodemailer = require("nodemailer");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const createCsvWriter = require("csv-writer").createObjectCsvWriter;
 
+const { Pool } = require("pg");
+const express = require("express");
+const cors = require("cors");
+
 const app = express();
+app.use(cors());
+app.use(express.json());
+
 const PORT = process.env.PORT || 5000;
 const ordersFilePath = "orders.csv"; // Store orders here
 const csvFilePath = "email_subscribers.csv"; // Store opted-in emails
 
-app.use(cors());
-app.use(express.json());
-app.use(express.static("public"));
 
 // ✅ Setup Email Transporter (For Order Confirmation)
 const transporter = nodemailer.createTransport({
@@ -25,36 +27,83 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// ✅ Save Order to CSV
-app.post("/save-order", (req, res) => {
-  const order = req.body;
-  const csvRow = `\n${new Date().toISOString()},${order.name},${order.email},${order.pickupDate},${order.items},${order.totalPrice},${order.paymentMethod}`;
-
-  fs.appendFile(ordersFilePath, csvRow, (err) => {
-    if (err) {
-      console.error("❌ Error saving order:", err);
-      return res.json({ success: false, error: "Failed to save order" });
-    }
-    res.json({ success: true });
-  });
+// ✅ Connect to Railway PostgreSQL
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false }, // Required for Railway
 });
 
-// ✅ Fetch Orders from CSV for Admin Panel
-app.get("/get-orders", (req, res) => {
-  fs.readFile(ordersFilePath, "utf8", (err, data) => {
-    if (err) {
-      console.error("❌ Error reading orders:", err);
-      return res.json([]);
+// ✅ Ensure Orders Table Exists
+async function setupDatabase() {
+    const client = await pool.connect();
+    await client.query(`
+        CREATE TABLE IF NOT EXISTS orders (
+            id SERIAL PRIMARY KEY,
+            timestamp TIMESTAMP DEFAULT NOW(),
+            name TEXT,
+            email TEXT,
+            pickupDate TEXT,
+            items TEXT,
+            totalPrice NUMERIC(10,2),
+            paymentMethod TEXT
+        )
+    `);
+    client.release();
+}
+setupDatabase();
+
+// ✅ Function to Save Orders in PostgreSQL
+async function saveOrderToDatabase(order) {
+    const query = `
+        INSERT INTO orders (name, email, pickupDate, items, totalPrice, paymentMethod)
+        VALUES ($1, $2, $3, $4, $5, $6)
+    `;
+    const values = [order.name, order.email, order.pickupDate, order.items, order.totalPrice, order.paymentMethod];
+
+    try {
+        await pool.query(query, values);
+        console.log("✅ Order saved to PostgreSQL successfully!");
+    } catch (err) {
+        console.error("❌ Error saving order to PostgreSQL:", err);
     }
+}
 
-    const orders = data.trim().split("\n").slice(1).map(row => {
-      const [timestamp, name, email, pickupDate, items, totalPrice, paymentMethod] = row.split(",");
-      return { timestamp, name, email, pickupDate, items, totalPrice, paymentMethod };
-    });
+// ✅ API Endpoint to Save Orders
 
-    res.json(orders);
-  });
+app.post("/save-order", async (req, res) => {
+  try {
+    const { email, pickupDay, items, totalPrice, paymentMethod } = req.body;
+
+    const query = `
+      INSERT INTO orders (email, pickup_day, items, total_price, payment_method)
+      VALUES ($1, $2, $3, $4, $5) RETURNING *;
+    `;
+
+    const values = [email, pickupDay, items, totalPrice, paymentMethod];
+
+    const result = await pool.query(query, values);
+    console.log("✅ Order saved:", result.rows[0]);
+
+    res.json({ success: true, order: result.rows[0] });
+  } catch (error) {
+    console.error("❌ Error saving order:", error);
+    res.status(500).json({ success: false, error: "Failed to save order" });
+  }
 });
+
+
+// ✅ API Endpoint to Fetch Orders
+app.get("/get-orders", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM orders ORDER BY order_date DESC");
+    res.json(result.rows);
+  } catch (error) {
+    console.error("❌ Error fetching orders:", error);
+    res.status(500).json({ error: "Failed to load orders." });
+  }
+});
+
+
 
 // ✅ Send Order Confirmation Email
 async function sendOrderConfirmationEmail(email, cart, pickupDay, totalAmount) {
