@@ -90,7 +90,7 @@ app.post("/save-order", async (req, res) => {
     const { email, pickupDay, items, totalPrice, paymentMethod } = req.body;
 
     const query = `
-      INSERT INTO orders (email, pickup_day, items, total_price, payment_method)
+      INSERT INTO orders (email, pickupDate, items, total_price, payment_method)
       VALUES ($1, $2, $3, $4, $5) RETURNING *;
     `;
 
@@ -110,7 +110,7 @@ app.post("/save-order", async (req, res) => {
 // ✅ API Endpoint to Fetch Orders
 app.get("/get-orders", async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM orders ORDER BY order_date DESC");
+    const result = await pool.query("SELECT * FROM orders ORDER BY timestamp DESC");
     res.json(result.rows);
   } catch (error) {
     console.error("❌ Error fetching orders:", error);
@@ -191,12 +191,7 @@ app.get("/export-email-optins", (req, res) => {
 });
 
 // ✅ Start Server
-const PORT = process.env.PORT || 8000;
-app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`))
-  .on("error", (err) => {
-    if (err.code === "EADDRINUSE") {
-      console.log("❌ Port already in use. Skipping...");
-    } else {
-      console.error("❌ Server startup error:", err);
-    }
-  });
+const PORT = process.env.PORT || 0;
+const server = app.listen(PORT, () => {
+  console.log(`✅ Server running on port ${server.address().port}`);
+});
