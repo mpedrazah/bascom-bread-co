@@ -13,15 +13,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`))
-  .on("error", (err) => {
-    if (err.code === "EADDRINUSE") {
-      console.log("❌ Port already in use. Skipping...");
-    } else {
-      console.error("❌ Server startup error:", err);
-    }
-  });
+
 
 const ordersFilePath = "orders.csv"; // Store orders here
 const csvFilePath = "email_subscribers.csv"; // Store opted-in emails
@@ -199,4 +191,12 @@ app.get("/export-email-optins", (req, res) => {
 });
 
 // ✅ Start Server
-app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+const PORT = process.env.PORT || 8000;
+app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`))
+  .on("error", (err) => {
+    if (err.code === "EADDRINUSE") {
+      console.log("❌ Port already in use. Skipping...");
+    } else {
+      console.error("❌ Server startup error:", err);
+    }
+  });
