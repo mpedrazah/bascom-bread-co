@@ -59,44 +59,45 @@ async function payWithVenmo() {
   const email = document.getElementById("email")?.value.trim();
   const pickupDay = document.getElementById("pickup-day")?.value;
 
+  console.log("🛠 Debug: PickupDay Before Sending:", pickupDay); // ✅ Log pickup day
+
   if (!email || !pickupDay) {
     alert("Please enter your email and select a pickup date.");
     return;
   }
 
   let orderData = {
-    name: email.split("@")[0], // Extract name from email
+    name: email.split("@")[0], 
     email,
-    pickupDate: pickupDay,
+    pickupDay,  // ✅ Ensure this is NOT null
     items: cart.map(item => `${item.name} (x${item.quantity})`).join(", "),
     totalPrice: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
     paymentMethod: "Venmo"
   };
 
-  console.log("📤 Sending Venmo order to server:", orderData);
+  console.log("📤 Sending Venmo order:", orderData);
 
   try {
-    const response = await fetch(`${API_BASE}/save-order`, { // ✅ Ensure correct endpoint
+    const response = await fetch(`${API_BASE}/save-order`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(orderData),
     });
 
-    const result = await response.json(); // ✅ Ensure response is JSON
-    if (result.success) {
-      console.log("✅ Venmo order saved successfully!");
+    const result = await response.json();
+    if (!result.success) throw new Error("Failed to save order");
 
-      // Redirect user to Venmo payment
-      const venmoDeepLink = `venmo://paycharge?txn=pay&recipients=Margaret-Smillie&amount=${orderData.totalPrice.toFixed(2)}&note=Bascom%20Bread%20Order%20-%20Pickup%20on%20${encodeURIComponent(pickupDay)}`;
-      window.location.href = venmoDeepLink;
-    } else {
-      alert("Payment failed. Please try again.");
-    }
+    console.log("✅ Order saved successfully!");
+
+    const venmoDeepLink = `venmo://paycharge?txn=pay&recipients=Margaret-Smillie&amount=${orderData.totalPrice.toFixed(2)}&note=Bascom%20Bread%20Order%20-%20Pickup%20on%20${encodeURIComponent(pickupDay)}`;
+    window.location.href = venmoDeepLink;
+
   } catch (error) {
     console.error("❌ Venmo order submission failed:", error);
-    alert("There was an issue processing your Venmo payment.");
+    alert("There was an error processing your Venmo payment.");
   }
 }
+
 
 
 

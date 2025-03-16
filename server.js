@@ -94,7 +94,12 @@ app.post("/save-order", async (req, res) => {
   try {
     const { email, pickupDay, items, totalPrice, paymentMethod } = req.body;
 
-    console.log("🛠 Received order data:", req.body); // ✅ Log incoming data for debugging
+    console.log("🛠 Received order:", req.body);
+
+    if (!email || !pickupDay || !items || !totalPrice || !paymentMethod) {
+      console.error("❌ Missing required fields:", req.body);
+      return res.status(400).json({ success: false, error: "All fields are required!" });
+    }
 
     const query = `
       INSERT INTO orders (email, pickup_day, items, total_price, payment_method, order_date)
@@ -102,16 +107,17 @@ app.post("/save-order", async (req, res) => {
     `;
 
     const values = [email, pickupDay, items, totalPrice, paymentMethod];
-
     const result = await pool.query(query, values);
-    console.log("✅ Order saved to PostgreSQL:", result.rows[0]);
 
+    console.log("✅ Order saved:", result.rows[0]);
     res.json({ success: true, order: result.rows[0] });
+
   } catch (error) {
     console.error("❌ Error saving order:", error);
     res.status(500).json({ success: false, error: error.message || "Failed to save order." });
   }
 });
+
 
 
 
