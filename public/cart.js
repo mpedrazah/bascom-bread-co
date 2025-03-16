@@ -458,7 +458,7 @@ async function checkout() {
   console.log("📤 Sending Stripe order to Railway Backend:", orderData);
 
   try {
-      const response = await fetch("bascom-bread-co-production.up.railway.app/save-order", {
+      const response = await fetch(`${API_BASE}/save-order`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(orderData)
@@ -472,7 +472,7 @@ async function checkout() {
       console.log("✅ Order saved successfully!");
 
       // ✅ Proceed with Stripe payment
-      const stripeResponse = await fetch("bascom-bread-co-production.up.railway.app/create-checkout-session", {
+      const stripeResponse = await fetch(`${API_BASE}/create-checkout-session`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
