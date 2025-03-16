@@ -1,4 +1,4 @@
-const API_BASE = "https://your-render-backend.onrender.com"; // Update with Render URL
+const API_BASE = "bascom-bread-co-production.up.railway.app"; // Update with Render URL
 
 async function fetchOrders() {
   try {
