@@ -65,43 +65,36 @@ async function payWithVenmo() {
   }
 
   let orderData = {
+    name: email.split("@")[0], // Extract name from email
     email,
-    pickupDay,
+    pickupDate: pickupDay,
     items: cart.map(item => `${item.name} (x${item.quantity})`).join(", "),
     totalPrice: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
-    paymentMethod: "Venmo",
+    paymentMethod: "Venmo"
   };
 
-  console.log("📤 Sending Venmo order to Railway Backend:", orderData);
+  console.log("📤 Sending Venmo order to server:", orderData);
 
   try {
-    const response = await fetch("bascom-bread-co-production.up.railway.app/save-order", {
+    const response = await fetch(`${API_BASE}/save-order`, { // ✅ Ensure correct endpoint
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(orderData),
     });
 
-    const result = await response.json();
+    const result = await response.json(); // ✅ Ensure response is JSON
     if (result.success) {
-      console.log("✅ Order saved successfully!");
+      console.log("✅ Venmo order saved successfully!");
 
-      // Redirect to Venmo for payment
-      const totalPrice = orderData.totalPrice;
-      const venmoLink = `venmo://paycharge?txn=pay&recipients=Margaret-Smillie&amount=${totalPrice.toFixed(2)}&note=Bascom%20Bread%20Order%20-%20Pickup%20on%20${encodeURIComponent(pickupDay)}`;
-      
-      window.location.href = venmoLink;
-      setTimeout(() => {
-        window.location.href = `https://venmo.com/Margaret-Smillie?txn=pay&amount=${totalPrice.toFixed(2)}&note=Bascom%20Bread%20Order%20-%20Pickup%20on%20${encodeURIComponent(pickupDay)}`;
-      }, 2000);
-
-      localStorage.removeItem("cart");
-      updateCartCount();
+      // Redirect user to Venmo payment
+      const venmoDeepLink = `venmo://paycharge?txn=pay&recipients=Margaret-Smillie&amount=${orderData.totalPrice.toFixed(2)}&note=Bascom%20Bread%20Order%20-%20Pickup%20on%20${encodeURIComponent(pickupDay)}`;
+      window.location.href = venmoDeepLink;
     } else {
-      alert("❌ Failed to save order.");
+      alert("Payment failed. Please try again.");
     }
   } catch (error) {
     console.error("❌ Venmo order submission failed:", error);
-    alert("There was an error processing your order.");
+    alert("There was an issue processing your Venmo payment.");
   }
 }
 
@@ -279,15 +272,9 @@ async function payWithVenmo() {
 // ✅ Make function globally accessible
 window.payWithVenmo = payWithVenmo;
 
-
 async function checkout() {
-  if (cart.length === 0) {
-    alert("Your cart is empty!");
-    return;
-  }
-
-  const email = document.getElementById("email").value.trim();
-  const pickupDay = document.getElementById("pickup-day").value;
+  const email = document.getElementById("email")?.value.trim();
+  const pickupDay = document.getElementById("pickup-day")?.value;
 
   if (!email || !pickupDay) {
     alert("Please enter your email and select a pickup date.");
@@ -295,8 +282,9 @@ async function checkout() {
   }
 
   let orderData = {
+    name: email.split("@")[0],
     email,
-    pickupDay,
+    pickupDate: pickupDay,
     items: cart.map(item => `${item.name} (x${item.quantity})`).join(", "),
     totalPrice: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
     paymentMethod: "Stripe",
@@ -305,33 +293,38 @@ async function checkout() {
   console.log("📤 Sending Stripe order to Railway Backend:", orderData);
 
   try {
-    const saveOrderResponse = await fetch("bascom-bread-co-production.up.railway.app/save-order", {
+    const response = await fetch(`${API_BASE}/save-order`, { // ✅ Fixed URL
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(orderData),
     });
 
-    const saveResult = await saveOrderResponse.json();
-    if (!saveResult.success) throw new Error("Failed to save order");
+    const result = await response.json();
+    if (result.success) {
+      console.log("✅ Order saved, redirecting to payment!");
 
-    // Proceed with Stripe Checkout
-    const stripeResponse = await fetch("bascom-bread-co-production.up.railway.app/create-checkout-session", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(orderData),
-    });
+      // Redirect to Stripe checkout
+      const stripeResponse = await fetch(`${API_BASE}/create-checkout-session`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderData),
+      });
 
-    const stripeData = await stripeResponse.json();
-    if (stripeData.url) {
-      window.location.href = stripeData.url;
+      const stripeData = await stripeResponse.json();
+      if (stripeData.url) {
+        window.location.href = stripeData.url; // Redirect to Stripe payment
+      } else {
+        alert("Error: " + stripeData.error);
+      }
     } else {
-      alert("❌ Error processing payment.");
+      alert("Payment failed. Please try again.");
     }
   } catch (error) {
-    console.error("❌ Checkout error:", error);
-    alert("Payment failed. Please try again.");
+    console.error("❌ Checkout process failed:", error);
+    alert("There was an error processing your order.");
   }
 }
+
 
 
 // ✅ Make function globally accessible
