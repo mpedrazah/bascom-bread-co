@@ -97,7 +97,7 @@ app.post("/save-order", async (req, res) => {
     console.log("🛠 Received order:", req.body);
 
     if (!email || !pickupDay || !items || !totalPrice || !paymentMethod) {
-      console.error("❌ Missing required fields:", req.body);
+      console.error("❌ Missing required fields:", { email, pickupDay, items, totalPrice, paymentMethod });
       return res.status(400).json({ success: false, error: "All fields are required!" });
     }
 
@@ -117,6 +117,7 @@ app.post("/save-order", async (req, res) => {
     res.status(500).json({ success: false, error: error.message || "Failed to save order." });
   }
 });
+
 
 
 
