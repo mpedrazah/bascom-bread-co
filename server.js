@@ -50,7 +50,17 @@ async function setupDatabase() {
     `);
     client.release();
 }
-setupDatabase();
+async function startServer() {
+  try {
+      await setupDatabase(); // ✅ Ensure Database is Ready
+      app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+  } catch (error) {
+      console.error("❌ Database connection failed. Shutting down...");
+      process.exit(1); // 🔴 Stop server if database fails
+  }
+}
+startServer();
+
 
 // ✅ Function to Save Orders in PostgreSQL
 async function saveOrderToDatabase(order) {
