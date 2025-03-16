@@ -1,60 +1,34 @@
-document.addEventListener("DOMContentLoaded", async function () {
-    const ordersList = document.getElementById("orders-list");
+const API_BASE = "https://your-render-backend.onrender.com"; // Update with Render URL
 
-    if (!ordersList) {
-        console.error("❌ Element with ID 'orders-list' not found!");
-        return;
-    }
+async function fetchOrders() {
+  try {
+    const response = await fetch(`${API_BASE}/get-orders`);
+    if (!response.ok) throw new Error("Failed to fetch orders");
 
-    try {
-        const response = await fetch("/orders");
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
+    const orders = await response.json();
+    displayOrders(orders);
+  } catch (error) {
+    console.error("❌ Error fetching orders:", error);
+  }
+}
 
-        const orders = await response.json();
+function displayOrders(orders) {
+  const ordersContainer = document.getElementById("orders-list");
+  ordersContainer.innerHTML = "";
 
-        if (!Array.isArray(orders) || orders.length === 0) {
-            ordersList.innerHTML = "<p>No orders found.</p>";
-            return;
-        }
+  orders.forEach(order => {
+    const orderElement = document.createElement("div");
+    orderElement.classList.add("order-card");
+    orderElement.innerHTML = `
+      <p><strong>Name:</strong> ${order.name}</p>
+      <p><strong>Email:</strong> ${order.email}</p>
+      <p><strong>Pickup Date:</strong> ${order.pickupDate}</p>
+      <p><strong>Items:</strong> ${order.items}</p>
+      <p><strong>Total:</strong> $${order.totalPrice}</p>
+      <hr>
+    `;
+    ordersContainer.appendChild(orderElement);
+  });
+}
 
-        ordersList.innerHTML = ""; // Clear placeholder content
-
-        orders.forEach(order => {
-            const orderDiv = document.createElement("div");
-            orderDiv.classList.add("order-item");
-
-            let orderDetails = `
-                <h3>Order for: <span class="order-email">${order.email}</span></h3>
-                <p><strong>Pickup:</strong> ${order.pickupDay || "N/A"}</p>
-                <ul class="order-items-list">`;
-
-            order.cart.forEach(item => {
-                orderDetails += `
-                    <li>${item.quantity} x ${item.name} - <strong>$${(item.price * item.quantity).toFixed(2)}</strong></li>`;
-            });
-
-            orderDetails += `</ul>
-                <p><strong>Date Ordered:</strong> ${order.date ? new Date(order.date).toLocaleString() : "N/A"}</p>
-                <hr>`;
-
-            orderDiv.innerHTML = orderDetails;
-            ordersList.appendChild(orderDiv);
-        });
-
-    } catch (error) {
-        console.error("❌ Error fetching orders:", error);
-        ordersList.innerHTML = "<p>Error loading orders. Please try again later.</p>";
-    }
-});
-
-document.addEventListener("DOMContentLoaded", function () {
-    const exportOrdersBtn = document.getElementById("export-orders-btn");
-
-    if (exportOrdersBtn) {
-        exportOrdersBtn.addEventListener("click", function () {
-            window.location.href = "/export-orders"; // Initiates file download
-        });
-    }
-});
+document.addEventListener("DOMContentLoaded", fetchOrders);

@@ -1,6 +1,11 @@
-//const API_BASE = "https://bascom-bread-co-production.up.railway.app";
-const API_BASE = "https://safe-feline-evident.ngrok-free.app"; // ✅ Use Local Server Instead of Railway
-// Predefined discount codes
+// ✅ Modify `payWithVenmo` to Use Firestore
+const API_BASE = "https://your-render-backend.onrender.com"; // Update with Render URL
+
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
+let pickupSlots = {};
+
+
+let discountAmount = 0; // Stores the applied discount
 const discountCodes = {
   "ICON10": 0.10,  // 10% off
   "VENMO10": 0.10,  // 10% off
@@ -8,44 +13,106 @@ const discountCodes = {
   "TEST90": 0.50 // 50% off for test purposes
 };
 
-let cart = JSON.parse(localStorage.getItem("cart")) || [];
-let pickupSlots = {}; // Define pickupSlots to avoid reference errors
 
+// ✅ Fetch Pickup Slots from Google Sheets
+async function fetchPickupSlotsFromGoogleSheets() {
+  const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRLeiHAcr4m4Q_4yFuZXtxlj_kqc6V8ZKaPOgsZS0HHCZReMr-vTX2KEXOB8qqgduHPZLsbIF281YoA/pub?output=csv";
 
-let discountAmount = 0; // Stores the applied discount
-
-// Fetch and parse CSV data
-async function fetchPickupSlotsCSV() {
   try {
-    const response = await fetch('/pickupSlots.csv');  
-    if (!response.ok) throw new Error("Failed to fetch pickup slots");
+    const response = await fetch(sheetURL);
+    if (!response.ok) throw new Error("Failed to fetch Google Sheets data");
 
     const csvText = await response.text();
-    const rows = csvText.trim().split('\n').slice(1); // Skip header row
-
-    rows.forEach(row => {
-      const [date, amount, booked] = row.split(','); // Extract all three columns
-
-      if (!pickupSlots[date]) {
-        pickupSlots[date] = { 
-          available: parseInt(amount), 
-          booked: parseInt(booked) || 0  // Ensure booked count is properly assigned
-        };
-      }
-    });
-
-    console.log("✅ Pickup slots loaded:", pickupSlots); // Debugging log
+    parsePickupSlotsData(csvText);
   } catch (error) {
-    console.error("❌ Error loading pickup slots:", error);
+    console.error("❌ Error fetching pickup slots:", error);
   }
 }
 
-// Load pickup slots on page load
-fetchPickupSlotsCSV().then(() => {
-  console.log("✅ Pickup slots loaded successfully");
-  populatePickupDayDropdown(); // Ensure dropdown updates with fetched slots
-  checkCartAvailability(); // Ensure warning message updates when slots load
-});
+// ✅ Save Order to Backend CSV
+async function saveOrderToCSV(orderData) {
+  console.log("📤 Sending order to backend CSV:", orderData);
+
+  try {
+    const response = await fetch(`${API_BASE}/save-order`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(orderData),
+    });
+
+    const responseData = await response.json();
+    if (!responseData.success) throw new Error(responseData.error);
+    console.log("✅ Order saved successfully!");
+  } catch (error) {
+    console.error("❌ Order submission failed:", error);
+    alert("Error saving order. Please try again.");
+  }
+}
+
+// ✅ Pay with Venmo (Now Saves Order to Backend)
+async function payWithVenmo() {
+  if (cart.length === 0) {
+    alert("Your cart is empty!");
+    return;
+  }
+
+  const email = document.getElementById("email")?.value.trim();
+  const pickupDay = document.getElementById("pickup-day")?.value;
+
+  if (!email || !pickupDay) {
+    alert("Please enter your email and select a pickup date.");
+    return;
+  }
+
+  let orderData = {
+    name: email.split("@")[0],
+    email,
+    pickupDate: pickupDay,
+    items: cart.map(item => `${item.name} (x${item.quantity})`).join(", "),
+    totalPrice: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+    paymentMethod: "Venmo"
+  };
+
+  await saveOrderToCSV(orderData);
+
+  let totalPrice = orderData.totalPrice;
+  const venmoLink = `venmo://paycharge?txn=pay&recipients=Margaret-Smillie&amount=${totalPrice.toFixed(2)}&note=Bascom%20Bread%20Order%20-%20Pickup%20on%20${encodeURIComponent(pickupDay)}`;
+
+  window.location.href = venmoLink;
+  setTimeout(() => {
+    window.location.href = `https://venmo.com/Margaret-Smillie?txn=pay&amount=${totalPrice.toFixed(2)}&note=Bascom%20Bread%20Order%20-%20Pickup%20on%20${encodeURIComponent(pickupDay)}`;
+  }, 2000);
+
+  localStorage.removeItem("cart");
+  updateCartCount();
+}
+
+window.payWithVenmo = payWithVenmo;
+document.addEventListener("DOMContentLoaded", fetchPickupSlotsFromGoogleSheets);
+
+
+
+// Convert CSV into JavaScript Object
+function parsePickupSlotsData(csvText) {
+  const rows = csvText.trim().split("\n").slice(1); // Skip header row
+  pickupSlots = {}; // Reset slots
+
+  rows.forEach(row => {
+    const [date, available, booked] = row.split(","); // Extract columns
+    if (date && available) {
+      pickupSlots[date] = {
+        available: parseInt(available),
+        booked: parseInt(booked) || 0
+      };
+    }
+  });
+
+  console.log("✅ Processed Pickup Slots:", pickupSlots);
+  populatePickupDayDropdown();
+}
+
+// Call this function when the page loads
+document.addEventListener("DOMContentLoaded", fetchPickupSlotsFromGoogleSheets);
 
 function populatePickupDayDropdown() {
   const pickupDayElement = document.getElementById("pickup-day");
@@ -135,65 +202,48 @@ function applyDiscount() {
 
 async function payWithVenmo() {
   if (cart.length === 0) {
-      alert("Your cart is empty!");
-      return;
+    alert("Your cart is empty!");
+    return;
   }
 
-  const email = document.getElementById("email").value.trim();
-  const pickupDay = document.getElementById("pickup-day").value;
+  const email = document.getElementById("email")?.value.trim();
+  const pickupDay = document.getElementById("pickup-day")?.value;
 
   if (!email || !pickupDay) {
-      alert("Please enter your email and select a pickup date.");
-      return;
+    alert("Please enter your email and select a pickup date.");
+    return;
   }
 
-  // Apply $1 discount per item
-  let discountAmount = cart.reduce((total, item) => total + item.quantity, 0); 
+  let orderData = {
+    name: email.split("@")[0],
+    email,
+    pickupDate: pickupDay,
+    items: cart.map(item => `${item.name} (x${item.quantity})`).join(", "),
+    totalPrice: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+    paymentMethod: "Venmo",
+    timestamp: serverTimestamp(),
+  };
 
-  // Create discounted cart
-  let discountedCart = cart.map(item => ({
-      ...item,
-      price: item.price - 1  // Apply $1 discount per item
-  }));
-
-  // Calculate new total
-  let totalPrice = discountedCart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  console.log("📤 Sending Venmo order to Firestore:", orderData);
 
   try {
-      // Log the order before redirecting to Venmo
-      const response = await fetch(`${API_BASE}/log-venmo-order`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ cart: discountedCart, email, pickupDay, discountCode: "VENMO_DISCOUNT", totalAmount: totalPrice }),
-      });
+    await addDoc(collection(db, "orders"), orderData);
+    console.log("✅ Order saved successfully in Firestore!");
 
-      const result = await response.json();
-      if (result.success) {
-          // Venmo Payment URL
-          const venmoDeepLink = `venmo://paycharge?txn=pay&recipients=Margaret-Smillie&amount=${totalPrice.toFixed(2)}&note=Bascom%20Bread%20Order%20-%20Pickup%20on%20${encodeURIComponent(pickupDay)}`;
-          const venmoWebProfile = `https://venmo.com/Margaret-Smillie?txn=pay&amount=${totalPrice.toFixed(2)}&note=Bascom%20Bread%20Order%20-%20Pickup%20on%20${encodeURIComponent(pickupDay)}`;
+    let totalPrice = orderData.totalPrice;
+    const venmoLink = `venmo://paycharge?txn=pay&recipients=Margaret-Smillie&amount=${totalPrice.toFixed(2)}&note=Bascom%20Bread%20Order%20-%20Pickup%20on%20${encodeURIComponent(pickupDay)}`;
+    
+    window.location.href = venmoLink;
+    setTimeout(() => {
+      window.location.href = `https://venmo.com/Margaret-Smillie?txn=pay&amount=${totalPrice.toFixed(2)}&note=Bascom%20Bread%20Order%20-%20Pickup%20on%20${encodeURIComponent(pickupDay)}`;
+    }, 2000);
 
-          // Detect mobile device
-          const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    localStorage.removeItem("cart"); // ✅ Clear cart after order
+    updateCartCount(); // ✅ Update cart count
 
-          if (isMobile) {
-              // Try to open Venmo app
-              window.location.href = venmoDeepLink;
-
-              // Set a fallback in case Venmo app doesn't open
-              setTimeout(() => {
-                  window.location.href = venmoWebProfile;
-              }, 2000); // Wait 2 seconds before falling back to web
-          } else {
-              // If on desktop, open Venmo web profile
-              window.open(venmoWebProfile, "_blank");
-          }
-      } else {
-          alert("Failed to process Venmo payment.");
-      }
   } catch (error) {
-      console.error("Venmo payment error:", error);
-      alert("There was an issue processing your Venmo payment.");
+    console.error("❌ Venmo order submission failed:", error);
+    alert("There was an error processing your Venmo payment. Please try again.");
   }
 }
 
@@ -207,7 +257,6 @@ let paymentMethod = "Stripe"; // Default to Stripe
 function setPaymentMethod(method) {
     paymentMethod = method;
 }
-
 
 // ✅ Renders Cart Items with Image Support and Discount Application
 function renderCartItems() {
@@ -347,7 +396,7 @@ function updateCartCount() {
       console.log("✅ Cart count updated:", totalCount);
   } else {
       console.warn("❌ `#cart-count` element not found. Retrying in 100ms...");
-      setTimeout(updateCartCount, 100);  // Retry after 100ms
+      setTimeout(updateCartCount, 5000);  // Retry after 100ms
   }
 }
 
@@ -407,7 +456,7 @@ function checkCartAvailability() {
 document.addEventListener("DOMContentLoaded", () => {
   renderCartItems();
   updateCartCount();
-  fetchPickupSlotsCSV().then(() => {
+  fetchPickupSlotsFromGoogleSheets()().then(() => {
     populatePickupDayDropdown();
     checkCartAvailability();
   });
@@ -420,7 +469,6 @@ window.removeFromCart = removeFromCart;
 window.updateCartCount = updateCartCount;
 window.checkCartAvailability = checkCartAvailability;
 window.addToCart = addToCart;
-window.fetchPickupSlotsCSV = fetchPickupSlotsCSV;
 
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -504,3 +552,40 @@ document.addEventListener("DOMContentLoaded", function () {
   console.log("🛒 Cart on load:", localStorage.getItem("cart"));
   console.log("🔄 Running updateCartCount()...");
 });
+
+
+
+
+// Call this function in your checkout process
+async function checkout() {
+  const email = document.getElementById("email")?.value.trim();
+  const pickupDay = document.getElementById("pickup-day")?.value;
+
+  if (!email || !pickupDay) {
+    alert("Please enter your email and select a pickup date.");
+    return;
+  }
+
+  let orderData = {
+    name: email.split("@")[0], // Extract name from email
+    email,
+    pickupDate: pickupDay,
+    items: cart.map(item => `${item.name} (x${item.quantity})`).join(", "),
+    totalPrice: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+    timestamp: new Date(),
+  };
+
+  console.log("📤 Sending order to Firestore:", orderData);
+
+  try {
+    await addDoc(collection(db, "orders"), orderData);
+    console.log("✅ Order saved successfully in Firestore!");
+
+    alert("Order placed successfully! You will receive a confirmation email.");
+    localStorage.removeItem("cart"); // Clear cart after order
+    updateCartCount(); // Update cart count
+  } catch (error) {
+    console.error("❌ Failed to save order:", error);
+    alert("There was an error processing your order. Please try again.");
+  }
+}
