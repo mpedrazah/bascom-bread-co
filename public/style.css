@@ -47,6 +47,8 @@ body {
     height: auto; /* Allow it to grow as needed */
     padding: 3rem 1rem; /* More padding on mobile */
     text-align: center;
+    background-size: cover;
+    height: 30vh;
   }
 }
 
