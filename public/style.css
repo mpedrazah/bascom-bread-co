@@ -27,11 +27,10 @@ body {
   text-align: center;
   color: white;
   position: relative;
-  padding: 2rem;
   z-index: 1;  /* Ensure it's above other elements */
   background-repeat: no-repeat; /* Prevents image from repeating */
   background-attachment: fixed; /* Keeps the image fixed while scrolling */
-  height: 100vh;
+  height: 80vh;
 }
 
 /* Ensure text inside hero is readable */
