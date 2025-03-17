@@ -44,21 +44,25 @@ body {
 /* Mobile Fix: Ensure hero is fully visible */
 @media screen and (max-width: 768px) {
   .hero {
-    padding: 3rem 1rem; /* More padding on mobile */
-    text-align: center;
-    background-size: auto 100%;
-    background-position: center top;
-    height: 60vh;
+    background-size: auto 120%;
+    background-attachment: scroll;
+    height: 100vh;
+    min-height: 100vh;
+    background-position: center;
   }
 }
 /* Mobile Fix on iphone safari: Ensure hero is fully visible */
-@media screen and (max-width: 430px) {
+@supports (-webkit-touch-callout: none) {
   .hero {
-    background-size: auto 100%;
-    background-position: center top;
-    height: 65vh;
+    background-size: auto 120%;
+    background-attachment: scroll;
+    height: 100vh;
+    min-height: 100vh;
   }
 }
+
+
+
 #warning-message {
   color: red;
   font-weight: bold;
