@@ -164,11 +164,6 @@ function applyDiscount() {
 let venmoPaymentAttempted = false; // ✅ Prevent duplicate submissions
 
 async function payWithVenmo() {
-  if (venmoPaymentAttempted) {
-    console.warn("⚠️ Venmo payment already attempted, skipping duplicate request.");
-    return;
-  }
-
   if (cart.length === 0) {
     alert("Your cart is empty!");
     return;
@@ -176,17 +171,14 @@ async function payWithVenmo() {
 
   const email = document.getElementById("email")?.value.trim();
   const pickup_day = document.getElementById("pickup-day")?.value;
-  const emailOptIn = document.getElementById("email-opt-in")?.checked || false;
+  const emailOptIn = document.getElementById("email-opt-in")?.checked || false; 
 
   if (!email || !pickup_day) {
     alert("Please enter your email and select a pickup date.");
     return;
   }
 
-  venmoPaymentAttempted = true; // ✅ Prevent duplicate submission
-
-  // ✅ Apply Venmo Discount ($1 off per item)
-  let total_price = cart.reduce((sum, item) => sum + ((item.price - 1) * item.quantity), 0).toFixed(2);
+  let total_price = parseFloat(cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2));
 
   let orderData = {
     name: email.split("@")[0],
@@ -195,8 +187,7 @@ async function payWithVenmo() {
     items: cart.map(item => `${item.name} (x${item.quantity})`).join(", "),
     total_price,
     payment_method: "Venmo",
-    email_opt_in: emailOptIn,
-    cart // ✅ Sending cart data to backend
+    email_opt_in: emailOptIn
   };
 
   console.log("📤 Sending Venmo order to server:", orderData);
@@ -213,24 +204,34 @@ async function payWithVenmo() {
 
     console.log("✅ Order saved successfully!");
 
-    // ✅ Redirect to success page after Venmo link opens
+    // ✅ Detect if user is on mobile
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+    let venmoLink;
+    if (isMobile) {
+      // ✅ Open Venmo app using deep link for mobile
+      venmoLink = `venmo://paycharge?txn=pay&recipients=Margaret-Smillie&amount=${total_price.toFixed(2)}&note=Bascom%20Bread%20Order%20-%20Pickup%20on%20${encodeURIComponent(pickup_day)}`;
+      window.location.href = venmoLink; // Redirects within the app
+    } else {
+      // ✅ Open Venmo Web for Desktop
+      venmoLink = `https://venmo.com/Margaret-Smillie?txn=pay&amount=${total_price.toFixed(2)}&note=Bascom%20Bread%20Order%20-%20Pickup%20on%20${encodeURIComponent(pickup_day)}`;
+      window.open(venmoLink, "_blank");
+    }
+
+    // ✅ Redirect to success page after payment attempt
     setTimeout(() => {
       window.location.href = "success.html";
-    }, 2000);
-
-    // ✅ Open Venmo payment link
-    const venmoLink = `https://venmo.com/Margaret-Smillie?txn=pay&amount=${total_price}&note=Bascom%20Bread%20Order%20-%20Pickup%20on%20${encodeURIComponent(pickup_day)}`;
-    window.open(venmoLink, "_blank");
+    }, 3000);
 
     // ✅ Clear cart after order submission
     localStorage.removeItem("cart");
     updateCartCount();
   } catch (error) {
-    venmoPaymentAttempted = false; // ✅ Reset flag if error occurs
     console.error("❌ Venmo order submission failed:", error);
     alert("There was an issue processing your Venmo payment.");
   }
 }
+
 
 
 // ✅ Make function globally accessible
