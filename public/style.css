@@ -36,7 +36,7 @@ body {
 /* Ensure text inside hero is readable */
 .hero h1, .hero p {
   color: white;
-  font-size: 1.5rem;
+  font-size: 3rem;
   text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.6);
   font-family: 'Playfair Display', serif;
 }
@@ -44,11 +44,11 @@ body {
 /* Mobile Fix: Ensure hero is fully visible */
 @media screen and (max-width: 768px) {
   .hero {
-    height: auto; /* Allow it to grow as needed */
-    padding: 3rem 1rem; /* More padding on mobile */
+    padding: 2rem; /* More padding on mobile */
     text-align: center;
     background-size: cover;
-    height: 30vh;
+    background-position: center;
+    height: 50vh;
   }
 }
 
