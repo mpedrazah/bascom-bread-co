@@ -110,9 +110,7 @@ app.post("/save-order", async (req, res) => {
 
     // ✅ Apply Venmo discount if payment method is Venmo
     let final_total_price = parseFloat(total_price);
-    if (payment_method === "Venmo") {
-      final_total_price -= cart.reduce((sum, item) => sum + (1 * item.quantity), 0); // ✅ Now `cart` is defined!
-    }
+    
 
     const query = `
       INSERT INTO orders (email, pickup_day, items, total_price, payment_method, email_opt_in, order_date)
