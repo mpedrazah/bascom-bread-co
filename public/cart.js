@@ -64,15 +64,13 @@ async function payWithVenmo() {
     return;
   }
 
-  let total_price = parseFloat(cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2));
-
   let orderData = {
     name: email.split("@")[0], // Extract name from email
     email,
-    pickup_day,  // ✅ Match database column
+    pickup_day, // ✅ Match DB column
     items: cart.map(item => `${item.name} (x${item.quantity})`).join(", "),
-    total_price,
-    payment_method: "Venmo"
+    total_price: parseFloat(cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)),
+    payment_method: "Venmo",
   };
 
   console.log("📤 Sending Venmo order to server:", orderData);
@@ -85,33 +83,34 @@ async function payWithVenmo() {
     });
 
     const result = await response.json();
-    if (!result.success) throw new Error("Failed to save order");
+    if (!result.success) {
+      console.error("❌ Failed to save order:", result.error);
+      return alert("There was an issue saving your order. Please try again.");
+    }
 
     console.log("✅ Order saved successfully!");
 
-    // ✅ Detect if user is on mobile
+    // ✅ Detect if user is on mobile or desktop
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     let venmoLink;
 
     if (isMobile) {
-      // Use Venmo deep link on mobile
-      venmoLink = `venmo://paycharge?txn=pay&recipients=Margaret-Smillie&amount=${total_price.toFixed(2)}&note=Bascom%20Bread%20Order%20-%20Pickup%20on%20${encodeURIComponent(pickup_day)}`;
+      venmoLink = `venmo://paycharge?txn=pay&recipients=Margaret-Smillie&amount=${orderData.total_price.toFixed(2)}&note=Bascom%20Bread%20Order%20-%20Pickup%20on%20${encodeURIComponent(pickup_day)}`;
       window.location.href = venmoLink; // Open directly (no new tab)
     } else {
-      // Use Venmo web URL on desktop (new tab)
-      venmoLink = `https://venmo.com/Margaret-Smillie?txn=pay&amount=${total_price.toFixed(2)}&note=Bascom%20Bread%20Order%20-%20Pickup%20on%20${encodeURIComponent(pickup_day)}`;
+      venmoLink = `https://venmo.com/Margaret-Smillie?txn=pay&amount=${orderData.total_price.toFixed(2)}&note=Bascom%20Bread%20Order%20-%20Pickup%20on%20${encodeURIComponent(pickup_day)}`;
       window.open(venmoLink, "_blank");
     }
 
     // ✅ Clear cart after successful order
     localStorage.removeItem("cart");
     updateCartCount();
-
   } catch (error) {
     console.error("❌ Venmo order submission failed:", error);
     alert("There was an issue processing your Venmo payment.");
   }
 }
+
 
 // ✅ Make function globally accessible
 window.payWithVenmo = payWithVenmo;
@@ -302,10 +301,6 @@ async function payWithVenmo() {
 window.payWithVenmo = payWithVenmo;
 
 
-
-// ✅ Make function globally accessible
-window.payWithVenmo = payWithVenmo;
-
 async function checkout() {
   if (cart.length === 0) {
     alert("Your cart is empty!");
@@ -313,7 +308,8 @@ async function checkout() {
   }
 
   const email = document.getElementById("email")?.value.trim();
-  const pickup_day = document.getElementById("pickup-day")?.value;  // ✅ Match database column
+  const pickup_day = document.getElementById("pickup-day")?.value;
+  const selectedPaymentMethod = paymentMethod; // Ensure this is set correctly
 
   if (!email || !pickup_day) {
     alert("Please enter your email and select a pickup date.");
@@ -323,10 +319,10 @@ async function checkout() {
   let orderData = {
     name: email.split("@")[0],
     email,
-    pickup_day,  // ✅ Match database column
+    pickup_day, // ✅ Match DB column
     items: cart.map(item => `${item.name} (x${item.quantity})`).join(", "),
     total_price: parseFloat(cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)),
-    payment_method: "Stripe"
+    payment_method: selectedPaymentMethod,
   };
 
   console.log("📤 Sending Stripe order to Railway Backend:", orderData);
@@ -343,27 +339,29 @@ async function checkout() {
 
     console.log("✅ Order saved successfully!");
 
-    // Proceed with Stripe payment
-    const stripeResponse = await fetch(`${API_BASE}/create-checkout-session`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(orderData),
-    });
+    // ✅ Only proceed to Stripe if payment method is Stripe
+    if (selectedPaymentMethod === "Stripe") {
+      const stripeResponse = await fetch(`${API_BASE}/create-checkout-session`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderData),
+      });
 
-    const stripeData = await stripeResponse.json();
-    if (stripeData.url) {
-      window.location.href = stripeData.url; // Redirect to Stripe payment
-    } else {
-      alert("Error: " + stripeData.error);
+      const stripeData = await stripeResponse.json();
+      if (stripeData.url) {
+        window.location.href = stripeData.url; // Redirect to Stripe payment
+      } else {
+        alert("Error: " + stripeData.error);
+      }
     }
-
   } catch (error) {
     console.error("❌ Checkout process failed:", error);
     alert("There was an error processing your payment.");
   }
 }
 
-
+// ✅ Make function globally accessible
+window.checkout = checkout;
 
 
 
@@ -371,8 +369,7 @@ async function checkout() {
 window.checkout = checkout;
 
 
-// ✅ Make function accessible globally
-window.payWithVenmo = payWithVenmo;
+
 
 let paymentMethod = "Stripe"; // Default to Stripe
 
