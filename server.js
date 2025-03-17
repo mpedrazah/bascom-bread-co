@@ -92,7 +92,7 @@ async function saveOrderToDatabase(order) {
 
 app.post("/save-order", async (req, res) => {
   try {
-    const { email, pickup_day, items, total_price, payment_method, email_optin } = req.body;
+    const { email, pickup_day, items, total_price, payment_method, email_opt_in } = req.body;
 
     console.log("🛠 Received order:", req.body);
 
