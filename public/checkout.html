@@ -84,6 +84,11 @@
   <p id="discount-message"></p>
 </div>
 
+<p>If paying by venmo, and it didn't open, <a href="#" id="venmo-fallback">click here</a> to pay.</p>
+<script>
+  document.getElementById("venmo-fallback").href = "venmo://paycharge?txn=pay&recipients=Margaret-Smillie&amount=12.00";
+</script>
+
     </section>
   </div>
   <script src="cart.js"></script>

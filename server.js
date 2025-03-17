@@ -157,20 +157,21 @@ app.get("/get-orders", async (req, res) => {
 
 // ✅ Send Order Confirmation Email
 async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, paymentMethod) {
+  if (!email) {
+    console.error("❌ Email is missing. Cannot send confirmation.");
+    return;
+  }
+
   const orderDetails = items.split(", ").map(item => `• ${item}`).join("<br>");
-
-  // ✅ Convert `totalAmount` to a number before using `.toFixed(2)`
-  const totalFormatted = Number(totalAmount).toFixed(2);
-
   let emailBody;
+
   if (paymentMethod === "Venmo") {
     emailBody = `
       <p>Thank you for your order!</p>
       <p><strong>You have purchased:</strong></p>
       <p>${orderDetails}</p>
       <p><strong>Pickup Date:</strong> ${pickupDay}</p>
-      <p>You can do a porch pickup from <strong>1508 Cooper Drive, Irving, 75061</strong> between <strong>10:00 AM - 12:00 PM</strong></p>
-      <p><strong>Total after Venmo discount:</strong> $${totalFormatted}</p>
+      <p><strong>Total after Venmo discount:</strong> $${parseFloat(totalAmount).toFixed(2)}</p>
       <p style="color: red; font-weight: bold;">⚠️ Your order will not be fulfilled until payment is received via Venmo. Please complete your payment as soon as possible.</p>
       <br>
       <p>Thank you,</p>
@@ -182,7 +183,6 @@ async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, 
       <p><strong>You have purchased:</strong></p>
       <p>${orderDetails}</p>
       <p><strong>Pickup Date:</strong> ${pickupDay}</p>
-      <p>You can do a porch pickup from <strong>1508 Cooper Drive, Irving, 75061</strong> between <strong>10:00 AM - 12:00 PM</strong></p>
       <br>
       <p>Thank you,</p>
       <p>Margaret</p>
@@ -191,7 +191,7 @@ async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, 
 
   const mailOptions = {
     from: process.env.EMAIL_USER,
-    to: email,
+    to: email, // ✅ Ensure `email` is valid before sending
     subject: "Your Bascom Bread Order Confirmation",
     html: emailBody,
   };

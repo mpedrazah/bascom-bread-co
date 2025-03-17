@@ -171,7 +171,7 @@ async function payWithVenmo() {
 
   const email = document.getElementById("email")?.value.trim();
   const pickup_day = document.getElementById("pickup-day")?.value;
-  const emailOptIn = document.getElementById("email-opt-in")?.checked || false; // ✅ Capture opt-in status
+  const emailOptIn = document.getElementById("email-opt-in")?.checked || false;
 
   if (!email || !pickup_day) {
     alert("Please enter your email and select a pickup date.");
@@ -180,7 +180,7 @@ async function payWithVenmo() {
 
   // ✅ Apply Venmo discount ($1 per product)
   let total_price = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  let total_discounted = total_price - (cart.length * 1); // ✅ Subtract $1 per product
+  let total_discounted = total_price - (cart.length * 1); // Subtract $1 per product
   total_discounted = Math.max(total_discounted, 0).toFixed(2); // Ensure no negative prices
 
   let orderData = {
@@ -188,10 +188,10 @@ async function payWithVenmo() {
     email,
     pickup_day,
     items: cart.map(item => `${item.name} (x${item.quantity})`).join(", "),
-    total_price: total_discounted, // ✅ Send discounted price
+    total_price: total_discounted,
     payment_method: "Venmo",
     email_opt_in: emailOptIn,
-    cart // ✅ Include full cart for backend validation
+    cart // ✅ Send full cart for validation
   };
 
   console.log("📤 Sending Venmo order to server:", orderData);
@@ -208,18 +208,30 @@ async function payWithVenmo() {
 
     console.log("✅ Order saved successfully!");
 
-    // ✅ Detect if user is on mobile and open Venmo app
+    // ✅ Detect if user is on mobile
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
     let venmoLink = isMobile
       ? `venmo://paycharge?txn=pay&recipients=Margaret-Smillie&amount=${total_discounted}&note=Bascom%20Bread%20Order%20-%20Pickup%20on%20${encodeURIComponent(pickup_day)}`
       : `https://venmo.com/Margaret-Smillie?txn=pay&amount=${total_discounted}&note=Bascom%20Bread%20Order%20-%20Pickup%20on%20${encodeURIComponent(pickup_day)}`;
 
-    window.open(venmoLink, "_blank");
+    if (isMobile) {
+      // ✅ Open Venmo app and redirect in the background
+      window.location.href = venmoLink; // Opens Venmo App
+      setTimeout(() => {
+        window.location.href = "success.html"; // Redirects to Success Page
+      }, 3000);
+    } else {
+      // ✅ Open Venmo in a new tab (for desktop users)
+      const venmoWindow = window.open(venmoLink, "_blank");
 
-    // ✅ Redirect to success page
-    setTimeout(() => {
-      window.location.href = "success.html";
-    }, 3000);
+      setTimeout(() => {
+        if (!venmoWindow || venmoWindow.closed) {
+          alert("Venmo did not open. Please complete payment manually.");
+        }
+        window.location.href = "success.html";
+      }, 5000);
+    }
 
     // ✅ Clear cart after order submission
     localStorage.removeItem("cart");
@@ -229,6 +241,7 @@ async function payWithVenmo() {
     alert("There was an issue processing your Venmo payment.");
   }
 }
+
 
 
 
