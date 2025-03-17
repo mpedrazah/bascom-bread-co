@@ -159,6 +159,9 @@ app.get("/get-orders", async (req, res) => {
 async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, paymentMethod) {
   const orderDetails = items.split(", ").map(item => `• ${item}`).join("<br>");
 
+  // ✅ Convert `totalAmount` to a number before using `.toFixed(2)`
+  const totalFormatted = Number(totalAmount).toFixed(2);
+
   let emailBody;
   if (paymentMethod === "Venmo") {
     emailBody = `
@@ -167,7 +170,7 @@ async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, 
       <p>${orderDetails}</p>
       <p><strong>Pickup Date:</strong> ${pickupDay}</p>
       <p>You can do a porch pickup from <strong>1508 Cooper Drive, Irving, 75061</strong> between <strong>10:00 AM - 12:00 PM</strong></p>
-      <p><strong>Total after Venmo discount:</strong> $${totalAmount.toFixed(2)}</p>
+      <p><strong>Total after Venmo discount:</strong> $${totalFormatted}</p>
       <p style="color: red; font-weight: bold;">⚠️ Your order will not be fulfilled until payment is received via Venmo. Please complete your payment as soon as possible.</p>
       <br>
       <p>Thank you,</p>
@@ -200,6 +203,7 @@ async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, 
     console.error("❌ Error sending email:", error);
   }
 }
+
 
 
 
