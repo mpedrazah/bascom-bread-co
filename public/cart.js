@@ -241,69 +241,92 @@ window.payWithVenmo = payWithVenmo;
 
 async function checkout() {
   if (cart.length === 0) {
-    alert("Your cart is empty!");
-    return;
+      alert("Your cart is empty!");
+      return;
   }
 
   const email = document.getElementById("email")?.value.trim();
   const pickup_day = document.getElementById("pickup-day")?.value;
+  const emailOptIn = document.getElementById("email-opt-in")?.checked || false;
+  const discountCode = document.getElementById("discount-code")?.value.trim().toUpperCase() || null;
 
   if (!email || !pickup_day) {
-    alert("Please enter your email and select a pickup date.");
-    return;
+      alert("Please enter your email and select a pickup date.");
+      return;
   }
 
-  // ✅ Prevent running checkout() for Venmo payments
-  if (paymentMethod === "Venmo") {
-    console.warn("⚠️ Skipping checkout for Venmo payment.");
-    return;
-  }
+  // ✅ Apply discounts if available
+  let totalDiscountedAmount = 0;
+  let updatedCart = cart.map(item => {
+      let discountedPrice = item.price;
+      if (discountCodes[discountCode]) {
+          discountedPrice = discountedPrice - (discountedPrice * discountCodes[discountCode]);
+      }
+      totalDiscountedAmount += discountedPrice * item.quantity;
+      return {
+          name: item.name,
+          price: discountedPrice, // ✅ Send discounted price
+          quantity: item.quantity
+      };
+  });
 
+  // ✅ Construct order data (Fix incorrect field names)
   let orderData = {
-    name: email.split("@")[0],
-    email,
-    pickup_day, // ✅ Match DB column
-    items: cart.map(item => `${item.name} (x${item.quantity})`).join(", "),
-    total_price: parseFloat(cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)),
-    payment_method: "Stripe",
+      name: email.split("@")[0], // Extract name from email
+      email,
+      pickup_day, // ✅ FIX: Changed from `pickupDate`
+      items: updatedCart.map(item => `${item.name} (x${item.quantity})`).join(", "),
+      total_price: totalDiscountedAmount.toFixed(2), // ✅ FIX: Changed from `totalPrice`
+      payment_method: "Stripe", // ✅ FIX: Changed from `paymentMethod`
+      emailOptIn,
+      discountCode
   };
 
   console.log("📤 Sending Stripe order to Railway Backend:", orderData);
 
   try {
-    const response = await fetch(`${API_BASE}/save-order`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(orderData),
-    });
+      const response = await fetch(`${API_BASE}/save-order`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(orderData)
+      });
 
-    const result = await response.json();
-    if (!result.success) throw new Error("Failed to save order");
+      const result = await response.json();
+      if (!result.success) throw new Error("Failed to save order.");
 
-    console.log("✅ Order saved successfully!");
+      console.log("✅ Order saved successfully!");
 
-    // ✅ Proceed to Stripe only if payment method is Stripe
-    const stripeResponse = await fetch(`${API_BASE}/create-checkout-session`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(orderData),
-    });
+      // ✅ Proceed with Stripe payment
+      const stripeResponse = await fetch(`${API_BASE}/create-checkout-session`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+              cart: updatedCart,
+              email,
+              pickup_day, // ✅ Ensure correct field name
+              emailOptIn,
+              discountCode,
+              totalAmount: totalDiscountedAmount,
+              payment_method: "Stripe" // ✅ Ensure correct field name
+          })
+      });
 
-    const stripeData = await stripeResponse.json();
-    if (stripeData.url) {
-      window.location.href = stripeData.url;
-    } else {
-      alert("Error processing payment: " + stripeData.error);
-    }
+      const stripeData = await stripeResponse.json();
+      if (stripeData.url) {
+          window.location.href = stripeData.url; // Redirect to Stripe checkout
+      } else {
+          alert("Error processing payment: " + stripeData.error);
+      }
+
   } catch (error) {
-    console.error("❌ Checkout process failed:", error);
-    alert("There was an error processing your payment.");
+      console.error("❌ Checkout process failed:", error);
+      alert("There was an error processing your payment. Please try again.");
   }
 }
 
+
 // ✅ Make function globally accessible
 window.checkout = checkout;
-
 
 
 
