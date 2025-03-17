@@ -200,12 +200,39 @@ app.post("/create-checkout-session", async (req, res) => {
 
 
 // ✅ Export Orders as CSV for Admin Download
-app.get("/export-orders", (req, res) => {
-  if (!fs.existsSync(ordersFilePath)) {
-    return res.status(404).json({ message: "No orders found." });
+app.get("/export-orders", async (req, res) => {
+  try {
+      const result = await pool.query("SELECT id, name, email, pickup_day, items, total_price, payment_method, order_date FROM orders ORDER BY id DESC");
+
+      if (result.rows.length === 0) {
+          return res.status(404).json({ message: "No orders found." });
+      }
+
+      const csvWriter = createCsvWriter({
+          path: "orders.csv",
+          header: [
+              { id: "id", title: "Order ID" },
+              { id: "name", title: "Name" },
+              { id: "email", title: "Email" },
+              { id: "pickup_day", title: "Pickup Day" },
+              { id: "items", title: "Items" },
+              { id: "total_price", title: "Total Price" },
+              { id: "payment_method", title: "Payment Method" },
+              { id: "order_date", title: "Order Date" }
+          ],
+      });
+
+      await csvWriter.writeRecords(result.rows);
+      console.log("✅ Orders exported successfully!");
+
+      res.download("orders.csv");
+
+  } catch (error) {
+      console.error("❌ Error exporting orders:", error);
+      res.status(500).json({ error: "Failed to export orders." });
   }
-  res.download(ordersFilePath);
 });
+
 
 // ✅ Export Email Subscribers
 app.get("/export-email-optins", async (req, res) => {

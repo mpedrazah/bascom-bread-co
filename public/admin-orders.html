@@ -6,6 +6,7 @@
     <title>Admin Orders - Bascom Bread</title>
     <link rel="stylesheet" href="style.css">
     <!-- ✅ Firebase SDK via CDN -->
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
 
 </head>
 <body>
@@ -18,23 +19,30 @@
         <nav>
             <ul>
                 <li><a href="index.html">Home</a></li>
-                <li><a href="products.html">Our Products</a></li>
+                <li><a href="products.html">Products</a></li>
                 <li><a href="admin-orders.html">Admin Orders</a></li>
             </ul>
         </nav>
     </header>
 
-    
     <!-- Orders Section -->
+
     <section class="admin-orders-container">
         <h2>Customer Orders</h2>
+    <button onclick="exportOptedInEmails()">Download Opted-in Emails 📩</button>
+     <button onclick="exportOrders()">Download Orders CSV 📦</button>
+
         <div id="orders-list" class="orders-list">
             <p>Loading orders...</p> <!-- Placeholder until data loads -->
         </div>
     </section>
 
-    <button onclick="exportOptedInEmails()">Download Opted-in Emails 📩</button>
-    <button id="export-orders-btn">Export Orders</button>
+    
+    <script>
+    function exportOrders() {
+        window.location.href = "/export-orders";
+    }
+    </script>
 
     <script>
     function exportOptedInEmails() {
