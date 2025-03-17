@@ -288,7 +288,8 @@ async function checkout() {
       items: updatedCart.map(item => `${item.name} (x${item.quantity})`).join(", "),
       total_price: totalDiscountedAmount.toFixed(2), // ✅ FIX: Changed from `totalPrice`
       payment_method: "Stripe", // ✅ FIX: Changed from `paymentMethod`
-      email_opt_in: emailOptIn 
+      email_opt_in: emailOptIn,
+      cart:updatedCart
   };
 
   console.log("📤 Sending Stripe order to Railway Backend:", orderData);
