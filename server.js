@@ -97,7 +97,7 @@ async function saveOrderToDatabase(order) {
 
 app.post("/save-order", async (req, res) => {
   try {
-    const { email, pickup_day, items, total_price, payment_method, email_opt_in, cart } = req.body; // ✅ Get cart
+    const { email, pickup_day, items, total_price, payment_method, email_opt_in, cart } = req.body;
 
     console.log("🛠 Received order:", req.body);
 
@@ -106,24 +106,20 @@ app.post("/save-order", async (req, res) => {
       return res.status(400).json({ success: false, error: "All fields are required!" });
     }
 
-    const emailOptInValue = email_opt_in === true; // ✅ Ensure boolean value
-
-    // ✅ Apply Venmo discount if payment method is Venmo
-    let final_total_price = parseFloat(total_price);
-    
+    const emailOptInValue = email_opt_in === true;
 
     const query = `
       INSERT INTO orders (email, pickup_day, items, total_price, payment_method, email_opt_in, order_date)
       VALUES ($1, $2, $3, $4, $5, $6, NOW()) RETURNING *;
     `;
-    const values = [email, pickup_day, items, final_total_price.toFixed(2), payment_method, emailOptInValue];
+    const values = [email, pickup_day, items, total_price, payment_method, emailOptInValue];
 
     const result = await pool.query(query, values);
     console.log("✅ Order saved:", result.rows[0]);
 
     // ✅ Send Email Confirmation if Opted-in
     if (emailOptInValue) {
-      await sendOrderConfirmationEmail(email, items, pickup_day, final_total_price, payment_method);
+      await sendOrderConfirmationEmail(email, items, pickup_day, total_price, payment_method);
     }
 
     res.json({ success: true, order: result.rows[0] });
@@ -133,6 +129,7 @@ app.post("/save-order", async (req, res) => {
     res.status(500).json({ success: false, error: error.message || "Failed to save order." });
   }
 });
+
 
 
 
