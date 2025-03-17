@@ -1,5 +1,5 @@
 // ✅ Modify `payWithVenmo` to Use Firestore
-const API_BASE = "https://bascom-bread-co-production.up.railway.app"; // Update with Render URL
+const API_BASE = "https://bascombreadco.up.railway.app"; // Update with Render URL
 
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
 let pickupSlots = {};
