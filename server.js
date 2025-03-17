@@ -92,31 +92,38 @@ async function saveOrderToDatabase(order) {
 
 app.post("/save-order", async (req, res) => {
   try {
-      const { email, pickup_day, items, total_price, payment_method, emailOptIn } = req.body;
+    const { email, pickup_day, items, total_price, payment_method, email_optin } = req.body;
 
-      console.log("🛠 Received order:", req.body);
+    console.log("🛠 Received order:", req.body);
 
-      if (!email || !pickup_day || !items || !total_price || !payment_method) {
-          console.error("❌ Missing required fields:", { email, pickup_day, items, total_price, payment_method });
-          return res.status(400).json({ success: false, error: "All fields are required!" });
-      }
+    if (!email || !pickup_day || !items || !total_price || !payment_method) {
+      console.error("❌ Missing required fields:", { email, pickup_day, items, total_price, payment_method });
+      return res.status(400).json({ success: false, error: "All fields are required!" });
+    }
 
-      const query = `
-          INSERT INTO orders (email, pickup_day, items, total_price, payment_method, email_opt_in, order_date)
-          VALUES ($1, $2, $3, $4, $5, $6, NOW()) RETURNING *;
-      `;
-      const values = [email, pickup_day, items, total_price, payment_method, emailOptIn || false];
+    const emailOptInValue = email_optin === true; // ✅ Ensure it's stored as a boolean
 
-      const result = await pool.query(query, values);
-      console.log("✅ Order saved:", result.rows[0]);
-      res.json({ success: true, order: result.rows[0] });
+    const query = `
+      INSERT INTO orders (email, pickup_day, items, total_price, payment_method, email_optin, order_date)
+      VALUES ($1, $2, $3, $4, $5, $6, NOW()) RETURNING *;
+    `;
+    const values = [email, pickup_day, items, total_price, payment_method, emailOptInValue];
+
+    const result = await pool.query(query, values);
+    console.log("✅ Order saved:", result.rows[0]);
+
+    // ✅ Send Email Confirmation if Opted-in
+    if (emailOptInValue) {
+      await sendOrderConfirmationEmail(email, items, pickup_day, total_price, payment_method);
+    }
+
+    res.json({ success: true, order: result.rows[0] });
 
   } catch (error) {
-      console.error("❌ Error saving order:", error);
-      res.status(500).json({ success: false, error: error.message || "Failed to save order." });
+    console.error("❌ Error saving order:", error);
+    res.status(500).json({ success: false, error: error.message || "Failed to save order." });
   }
 });
-
 
 
 
@@ -140,14 +147,43 @@ app.get("/get-orders", async (req, res) => {
 
 
 // ✅ Send Order Confirmation Email
-async function sendOrderConfirmationEmail(email, cart, pickupDay, totalAmount) {
-  const orderDetails = cart.map(item => `• ${item.quantity}x ${item.name} ($${item.price.toFixed(2)})`).join("\n");
+// ✅ Send Order Confirmation Email
+async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, paymentMethod) {
+  const orderDetails = items.split(", ").map(item => `• ${item}`).join("<br>");
+
+  // Format email content based on payment method
+  let emailBody;
+  if (paymentMethod === "Venmo") {
+    emailBody = `
+      <p>Thank you for your order!</p>
+      <p><strong>You have purchased:</strong></p>
+      <p>${orderDetails}</p>
+      <p><strong>Pickup Date:</strong> ${pickupDay}</p>
+      <p>You can do a porch pickup from <strong>1508 Cooper Drive, Irving, 75061</strong> between <strong>10:00 AM - 12:00 PM</strong></p>
+      <p><strong>Total after Venmo discount:</strong> $${totalAmount}</p>
+      <p style="color: red; font-weight: bold;">⚠️ Your order will not be fulfilled until payment is received via Venmo. Please complete your payment as soon as possible.</p>
+      <br>
+      <p>Thank you,</p>
+      <p>Margaret</p>
+    `;
+  } else {
+    emailBody = `
+      <p>Thank you for your order!</p>
+      <p><strong>You have purchased:</strong></p>
+      <p>${orderDetails}</p>
+      <p><strong>Pickup Date:</strong> ${pickupDay}</p>
+      <p>You can do a porch pickup from <strong>1508 Cooper Drive, Irving, 75061</strong> between <strong>10:00 AM - 12:00 PM</strong></p>
+      <br>
+      <p>Thank you,</p>
+      <p>Margaret</p>
+    `;
+  }
 
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to: email,
     subject: "Your Bascom Bread Order Confirmation",
-    text: `Thank you for your order!\n\nYou have purchased:\n${orderDetails}\n\nPickup Date: ${pickupDay}\nTotal: $${totalAmount.toFixed(2)}\n\nWe look forward to seeing you!`,
+    html: emailBody, // ✅ Use HTML for better formatting
   };
 
   try {
@@ -157,6 +193,7 @@ async function sendOrderConfirmationEmail(email, cart, pickupDay, totalAmount) {
     console.error("❌ Error sending email:", error);
   }
 }
+
 
 // ✅ Stripe Checkout API
 app.post("/create-checkout-session", async (req, res) => {
