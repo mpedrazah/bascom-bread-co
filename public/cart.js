@@ -615,35 +615,3 @@ function updateCartCount() {
   }
 }
 
-document.addEventListener("DOMContentLoaded", function () {
-  console.log("✅ cart.js has loaded!");
-
-  updateCartCount();  // Ensure cart count updates
-
-  // 🔍 Get button elements
-  const stripeButton = document.getElementById("stripe-button");
-  const venmoButton = document.getElementById("venmo-button");
-
-  // ✅ Add event listener only if element exists
-  if (stripeButton) {
-      stripeButton.addEventListener("click", function () {
-          setPaymentMethod("Stripe");
-          checkout();
-      });
-  } else {
-      console.warn("⚠️ `#stripe-button` not found on this page. Skipping event listener.");
-  }
-
-  if (venmoButton) {
-      venmoButton.addEventListener("click", function () {
-          setPaymentMethod("Venmo");
-          checkout();
-      });
-  } else {
-      console.warn("⚠️ `#venmo-button` not found on this page. Skipping event listener.");
-  }
-
-  // Debugging logs
-  console.log("🛒 Cart on load:", localStorage.getItem("cart"));
-  console.log("🔄 Running updateCartCount()...");
-});
