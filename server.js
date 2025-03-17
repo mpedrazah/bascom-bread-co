@@ -129,6 +129,9 @@ app.post("/save-order", async (req, res) => {
 app.get("/get-orders", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM orders ORDER BY id DESC");
+    
+    console.log("✅ Orders fetched:", result.rows);
+
     res.json(result.rows);
   } catch (error) {
     console.error("❌ Error fetching orders:", error);
