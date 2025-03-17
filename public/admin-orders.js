@@ -43,26 +43,23 @@ function displayOrders(orders) {
   });
 }
 
-// ✅ Export Orders as CSV
-document.getElementById("export-orders-btn").addEventListener("click", () => {
-  console.log("📤 Exporting orders...");
-  window.location.href = `${API_BASE}/export-orders`;
-});
-
-// ✅ Run on Page Load
-
+// ✅ Ensure the DOM is fully loaded before attaching event listeners
 document.addEventListener("DOMContentLoaded", () => {
-  const exportOrdersBtn = document.getElementById("export-orders-btn");
+  console.log("✅ DOM fully loaded. Initializing admin page...");
 
+  // ✅ Check if the button exists before adding event listener
+  const exportOrdersBtn = document.getElementById("export-orders-btn");
   if (exportOrdersBtn) {
-      exportOrdersBtn.addEventListener("click", exportOrders);
+    exportOrdersBtn.addEventListener("click", exportOrders);
   } else {
-      console.error("❌ Error: #export-orders-btn not found in DOM.");
+    console.warn("⚠️ Warning: #export-orders-btn not found in DOM.");
   }
 
-  fetchOrders(); // Ensure orders are fetched when page loads
+  fetchOrders(); // Ensure orders are fetched when the page loads
 });
 
+// ✅ Export Orders as CSV
 function exportOrders() {
-  window.location.href = "/export-orders";
+  console.log("📤 Exporting orders...");
+  window.location.href = `${API_BASE}/export-orders`;
 }
