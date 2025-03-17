@@ -161,7 +161,7 @@ function applyDiscount() {
   renderCartItems(); // Update total price after discount
 }
 
-let venmoPaymentAttempted = false; // ✅ Prevents multiple Venmo submissions
+let venmoPaymentAttempted = false; // ✅ Prevent duplicate submissions
 
 async function payWithVenmo() {
   if (venmoPaymentAttempted) {
@@ -195,7 +195,8 @@ async function payWithVenmo() {
     items: cart.map(item => `${item.name} (x${item.quantity})`).join(", "),
     total_price,
     payment_method: "Venmo",
-    email_opt_in: emailOptIn
+    email_opt_in: emailOptIn,
+    cart // ✅ Sending cart data to backend
   };
 
   console.log("📤 Sending Venmo order to server:", orderData);
@@ -230,6 +231,7 @@ async function payWithVenmo() {
     alert("There was an issue processing your Venmo payment.");
   }
 }
+
 
 // ✅ Make function globally accessible
 window.payWithVenmo = payWithVenmo;
