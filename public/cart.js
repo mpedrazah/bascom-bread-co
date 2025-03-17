@@ -222,19 +222,21 @@ async function payWithVenmo() {
   }
 
   const email = document.getElementById("email")?.value.trim();
-  const pickup_day = document.getElementById("pickup-day")?.value;  // ✅ Match database column
+  const pickup_day = document.getElementById("pickup-day")?.value;
 
   if (!email || !pickup_day) {
     alert("Please enter your email and select a pickup date.");
     return;
   }
 
+  let total_price = parseFloat(cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2));
+
   let orderData = {
-    name: email.split("@")[0], // Extract name from email
+    name: email.split("@")[0],
     email,
-    pickup_day,  // ✅ Match database column
+    pickup_day,
     items: cart.map(item => `${item.name} (x${item.quantity})`).join(", "),
-    total_price: parseFloat(cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)),
+    total_price,
     payment_method: "Venmo"
   };
 
@@ -252,11 +254,16 @@ async function payWithVenmo() {
 
     console.log("✅ Order saved successfully!");
 
-    // Redirect user to Venmo
-    const venmoDeepLink = `venmo://paycharge?txn=pay&recipients=Margaret-Smillie&amount=${orderData.total_price.toFixed(2)}&note=Bascom%20Bread%20Order%20-%20Pickup%20on%20${encodeURIComponent(pickup_day)}`;
+    // ✅ Try opening Venmo app first
+    const venmoDeepLink = `venmo://paycharge?txn=pay&recipients=Margaret-Smillie&amount=${total_price.toFixed(2)}&note=Bascom%20Bread%20Order%20-%20Pickup%20on%20${encodeURIComponent(pickup_day)}`;
     window.location.href = venmoDeepLink;
 
-    // ✅ Clear cart
+    // ✅ If the Venmo app fails to open, redirect to Venmo web page (after 2 sec)
+    setTimeout(() => {
+      window.location.href = `https://venmo.com/Margaret-Smillie?txn=pay&amount=${total_price.toFixed(2)}&note=Bascom%20Bread%20Order%20-%20Pickup%20on%20${encodeURIComponent(pickup_day)}`;
+    }, 2000);
+
+    // ✅ Clear cart after successful order
     localStorage.removeItem("cart");
     updateCartCount();
 
@@ -265,6 +272,7 @@ async function payWithVenmo() {
     alert("There was an issue processing your Venmo payment.");
   }
 }
+
 
 // ✅ Make function globally accessible
 window.payWithVenmo = payWithVenmo;
