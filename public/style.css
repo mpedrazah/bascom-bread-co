@@ -19,7 +19,7 @@ body {
 /* Hero Section */
 .hero {
   background-image: url('images/hero-image.jpg');
-  background-size: contain;
+  background-size: cover;
   background-position: center;
   display: flex;
   justify-content: center;
@@ -30,7 +30,7 @@ body {
   z-index: 1;  /* Ensure it's above other elements */
   background-repeat: no-repeat; /* Prevents image from repeating */
   background-attachment: fixed; /* Keeps the image fixed while scrolling */
-  height: 80vh;
+  height: 70vh;
 }
 
 /* Ensure text inside hero is readable */
