@@ -44,10 +44,10 @@ body {
 /* Mobile Fix: Ensure hero is fully visible */
 @media screen and (max-width: 768px) {
   .hero {
-    padding: 2rem; /* More padding on mobile */
+    padding: 3rem 1rem; /* More padding on mobile */
     text-align: center;
     background-size: cover;
-    background-position: center;
+    background-position: center 20%;
     height: 50vh;
   }
 }
