@@ -97,12 +97,12 @@ async function saveOrderToDatabase(order) {
 
 app.post("/save-order", async (req, res) => {
   try {
-    const { email, pickup_day, items, total_price, payment_method, email_opt_in } = req.body;
+    const { email, pickup_day, items, total_price, payment_method, email_opt_in, cart } = req.body; // ✅ Get cart
 
     console.log("🛠 Received order:", req.body);
 
-    if (!email || !pickup_day || !items || !total_price || !payment_method) {
-      console.error("❌ Missing required fields:", { email, pickup_day, items, total_price, payment_method });
+    if (!email || !pickup_day || !items || !total_price || !payment_method || !cart) {
+      console.error("❌ Missing required fields:", { email, pickup_day, items, total_price, payment_method, cart });
       return res.status(400).json({ success: false, error: "All fields are required!" });
     }
 
@@ -111,7 +111,7 @@ app.post("/save-order", async (req, res) => {
     // ✅ Apply Venmo discount if payment method is Venmo
     let final_total_price = parseFloat(total_price);
     if (payment_method === "Venmo") {
-      final_total_price -= cart.reduce((sum, item) => sum + (1 * item.quantity), 0); // ✅ $1 off per item
+      final_total_price -= cart.reduce((sum, item) => sum + (1 * item.quantity), 0); // ✅ Now `cart` is defined!
     }
 
     const query = `
@@ -135,6 +135,7 @@ app.post("/save-order", async (req, res) => {
     res.status(500).json({ success: false, error: error.message || "Failed to save order." });
   }
 });
+
 
 
 
