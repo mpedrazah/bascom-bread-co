@@ -168,7 +168,7 @@ async function payWithVenmo() {
     alert("Your cart is empty!");
     return;
   }
-  const emailOptIn = document.getElementById("email-opt-in")?.checked || false;
+
   const email = document.getElementById("email")?.value.trim();
   const pickup_day = document.getElementById("pickup-day")?.value;
 
@@ -194,7 +194,6 @@ async function payWithVenmo() {
     items: cart.map(item => `${item.name} (x${item.quantity})`).join(", "),
     total_price,
     payment_method: "Venmo",
-    emailOptIn  // ✅ Ensure this is included
   };
 
   console.log("📤 Sending Venmo order to server:", orderData);
@@ -227,8 +226,14 @@ async function payWithVenmo() {
       window.open(venmoLink, "_blank");
     }
 
+    // ✅ Clear cart after successful order
     localStorage.removeItem("cart");
     updateCartCount();
+
+    // ✅ Redirect to success page after 3 seconds
+
+    window.location.href = "success.html"; 
+
   } catch (error) {
     console.error("❌ Venmo order submission failed:", error);
     venmoPaymentAttempted = false; // Reset flag

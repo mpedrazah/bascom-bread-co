@@ -64,15 +64,6 @@
       <p>💰 Pay with <strong>Venmo</strong> for a $1 off!</span> Your order will not be fulfilled until payment is confirmed.</p>
     </div>
 
-
-      <!-- Discount Code Section -->
-      <div class="discount-section">
-        <label for="discount-code">Enter Discount Code:</label>
-        <input type="text" id="discount-code" placeholder="Enter code">
-        <button onclick="applyDiscount()">Apply Discount</button>
-        <p id="discount-message"></p>
-      </div>
-
       <!-- Pay with Venmo Button -->
 <button id="venmo-button" onclick="payWithVenmo()">
   <img src="images/venmo.png" alt="Venmo Logo" class="venmo-logo">
@@ -84,6 +75,14 @@
   <img src="images/stripe.png" alt="Stripe Logo" class="stripe-logo">
   Proceed to Payment
 </button>
+
+<!-- Discount Code Section -->
+<div class="discount-section">
+  <label for="discount-code">Enter Discount Code:</label>
+  <input type="text" id="discount-code" placeholder="Enter code">
+  <button onclick="applyDiscount()">Apply Discount</button>
+  <p id="discount-message"></p>
+</div>
 
     </section>
   </div>
