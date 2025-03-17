@@ -46,12 +46,19 @@ body {
   .hero {
     padding: 3rem 1rem; /* More padding on mobile */
     text-align: center;
-    background-size: cover;
-    background-position: center 2%;
-    height: 50vh;
+    background-size: auto 100%;
+    background-position: center top;
+    height: 60vh;
   }
 }
-
+/* Mobile Fix on iphone safari: Ensure hero is fully visible */
+@media screen and (max-width: 430px) {
+  .hero {
+    background-size: auto 100%;
+    background-position: center top;
+    height: 65vh;
+  }
+}
 #warning-message {
   color: red;
   font-weight: bold;
