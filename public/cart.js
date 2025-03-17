@@ -222,26 +222,25 @@ async function payWithVenmo() {
   }
 
   const email = document.getElementById("email")?.value.trim();
-  const pickupDay = document.getElementById("pickup-day")?.value;
+  const pickup_day = document.getElementById("pickup-day")?.value;  // ✅ Match database column
 
-  if (!email || !pickupDay) {
+  if (!email || !pickup_day) {
     alert("Please enter your email and select a pickup date.");
     return;
   }
 
   let orderData = {
-    name: email.split("@")[0], // Use email prefix as name
+    name: email.split("@")[0], // Extract name from email
     email,
-    pickupDate: pickupDay,
+    pickup_day,  // ✅ Match database column
     items: cart.map(item => `${item.name} (x${item.quantity})`).join(", "),
-    totalPrice: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
-    paymentMethod: "Venmo"
+    total_price: parseFloat(cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)),
+    payment_method: "Venmo"
   };
 
   console.log("📤 Sending Venmo order to server:", orderData);
 
   try {
-    // ✅ Send order to backend
     const response = await fetch(`${API_BASE}/save-order`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -251,24 +250,19 @@ async function payWithVenmo() {
     const result = await response.json();
     if (!result.success) throw new Error("Failed to save order");
 
-    console.log("✅ Order saved successfully to CSV!");
+    console.log("✅ Order saved successfully!");
 
-    // ✅ Redirect user to Venmo
-    let totalPrice = orderData.totalPrice;
-    const venmoLink = `venmo://paycharge?txn=pay&recipients=Margaret-Smillie&amount=${totalPrice.toFixed(2)}&note=Bascom%20Bread%20Order%20-%20Pickup%20on%20${encodeURIComponent(pickupDay)}`;
-    
-    window.location.href = venmoLink;
-    setTimeout(() => {
-      window.location.href = `https://venmo.com/Margaret-Smillie?txn=pay&amount=${totalPrice.toFixed(2)}&note=Bascom%20Bread%20Order%20-%20Pickup%20on%20${encodeURIComponent(pickupDay)}`;
-    }, 2000);
+    // Redirect user to Venmo
+    const venmoDeepLink = `venmo://paycharge?txn=pay&recipients=Margaret-Smillie&amount=${orderData.total_price.toFixed(2)}&note=Bascom%20Bread%20Order%20-%20Pickup%20on%20${encodeURIComponent(pickup_day)}`;
+    window.location.href = venmoDeepLink;
 
-    // ✅ Clear cart after successful order
+    // ✅ Clear cart
     localStorage.removeItem("cart");
     updateCartCount();
 
   } catch (error) {
     console.error("❌ Venmo order submission failed:", error);
-    alert("There was an error processing your Venmo payment. Please try again.");
+    alert("There was an issue processing your Venmo payment.");
   }
 }
 
@@ -276,14 +270,15 @@ async function payWithVenmo() {
 window.payWithVenmo = payWithVenmo;
 
 async function checkout() {
+  if (cart.length === 0) {
+    alert("Your cart is empty!");
+    return;
+  }
+
   const email = document.getElementById("email")?.value.trim();
-  const pickupDay = document.getElementById("pickup-day")?.value;
-  const emailOptIn = document.getElementById("email-opt-in")?.checked || false;
-  const discountCode = document.getElementById("discount-code")?.value.trim().toUpperCase() || null;
+  const pickup_day = document.getElementById("pickup-day")?.value;  // ✅ Match database column
 
-  console.log("🛠 Debug: PickupDay Before Sending:", pickupDay);
-
-  if (!email || !pickupDay) {
+  if (!email || !pickup_day) {
     alert("Please enter your email and select a pickup date.");
     return;
   }
@@ -291,12 +286,10 @@ async function checkout() {
   let orderData = {
     name: email.split("@")[0],
     email,
-    pickupDay,  // ✅ Ensure this is NOT null
+    pickup_day,  // ✅ Match database column
     items: cart.map(item => `${item.name} (x${item.quantity})`).join(", "),
-    totalPrice: parseFloat(cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)), // Ensure float
-    paymentMethod: "Stripe",
-    emailOptIn,
-    discountCode
+    total_price: parseFloat(cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)),
+    payment_method: "Stripe"
   };
 
   console.log("📤 Sending Stripe order to Railway Backend:", orderData);
@@ -311,8 +304,9 @@ async function checkout() {
     const result = await response.json();
     if (!result.success) throw new Error("Failed to save order");
 
-    console.log("✅ Order saved, redirecting to payment!");
+    console.log("✅ Order saved successfully!");
 
+    // Proceed with Stripe payment
     const stripeResponse = await fetch(`${API_BASE}/create-checkout-session`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -325,11 +319,13 @@ async function checkout() {
     } else {
       alert("Error: " + stripeData.error);
     }
+
   } catch (error) {
     console.error("❌ Checkout process failed:", error);
-    alert("There was an error processing your order.");
+    alert("There was an error processing your payment.");
   }
 }
+
 
 
 

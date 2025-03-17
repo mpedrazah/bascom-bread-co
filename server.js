@@ -92,12 +92,12 @@ async function saveOrderToDatabase(order) {
 
 app.post("/save-order", async (req, res) => {
   try {
-    const { email, pickupDay, items, totalPrice, paymentMethod } = req.body;
+    const { email, pickup_day, items, total_price, payment_method } = req.body; // ✅ Expect `pickup_day`
 
     console.log("🛠 Received order:", req.body);
 
-    if (!email || !pickupDay || !items || !totalPrice || !paymentMethod) {
-      console.error("❌ Missing required fields:", { email, pickupDay, items, totalPrice, paymentMethod });
+    if (!email || !pickup_day || !items || !total_price || !payment_method) {
+      console.error("❌ Missing required fields:", { email, pickup_day, items, total_price, payment_method });
       return res.status(400).json({ success: false, error: "All fields are required!" });
     }
 
@@ -106,9 +106,9 @@ app.post("/save-order", async (req, res) => {
       VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING *;
     `;
 
-    const values = [email, pickupDay, items, totalPrice, paymentMethod];
-    const result = await pool.query(query, values);
+    const values = [email, pickup_day, items, total_price, payment_method]; // ✅ Match database column names
 
+    const result = await pool.query(query, values);
     console.log("✅ Order saved:", result.rows[0]);
     res.json({ success: true, order: result.rows[0] });
 
@@ -117,7 +117,6 @@ app.post("/save-order", async (req, res) => {
     res.status(500).json({ success: false, error: error.message || "Failed to save order." });
   }
 });
-
 
 
 
