@@ -240,7 +240,6 @@ function applyDiscount() {
   renderCartItems(); // Update total price after discount
 }
 
-let venmoPaymentAttempted = false;
 async function payWithVenmo() {
   if (cart.length === 0) {
     alert("Your cart is empty!");
@@ -631,6 +630,7 @@ window.checkCartAvailability = checkCartAvailability;
 window.addToCart = addToCart;
 
 
+
 document.addEventListener("DOMContentLoaded", function () {
   console.log("✅ DOM fully loaded. Running updateCartCount()...");
 
@@ -655,13 +655,14 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   if (venmoButton) {
-      venmoButton.addEventListener("click", function () {
-          setPaymentMethod("Venmo");
-          checkout();
-      });
-  } else {
-      console.warn("⚠️ `#venmo-button` not found on this page.");
-  }
+    venmoButton.addEventListener("click", function () {
+        setPaymentMethod("Venmo");
+        payWithVenmo();  // ✅ Correct function - Ensures only Venmo runs
+    });
+} else {
+    console.warn("⚠️ `#venmo-button` not found on this page.");
+}
+
 });
 
 // Ensure updateCartCount() works globally
