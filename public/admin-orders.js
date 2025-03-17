@@ -50,4 +50,19 @@ document.getElementById("export-orders-btn").addEventListener("click", () => {
 });
 
 // ✅ Run on Page Load
-document.addEventListener("DOMContentLoaded", fetchOrders);
+
+document.addEventListener("DOMContentLoaded", () => {
+  const exportOrdersBtn = document.getElementById("export-orders-btn");
+
+  if (exportOrdersBtn) {
+      exportOrdersBtn.addEventListener("click", exportOrders);
+  } else {
+      console.error("❌ Error: #export-orders-btn not found in DOM.");
+  }
+
+  fetchOrders(); // Ensure orders are fetched when page loads
+});
+
+function exportOrders() {
+  window.location.href = "/export-orders";
+}
