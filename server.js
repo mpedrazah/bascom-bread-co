@@ -108,18 +108,24 @@ app.post("/save-order", async (req, res) => {
 
     const emailOptInValue = email_opt_in === true; // ✅ Ensure boolean value
 
+    // ✅ Apply Venmo discount if payment method is Venmo
+    let final_total_price = parseFloat(total_price);
+    if (payment_method === "Venmo") {
+      final_total_price -= cart.reduce((sum, item) => sum + (1 * item.quantity), 0); // ✅ $1 off per item
+    }
+
     const query = `
       INSERT INTO orders (email, pickup_day, items, total_price, payment_method, email_opt_in, order_date)
       VALUES ($1, $2, $3, $4, $5, $6, NOW()) RETURNING *;
     `;
-    const values = [email, pickup_day, items, total_price, payment_method, emailOptInValue];
+    const values = [email, pickup_day, items, final_total_price.toFixed(2), payment_method, emailOptInValue];
 
     const result = await pool.query(query, values);
     console.log("✅ Order saved:", result.rows[0]);
 
     // ✅ Send Email Confirmation if Opted-in
     if (emailOptInValue) {
-      await sendOrderConfirmationEmail(email, items, pickup_day, total_price, payment_method);
+      await sendOrderConfirmationEmail(email, items, pickup_day, final_total_price, payment_method);
     }
 
     res.json({ success: true, order: result.rows[0] });
@@ -129,6 +135,7 @@ app.post("/save-order", async (req, res) => {
     res.status(500).json({ success: false, error: error.message || "Failed to save order." });
   }
 });
+
 
 
 
@@ -159,12 +166,12 @@ async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, 
   let emailBody;
   if (paymentMethod === "Venmo") {
     emailBody = `
-      <p style="font-size: 18px; font-weight: bold;">Thank you for your order!</p>
+      <p>Thank you for your order!</p>
       <p><strong>You have purchased:</strong></p>
       <p>${orderDetails}</p>
       <p><strong>Pickup Date:</strong> ${pickupDay}</p>
       <p>You can do a porch pickup from <strong>1508 Cooper Drive, Irving, 75061</strong> between <strong>10:00 AM - 12:00 PM</strong></p>
-      <p><strong>Total after Venmo discount:</strong> $${totalAmount}</p>
+      <p><strong>Total after Venmo discount:</strong> $${totalAmount.toFixed(2)}</p>
       <p style="color: red; font-weight: bold;">⚠️ Your order will not be fulfilled until payment is received via Venmo. Please complete your payment as soon as possible.</p>
       <br>
       <p>Thank you,</p>
@@ -172,7 +179,7 @@ async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, 
     `;
   } else {
     emailBody = `
-      <p style="font-size: 18px; font-weight: bold;">Thank you for your order!</p>
+      <p>Thank you for your order!</p>
       <p><strong>You have purchased:</strong></p>
       <p>${orderDetails}</p>
       <p><strong>Pickup Date:</strong> ${pickupDay}</p>
@@ -197,6 +204,7 @@ async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, 
     console.error("❌ Error sending email:", error);
   }
 }
+
 
 
 
