@@ -186,6 +186,7 @@ async function payWithVenmo() {
   venmoPaymentAttempted = true; // ✅ Mark as attempted to prevent duplicates
 
   let total_price = parseFloat(cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2));
+  const emailOptIn = document.getElementById("email-opt-in")?.checked || false;
 
   let orderData = {
     name: email.split("@")[0], // Extract name from email
@@ -194,6 +195,7 @@ async function payWithVenmo() {
     items: cart.map(item => `${item.name} (x${item.quantity})`).join(", "),
     total_price,
     payment_method: "Venmo",
+    emailOptIn  // ✅ Ensure this is included
   };
 
   console.log("📤 Sending Venmo order to server:", orderData);
@@ -271,6 +273,8 @@ async function checkout() {
   });
 
   // ✅ Construct order data (Fix incorrect field names)
+  const emailOptIn = document.getElementById("email-opt-in")?.checked || false;
+
   let orderData = {
       name: email.split("@")[0], // Extract name from email
       email,
@@ -279,7 +283,6 @@ async function checkout() {
       total_price: totalDiscountedAmount.toFixed(2), // ✅ FIX: Changed from `totalPrice`
       payment_method: "Stripe", // ✅ FIX: Changed from `paymentMethod`
       emailOptIn,
-      discountCode
   };
 
   console.log("📤 Sending Stripe order to Railway Backend:", orderData);

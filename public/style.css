@@ -15,6 +15,7 @@ body {
   box-sizing: border-box;
 }
 
+
 /* Hero Section */
 .hero {
   background-image: url('images/hero-image.jpg');
@@ -932,4 +933,10 @@ nav ul li a {
     font-size: 14px; /* Adjust size */
     font-weight: 600; /* Keep consistent with desktop */
   }
+}
+
+/* ✅ Add spacing below navbar */
+.admin-orders-container {
+  margin-top: 20px;
+  padding: 20px;
 }

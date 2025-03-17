@@ -92,33 +92,31 @@ async function saveOrderToDatabase(order) {
 
 app.post("/save-order", async (req, res) => {
   try {
-    let { email, pickup_day, items, total_price, payment_method } = req.body;
+      const { email, pickup_day, items, total_price, payment_method, emailOptIn } = req.body;
 
-    // ✅ Ensure required fields are present
-    if (!email || !pickup_day || !items || !total_price || !payment_method) {
-      console.error("❌ Missing required fields:", { email, pickup_day, items, total_price, payment_method });
-      return res.status(400).json({ success: false, error: "All fields are required!" });
-    }
+      console.log("🛠 Received order:", req.body);
 
-    console.log("🛠 Received order:", req.body);
+      if (!email || !pickup_day || !items || !total_price || !payment_method) {
+          console.error("❌ Missing required fields:", { email, pickup_day, items, total_price, payment_method });
+          return res.status(400).json({ success: false, error: "All fields are required!" });
+      }
 
-    // ✅ Save to PostgreSQL
-    const query = `
-      INSERT INTO orders (email, pickup_day, items, total_price, payment_method, order_date)
-      VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING *;
-    `;
+      const query = `
+          INSERT INTO orders (email, pickup_day, items, total_price, payment_method, email_opt_in, order_date)
+          VALUES ($1, $2, $3, $4, $5, $6, NOW()) RETURNING *;
+      `;
+      const values = [email, pickup_day, items, total_price, payment_method, emailOptIn || false];
 
-    const values = [email, pickup_day, items, total_price, payment_method];
-
-    const result = await pool.query(query, values);
-    console.log("✅ Order saved:", result.rows[0]);
-    res.json({ success: true, order: result.rows[0] });
+      const result = await pool.query(query, values);
+      console.log("✅ Order saved:", result.rows[0]);
+      res.json({ success: true, order: result.rows[0] });
 
   } catch (error) {
-    console.error("❌ Error saving order:", error);
-    res.status(500).json({ success: false, error: error.message || "Failed to save order." });
+      console.error("❌ Error saving order:", error);
+      res.status(500).json({ success: false, error: error.message || "Failed to save order." });
   }
 });
+
 
 
 
@@ -210,12 +208,30 @@ app.get("/export-orders", (req, res) => {
 });
 
 // ✅ Export Email Subscribers
-app.get("/export-email-optins", (req, res) => {
-  if (!fs.existsSync(csvFilePath)) {
-    return res.status(404).json({ message: "No opted-in emails found." });
+app.get("/export-email-optins", async (req, res) => {
+  try {
+      const result = await pool.query("SELECT DISTINCT email FROM orders WHERE email_opt_in = TRUE");
+
+      if (result.rows.length === 0) {
+          return res.status(404).json({ message: "No opted-in emails found." });
+      }
+
+      const csvWriter = createCsvWriter({
+          path: "opted_in_emails.csv",
+          header: [{ id: "email", title: "Email" }],
+      });
+
+      await csvWriter.writeRecords(result.rows);
+      console.log("✅ Opted-in emails exported successfully!");
+
+      res.download("opted_in_emails.csv");
+
+  } catch (error) {
+      console.error("❌ Error exporting opted-in emails:", error);
+      res.status(500).json({ error: "Failed to export opted-in emails." });
   }
-  res.download(csvFilePath);
 });
+
 
 // ✅ Start Server
 const PORT = process.env.PORT || 0;
