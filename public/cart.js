@@ -168,7 +168,7 @@ async function payWithVenmo() {
     alert("Your cart is empty!");
     return;
   }
-
+  const emailOptIn = document.getElementById("email-opt-in")?.checked || false;
   const email = document.getElementById("email")?.value.trim();
   const pickup_day = document.getElementById("pickup-day")?.value;
 
@@ -186,7 +186,6 @@ async function payWithVenmo() {
   venmoPaymentAttempted = true; // ✅ Mark as attempted to prevent duplicates
 
   let total_price = parseFloat(cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2));
-  const emailOptIn = document.getElementById("email-opt-in")?.checked || false;
 
   let orderData = {
     name: email.split("@")[0], // Extract name from email
@@ -246,7 +245,6 @@ async function checkout() {
       alert("Your cart is empty!");
       return;
   }
-
   const email = document.getElementById("email")?.value.trim();
   const pickup_day = document.getElementById("pickup-day")?.value;
   const emailOptIn = document.getElementById("email-opt-in")?.checked || false;
@@ -273,8 +271,7 @@ async function checkout() {
   });
 
   // ✅ Construct order data (Fix incorrect field names)
-  const emailOptIn = document.getElementById("email-opt-in")?.checked || false;
-
+  
   let orderData = {
       name: email.split("@")[0], // Extract name from email
       email,
@@ -282,7 +279,7 @@ async function checkout() {
       items: updatedCart.map(item => `${item.name} (x${item.quantity})`).join(", "),
       total_price: totalDiscountedAmount.toFixed(2), // ✅ FIX: Changed from `totalPrice`
       payment_method: "Stripe", // ✅ FIX: Changed from `paymentMethod`
-      emailOptIn,
+      emailOptIn
   };
 
   console.log("📤 Sending Stripe order to Railway Backend:", orderData);
