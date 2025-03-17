@@ -160,11 +160,16 @@ async function sendOrderConfirmationEmail(email, cart, pickupDay, totalAmount) {
 // ✅ Stripe Checkout API
 app.post("/create-checkout-session", async (req, res) => {
   try {
-    const { cart, email, pickupDay, totalAmount, paymentMethod } = req.body;
+    console.log("🛠 Received Stripe checkout request:", req.body); // ✅ Log incoming request
 
-    if (!paymentMethod) {
-      return res.status(400).json({ error: "Payment method not specified." });
+    const { cart, email, pickup_day, totalAmount, payment_method } = req.body;
+
+    if (!cart || !email || !pickup_day || !totalAmount || !payment_method) {
+      console.error("❌ Missing required fields:", { cart, email, pickup_day, totalAmount, payment_method });
+      return res.status(400).json({ error: "Missing required fields for Stripe checkout." });
     }
+
+    console.log("✅ All required fields are present. Proceeding to Stripe API...");
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -180,7 +185,7 @@ app.post("/create-checkout-session", async (req, res) => {
       success_url: "https://your-site.com/success.html",
       cancel_url: "https://your-site.com/cancel.html",
       customer_email: email,
-      metadata: { cart: JSON.stringify(cart), pickupDay, totalAmount, paymentMethod }
+      metadata: { cart: JSON.stringify(cart), pickup_day, totalAmount, payment_method }
     });
 
     console.log("✅ Stripe Session Created:", session.url);
@@ -191,6 +196,7 @@ app.post("/create-checkout-session", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 
 // ✅ Export Orders as CSV for Admin Download
 app.get("/export-orders", (req, res) => {
