@@ -39,31 +39,36 @@ const pool = new Pool({
 // ✅ Retry connecting to PostgreSQL before failing
 async function setupDatabase(retries = 5, delay = 5000) {
   for (let i = 0; i < retries; i++) {
-      try {
-          const client = await pool.connect();
-          console.log("✅ Database connected successfully!");
-          await client.query(`
-              CREATE TABLE IF NOT EXISTS orders (
-                  id SERIAL PRIMARY KEY,
-                  timestamp TIMESTAMP DEFAULT NOW(),
-                  name TEXT,
-                  email TEXT,
-                  pickupDate TEXT,
-                  items TEXT,
-                  totalPrice NUMERIC(10,2),
-                  paymentMethod TEXT
-              )
-          `);
-          client.release();
-          return; // ✅ Exit if successful
-      } catch (err) {
-          console.error(`❌ Database connection attempt ${i + 1} failed. Retrying in ${delay / 1000} seconds...`);
-          await new Promise((resolve) => setTimeout(resolve, delay)); // Wait before retrying
-      }
+    try {
+      const client = await pool.connect();
+      console.log("✅ Database connected successfully!");
+
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS orders (
+          id SERIAL PRIMARY KEY,
+          timestamp TIMESTAMP DEFAULT NOW(),
+          name TEXT,
+          email TEXT,
+          pickup_day TEXT,
+          items TEXT,
+          total_price NUMERIC(10,2),
+          payment_method TEXT,
+          email_opt_in BOOLEAN DEFAULT FALSE,
+          order_date TIMESTAMP DEFAULT NOW()
+        )
+      `);
+
+      client.release();
+      return; // ✅ Exit if successful
+    } catch (err) {
+      console.error(`❌ Database connection attempt ${i + 1} failed. Retrying in ${delay / 1000} seconds...`);
+      await new Promise((resolve) => setTimeout(resolve, delay)); // Wait before retrying
+    }
   }
   console.error("🚨 Database connection failed after multiple attempts. Exiting.");
-  process.exit(1); // Stop the app so Railway doesn't keep restarting it
+  process.exit(1);
 }
+
 
 // ✅ Call the function to initialize the DB
 setupDatabase();
@@ -101,10 +106,10 @@ app.post("/save-order", async (req, res) => {
       return res.status(400).json({ success: false, error: "All fields are required!" });
     }
 
-    const emailOptInValue = email_optin === true; // ✅ Ensure it's stored as a boolean
+    const emailOptInValue = email_opt_in === true; // ✅ Ensure boolean value
 
     const query = `
-      INSERT INTO orders (email, pickup_day, items, total_price, payment_method, email_optin, order_date)
+      INSERT INTO orders (email, pickup_day, items, total_price, payment_method, email_opt_in, order_date)
       VALUES ($1, $2, $3, $4, $5, $6, NOW()) RETURNING *;
     `;
     const values = [email, pickup_day, items, total_price, payment_method, emailOptInValue];
@@ -130,6 +135,7 @@ app.post("/save-order", async (req, res) => {
 
 
 
+
 // ✅ API Endpoint to Fetch Orders
 app.get("/get-orders", async (req, res) => {
   try {
@@ -147,15 +153,13 @@ app.get("/get-orders", async (req, res) => {
 
 
 // ✅ Send Order Confirmation Email
-// ✅ Send Order Confirmation Email
 async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, paymentMethod) {
   const orderDetails = items.split(", ").map(item => `• ${item}`).join("<br>");
 
-  // Format email content based on payment method
   let emailBody;
   if (paymentMethod === "Venmo") {
     emailBody = `
-      <p>Thank you for your order!</p>
+      <p style="font-size: 18px; font-weight: bold;">Thank you for your order!</p>
       <p><strong>You have purchased:</strong></p>
       <p>${orderDetails}</p>
       <p><strong>Pickup Date:</strong> ${pickupDay}</p>
@@ -168,7 +172,7 @@ async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, 
     `;
   } else {
     emailBody = `
-      <p>Thank you for your order!</p>
+      <p style="font-size: 18px; font-weight: bold;">Thank you for your order!</p>
       <p><strong>You have purchased:</strong></p>
       <p>${orderDetails}</p>
       <p><strong>Pickup Date:</strong> ${pickupDay}</p>
@@ -183,7 +187,7 @@ async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, 
     from: process.env.EMAIL_USER,
     to: email,
     subject: "Your Bascom Bread Order Confirmation",
-    html: emailBody, // ✅ Use HTML for better formatting
+    html: emailBody,
   };
 
   try {
@@ -193,6 +197,7 @@ async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, 
     console.error("❌ Error sending email:", error);
   }
 }
+
 
 
 // ✅ Stripe Checkout API
