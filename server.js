@@ -171,6 +171,8 @@ async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, 
       <p><strong>You have purchased:</strong></p>
       <p>${orderDetails}</p>
       <p><strong>Pickup Date:</strong> ${pickupDay}</p>
+      <p> You can pickup your order from the porch at 1508 Cooper Dr., Irving, Texas 75061. 
+      <p></p>
       <p><strong>Total after Venmo discount:</strong> $${parseFloat(totalAmount).toFixed(2)}</p>
       <p style="color: red; font-weight: bold;">⚠️ Your order will not be fulfilled until payment is received via Venmo. Please complete your payment as soon as possible.</p>
       <br>
@@ -183,6 +185,8 @@ async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, 
       <p><strong>You have purchased:</strong></p>
       <p>${orderDetails}</p>
       <p><strong>Pickup Date:</strong> ${pickupDay}</p>
+      <p> You can pickup your order from the porch at 1508 Cooper Dr., Irving, Texas 75061. 
+      <p></p>
       <br>
       <p>Thank you,</p>
       <p>Margaret</p>
