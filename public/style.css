@@ -572,11 +572,6 @@ button:hover {
 }
 
 
-@media (min-width: 768px) { /* Desktop Mode */
-  .email-container {
-    margin-top: 120px; /* Adjust this if still covered */
-  }
-}
 
 .email-container label {
   font-size: 16px;
@@ -618,11 +613,7 @@ button:hover {
   flex: 1;
 }
 
-@media (min-width: 768px) { /* Apply only on desktop */
-  .email-container {
-    margin-top: 80px; /* Adjust based on navbar height */
-  }
-}
+
 
 
 
