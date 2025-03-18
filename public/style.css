@@ -564,6 +564,7 @@ button:hover {
   background: #f9f9f9;
   padding: 20px;
   padding-top: 20px;
+  margin-top: 80px;
   border-radius: 8px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   text-align: center;
@@ -613,11 +614,12 @@ button:hover {
   flex: 1;
 }
 
-@media (min-width: 768px) {
-  body {
-    padding-top: 80px; /* Push all content down */
+@media (min-width: 768px) { /* Apply only on desktop */
+  .email-container {
+    margin-top: 80px; /* Adjust based on navbar height */
   }
 }
+
 
 
 .about-image {
