@@ -572,7 +572,11 @@ button:hover {
 }
 
 
-
+@media (min-width: 768px) { /* Desktop Mode */
+  .email-container {
+    margin-top: 120px; /* Adjust this if still covered */
+  }
+}
 
 .email-container label {
   font-size: 16px;
