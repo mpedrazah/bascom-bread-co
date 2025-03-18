@@ -180,8 +180,7 @@ async function payWithVenmo() {
 
   // ✅ Calculate Total with Venmo Discount (Remove 3% Fee)
   let subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  let venmoDiscount = subtotal * 0.03; // **Remove 3% Fee**
-  let total_price = subtotal - venmoDiscount;
+  let total_price = subtotal
 
   total_price = Math.max(total_price, 0).toFixed(2);
 
