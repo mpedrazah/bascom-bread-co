@@ -165,8 +165,8 @@ let venmoPaymentAttempted = false; // ✅ Prevent duplicate submissions
 
 async function payWithVenmo() {
   if (cart.length === 0) {
-    alert("Your cart is empty!");
-    return;
+      alert("Your cart is empty!");
+      return;
   }
 
   const email = document.getElementById("email")?.value.trim();
@@ -174,76 +174,71 @@ async function payWithVenmo() {
   const emailOptIn = document.getElementById("email-opt-in")?.checked || false;
 
   if (!email || !pickup_day) {
-    alert("Please enter your email and select a pickup date.");
-    return;
+      alert("Please enter your email and select a pickup date.");
+      return;
   }
 
-  // ✅ Apply Venmo discount ($1 per product)
-  let total_price = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  let total_discounted = total_price - (cart.length * 1); // Subtract $1 per product
-  total_discounted = Math.max(total_discounted, 0).toFixed(2); // Ensure no negative prices
+  // ✅ Calculate Total with Venmo Discount (Remove 3% Fee)
+  let subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  let venmoDiscount = subtotal * 0.03; // **Remove 3% Fee**
+  let total_price = subtotal - venmoDiscount;
+
+  total_price = Math.max(total_price, 0).toFixed(2);
 
   let orderData = {
-    name: email.split("@")[0],
-    email,
-    pickup_day,
-    items: cart.map(item => `${item.name} (x${item.quantity})`).join(", "),
-    total_price: total_discounted,
-    payment_method: "Venmo",
-    email_opt_in: emailOptIn,
-    cart // ✅ Send full cart for validation
+      name: email.split("@")[0],
+      email,
+      pickup_day,
+      items: cart.map(item => `${item.name} (x${item.quantity})`).join(", "),
+      total_price: total_price,
+      payment_method: "Venmo",
+      email_opt_in: emailOptIn,
+      cart
   };
 
   console.log("📤 Sending Venmo order to server:", orderData);
 
   try {
-    const response = await fetch(`${API_BASE}/save-order`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(orderData),
-    });
+      const response = await fetch(`${API_BASE}/save-order`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(orderData),
+      });
 
-    const result = await response.json();
-    if (!result.success) throw new Error("Failed to save order.");
+      const result = await response.json();
+      if (!result.success) throw new Error("Failed to save order.");
 
-    console.log("✅ Order saved successfully!");
+      console.log("✅ Order saved successfully!");
 
-    // ✅ Detect if user is on mobile
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      // ✅ Open Venmo App on Mobile, New Tab on Desktop
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      let venmoLink = isMobile
+          ? `venmo://paycharge?txn=pay&recipients=Margaret-Smillie&amount=${total_price}&note=Bascom%20Bread%20Order`
+          : `https://venmo.com/Margaret-Smillie?txn=pay&amount=${total_price}&note=Bascom%20Bread%20Order`;
 
-    let venmoLink = isMobile
-      ? `venmo://paycharge?txn=pay&recipients=Margaret-Smillie&amount=${total_discounted}&note=Bascom%20Bread%20Order%20-%20Pickup%20on%20${encodeURIComponent(pickup_day)}`
-      : `https://venmo.com/Margaret-Smillie?txn=pay&amount=${total_discounted}&note=Bascom%20Bread%20Order%20-%20Pickup%20on%20${encodeURIComponent(pickup_day)}`;
+      if (isMobile) {
+          window.location.href = venmoLink; // Opens Venmo App
+          setTimeout(() => {
+              window.location.href = "success.html"; // Redirect to Success Page
+          }, 3000);
+      } else {
+          const venmoWindow = window.open(venmoLink, "_blank");
+          setTimeout(() => {
+              if (!venmoWindow || venmoWindow.closed) {
+                  alert("Venmo did not open. Please complete payment manually.");
+              }
+              window.location.href = "success.html";
+          }, 5000);
+      }
 
-    if (isMobile) {
-      // ✅ Open Venmo app and redirect in the background
-      window.location.href = venmoLink; // Opens Venmo App
-      setTimeout(() => {
-        window.location.href = "success.html"; // Redirects to Success Page
-      }, 3000);
-    } else {
-      // ✅ Open Venmo in a new tab (for desktop users)
-      const venmoWindow = window.open(venmoLink, "_blank");
-
-      setTimeout(() => {
-        if (!venmoWindow || venmoWindow.closed) {
-          alert("Venmo did not open. Please complete payment manually.");
-        }
-        window.location.href = "success.html";
-      }, 5000);
-    }
-
-    // ✅ Clear cart after order submission
-    localStorage.removeItem("cart");
-    updateCartCount();
+      // ✅ Clear Cart After Order
+      localStorage.removeItem("cart");
+      updateCartCount();
   } catch (error) {
-    console.error("❌ Venmo order submission failed:", error);
-    alert("There was an issue processing your Venmo payment.");
+      console.error("❌ Venmo order submission failed:", error);
+      alert("There was an issue processing your Venmo payment.");
   }
 }
-
-
-
 
 
 // ✅ Make function globally accessible
@@ -345,46 +340,61 @@ let paymentMethod = "Stripe"; // Default to Stripe
 // Function to set payment method
 function setPaymentMethod(method) {
     paymentMethod = method;
+    renderCartItems();
 }
 
 // ✅ Renders Cart Items with Image Support and Discount Application
 function renderCartItems() {
   const cartContainer = document.getElementById("cart-items");
   const totalContainer = document.getElementById("cart-total");
+  const feeContainer = document.getElementById("convenience-fee"); // Add new fee display
+  const paymentFeeContainer = document.getElementById("payment-fee"); // For Venmo fee handling
 
   if (!cartContainer || !totalContainer) return;
 
   cartContainer.innerHTML = "";
-  let total = 0;
+  let subtotal = 0;
 
+  // Calculate subtotal
   cart.forEach((item, index) => {
-    const imageUrl = item.image && item.image !== "undefined" ? item.image : "images/freshmillloaf.jpg";
-    total += item.price * item.quantity;
+      const imageUrl = item.image || "images/freshmillloaf.jpg";
+      subtotal += item.price * item.quantity;
 
-    cartContainer.innerHTML += `
-      <div class="cart-item">
-        <div class="item-info">
-          <img src="${imageUrl}" alt="${item.name}" onerror="this.onerror=null;this.src='images/freshmillloaf.jpg';">
-          <div>
-            <h4>${item.name}</h4>
-            <p>Price: $${item.price.toFixed(2)}</p>
+      cartContainer.innerHTML += `
+          <div class="cart-item">
+              <div class="item-info">
+                  <img src="${imageUrl}" alt="${item.name}">
+                  <div>
+                      <h4>${item.name}</h4>
+                      <p>Price: $${item.price.toFixed(2)}</p>
+                  </div>
+              </div>
+              <input type="number" value="${item.quantity}" min="1" onchange="updateQuantity(${index}, this.value)" />
+              <button onclick="removeFromCart(${index})">Remove</button>
           </div>
-        </div>
-        <input type="number" value="${item.quantity}" min="1" onchange="updateQuantity(${index}, this.value)" />
-        <button onclick="removeFromCart(${index})">Remove</button>
-      </div>
-    `;
+      `;
   });
 
-  // Apply Discount if Available
-  if (discountAmount > 0) {
-    total = total - (total * discountAmount);
+  // **Calculate Convenience Fee (3%)**
+  let convenienceFee = subtotal * 0.03;
+  convenienceFee = parseFloat(convenienceFee.toFixed(2)); // Ensure 2 decimal places
+
+  // **Adjust for Venmo Payment**
+  let venmoDiscount = 0; 
+  if (paymentMethod === "Venmo") {
+      venmoDiscount = convenienceFee; // Remove 3% fee
+      convenienceFee = 0; // No extra charge for Venmo
   }
 
-  totalContainer.innerText = `Total: $${total.toFixed(2)}`;
+  let total = subtotal + convenienceFee - venmoDiscount;
 
-  if (typeof checkCartAvailability === "function") checkCartAvailability();
+  // **Update UI**
+  feeContainer.innerText = `Online Convenience Fee: $${convenienceFee.toFixed(2)}`;
+  paymentFeeContainer.innerText = paymentMethod === "Venmo" ? `Venmo Discount: -$${venmoDiscount.toFixed(2)}` : "";
+
+  totalContainer.innerText = `Total: $${total.toFixed(2)}`;
 }
+
 
 // ✅ Ensures Global Accessibility
 window.renderCartItems = renderCartItems;

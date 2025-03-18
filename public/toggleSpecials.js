@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // ✅ Toggle these manually (true to show, false to hide)
     const isEasterActive = false;  // Set to true when Easter is active
-    const isStPatricksActive = true; // Set to true when St. Patrick's is active
+    const isStPatricksActive = false; // Set to true when St. Patrick's is active
 
     let specialsActive = false;
 
