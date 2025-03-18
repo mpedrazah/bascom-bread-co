@@ -209,6 +209,58 @@ async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, 
 }
 
 
+// ✅ Stripe Webhook for Payment Confirmation
+app.post("/webhook", express.raw({ type: "application/json" }), async (req, res) => {
+  const sig = req.headers["stripe-signature"];
+
+  let event;
+  try {
+      event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+  } catch (err) {
+      console.error("❌ Webhook signature verification failed:", err.message);
+      return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  // ✅ Handle only successful payments
+  if (event.type === "checkout.session.completed") {
+      const session = event.data.object;
+
+      console.log("✅ Payment received! Processing order:", session);
+
+      const email = session.customer_email;
+      const metadata = session.metadata;
+
+      const orderData = {
+          email,
+          pickup_day: metadata.pickup_day,
+          items: JSON.parse(metadata.cart).map(item => `${item.name} (x${item.quantity})`).join(", "),
+          total_price: parseFloat(metadata.totalAmount).toFixed(2),
+          payment_method: metadata.payment_method,
+          email_opt_in: metadata.emailOptIn === "true"
+      };
+
+      try {
+          // ✅ Save the order in PostgreSQL
+          const query = `
+              INSERT INTO orders (email, pickup_day, items, total_price, payment_method, email_opt_in, order_date)
+              VALUES ($1, $2, $3, $4, $5, $6, NOW()) RETURNING *;
+          `;
+          const values = [orderData.email, orderData.pickup_day, orderData.items, orderData.total_price, orderData.payment_method, orderData.email_opt_in];
+
+          const result = await pool.query(query, values);
+          console.log("✅ Order saved in database:", result.rows[0]);
+
+          // ✅ Send confirmation email
+          await sendOrderConfirmationEmail(orderData.email, orderData.items, orderData.pickup_day, orderData.total_price, orderData.payment_method);
+
+      } catch (error) {
+          console.error("❌ Error saving order:", error);
+          return res.status(500).send("Error processing order.");
+      }
+  }
+
+  res.json({ received: true });
+});
 
 
 

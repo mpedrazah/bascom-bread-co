@@ -37,6 +37,8 @@ document.addEventListener("DOMContentLoaded", function () {
     } else {
         seasonalSpecials.classList.add("hidden");
         specialsBanner.classList.add("hidden");
+        seasonalSpecials.style.display = "none"; // Ensure it's hidden
+        specialsBanner.style.display="none";
     }
 
     // 🔍 Debugging logs
@@ -46,4 +48,12 @@ document.addEventListener("DOMContentLoaded", function () {
         easterDisplay: easterSpecials.style.display,
         stPatricksDisplay: stPatricksSpecials.style.display
     });
+
+    console.log("Banner visibility:", {
+        seasonalSpecialsHidden: seasonalSpecials?.classList.contains("hidden"),
+        specialsBannerHidden: specialsBanner?.classList.contains("hidden"),
+        seasonalDisplay: seasonalSpecials?.style.display,
+        bannerDisplay: specialsBanner?.style.display
+    });
+
 });
