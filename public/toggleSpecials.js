@@ -49,11 +49,5 @@ document.addEventListener("DOMContentLoaded", function () {
         stPatricksDisplay: stPatricksSpecials.style.display
     });
 
-    console.log("Banner visibility:", {
-        seasonalSpecialsHidden: seasonalSpecials?.classList.contains("hidden"),
-        specialsBannerHidden: specialsBanner?.classList.contains("hidden"),
-        seasonalDisplay: seasonalSpecials?.style.display,
-        bannerDisplay: specialsBanner?.style.display
-    });
 
 });
