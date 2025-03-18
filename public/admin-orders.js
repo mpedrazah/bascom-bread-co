@@ -1,4 +1,4 @@
-const API_BASE = "https://bascom-bread-co-production.up.railway.app"; // ✅ Fix missing https://
+const API_BASE = "www.bascombreadco.com"; // ✅ Fix missing https://
 
 // ✅ Fetch Orders from Backend
 async function fetchOrders() {
