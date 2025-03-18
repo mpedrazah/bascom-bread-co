@@ -613,6 +613,12 @@ button:hover {
   flex: 1;
 }
 
+@media (min-width: 768px) { /* Apply only on desktop */
+  .email-container {
+    margin-top: 80px; /* Adjust based on navbar height */
+  }
+}
+
 .about-image {
   flex: 1;
   max-width: 300px;
