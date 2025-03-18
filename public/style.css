@@ -676,7 +676,8 @@ button:hover {
   align-items: center;
   max-width: 600px;
   margin: 20px auto;
-  padding: 60px 20px;
+  padding-top: 120px;
+  margin-top:80px;
   gap:20px;
   margin-bottom: 20px;
   padding: 10px;
