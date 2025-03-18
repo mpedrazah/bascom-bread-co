@@ -382,7 +382,6 @@ function renderCartItems() {
   let venmoDiscount = 0; 
   if (paymentMethod === "Venmo") {
       venmoDiscount = convenienceFee; // Remove 3% fee
-      convenienceFee = 0; // No extra charge for Venmo
   }
 
   let total = subtotal + convenienceFee - venmoDiscount;
