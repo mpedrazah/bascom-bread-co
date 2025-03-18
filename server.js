@@ -289,8 +289,8 @@ app.post("/create-checkout-session", async (req, res) => {
         quantity: item.quantity || 1,
       })),
       mode: "payment",
-      success_url: "www.bascombreadco.com/success.html",
-      cancel_url: "www.bascombreadco.com/cancel.html",
+      success_url: "https://www.bascombreadco.com/success.html",
+      cancel_url: "https://www.bascombreadco.com/cancel.html",
       customer_email: email,
       metadata: { cart: JSON.stringify(cart), pickup_day, totalAmount, payment_method }
     });
