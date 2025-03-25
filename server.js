@@ -77,20 +77,23 @@ setupDatabase();
 // ✅ Function to Save Orders in PostgreSQL
 async function saveOrderToDatabase(order) {
   const query = `
-      INSERT INTO orders (email, pickup_day, items, total_price, payment_method, order_date)
-      VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING *;
+      INSERT INTO orders (email, pickup_day, items, total_price, payment_method, email_opt_in, order_date)
+      VALUES ($1, $2, $3, $4, $5, $6, NOW()) RETURNING *;
   `;
-  const values = [order.email, order.pickupDay, order.items, order.totalPrice, order.paymentMethod];
+  const values = [order.email, order.pickup_day, order.items, order.total_price, order.payment_method, order.email_opt_in];
 
   try {
-      const result = await pool.query(query, values);
-      console.log("✅ Order saved to PostgreSQL successfully!", result.rows[0]);
-      return result.rows[0];
+    const result = await pool.query(query, values);
+    console.log("✅ Order saved to PostgreSQL successfully!", result.rows[0]);
+    return result.rows[0];
   } catch (err) {
-      console.error("❌ Error saving order to PostgreSQL:", err);
-      throw err;
+    console.error("❌ Error saving order to PostgreSQL:", err);
+    console.error("❌ Query:", query);
+    console.error("❌ Values:", values);
+    throw err;
   }
 }
+
 
 
 // ✅ API Endpoint to Save Orders
@@ -205,62 +208,59 @@ async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, 
     console.log("✅ Order confirmation email sent to:", email);
   } catch (error) {
     console.error("❌ Error sending email:", error);
+    console.error("❌ Mail Options:", mailOptions);
   }
+  
 }
 
 
 // ✅ Stripe Webhook for Payment Confirmation
+// Webhook endpoint for Stripe
 app.post("/webhook", express.raw({ type: "application/json" }), async (req, res) => {
   const sig = req.headers["stripe-signature"];
 
   let event;
   try {
-      event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+    console.log("✅ Webhook Event Received:", event.type); // ✅ Log event type
   } catch (err) {
-      console.error("❌ Webhook signature verification failed:", err.message);
-      return res.status(400).send(`Webhook Error: ${err.message}`);
+    console.error("❌ Webhook signature verification failed:", err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  // ✅ Handle only successful payments
+  // Process only successful payments
   if (event.type === "checkout.session.completed") {
-      const session = event.data.object;
+    const session = event.data.object;
 
-      console.log("✅ Payment received! Processing order:", session);
+    console.log("✅ Payment received! Processing order:", session);
 
-      const email = session.customer_email;
-      const metadata = session.metadata;
+    const email = session.customer_email;
+    const metadata = session.metadata;
 
-      const orderData = {
-          email,
-          pickup_day: metadata.pickup_day,
-          items: JSON.parse(metadata.cart).map(item => `${item.name} (x${item.quantity})`).join(", "),
-          total_price: parseFloat(metadata.totalAmount).toFixed(2),
-          payment_method: metadata.payment_method,
-          email_opt_in: metadata.emailOptIn === "true"
-      };
+    const orderData = {
+      email,
+      pickup_day: metadata.pickup_day,
+      items: JSON.parse(metadata.cart).map(item => `${item.name} (x${item.quantity})`).join(", "),
+      total_price: parseFloat(metadata.totalAmount).toFixed(2),
+      payment_method: metadata.payment_method,
+      email_opt_in: metadata.emailOptIn && metadata.emailOptIn === "true"
 
-      try {
-          // ✅ Save the order in PostgreSQL
-          const query = `
-              INSERT INTO orders (email, pickup_day, items, total_price, payment_method, email_opt_in, order_date)
-              VALUES ($1, $2, $3, $4, $5, $6, NOW()) RETURNING *;
-          `;
-          const values = [orderData.email, orderData.pickup_day, orderData.items, orderData.total_price, orderData.payment_method, orderData.email_opt_in];
+    };
 
-          const result = await pool.query(query, values);
-          console.log("✅ Order saved in database:", result.rows[0]);
-
-          // ✅ Send confirmation email
-          await sendOrderConfirmationEmail(orderData.email, orderData.items, orderData.pickup_day, orderData.total_price, orderData.payment_method);
-
-      } catch (error) {
-          console.error("❌ Error saving order:", error);
-          return res.status(500).send("Error processing order.");
-      }
+    try {
+      await saveOrderToDatabase(orderData);
+      console.log("✅ Order saved successfully to database!");
+      await sendOrderConfirmationEmail(orderData.email, orderData.items, orderData.pickup_day, orderData.total_price, orderData.payment_method);
+      console.log("✅ Confirmation email sent successfully!");
+    } catch (error) {
+      console.error("❌ Error processing order:", error);
+      return res.status(500).send("Error processing order.");
+    }
   }
 
   res.json({ received: true });
 });
+
 
 
 
@@ -292,8 +292,15 @@ app.post("/create-checkout-session", async (req, res) => {
       success_url: "https://www.bascombreadco.com/success.html",
       cancel_url: "https://www.bascombreadco.com/cancel.html",
       customer_email: email,
-      metadata: { cart: JSON.stringify(cart), pickup_day, totalAmount, payment_method }
+      metadata: {
+        cart: JSON.stringify(cart),
+        pickup_day,
+        totalAmount,
+        payment_method,
+        emailOptIn: emailOptIn.toString()
+      }
     });
+    
 
     console.log("✅ Stripe Session Created:", session.url);
     res.json({ url: session.url });

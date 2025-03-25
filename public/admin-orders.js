@@ -35,7 +35,7 @@ function displayOrders(orders) {
       <p><strong>Email:</strong> ${order.email}</p>
       <p><strong>Pickup Date:</strong> ${order.pickup_day || "N/A"}</p> <!-- ✅ Fix field name -->
       <p><strong>Items:</strong> ${order.items}</p>
-      <p><strong>Total:</strong> $${order.total_price}</p> <!-- ✅ Fix field name -->
+      <p><strong>Total:</strong> ${order.total_price}</p> <!-- ✅ Fix field name -->
       <p><strong>Payment Method:</strong> ${order.payment_method}</p> 
       <hr>
     `;
