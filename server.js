@@ -10,7 +10,11 @@ const express = require("express");
 const cors = require("cors");
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: ["https://www.bascombreadco.com", "https://bascombreadco.up.railway.app"],
+  methods: ["GET", "POST"],
+  credentials: true
+}));
 app.use(express.json());
 
 app.use(express.static(path.join(__dirname, "public")));
@@ -269,7 +273,7 @@ app.post("/create-checkout-session", async (req, res) => {
   try {
     console.log("🛠 Received Stripe checkout request:", req.body); // ✅ Log incoming request
 
-    const { cart, email, pickup_day, totalAmount, payment_method } = req.body;
+    const { cart, email, pickup_day, totalAmount, payment_method, emailOptIn } = req.body;
 
     if (!cart || !email || !pickup_day || !totalAmount || !payment_method) {
       console.error("❌ Missing required fields:", { cart, email, pickup_day, totalAmount, payment_method });
