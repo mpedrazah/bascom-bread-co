@@ -10,11 +10,75 @@ const express = require("express");
 const cors = require("cors");
 
 const app = express();
+
 app.use(cors({
   origin: ["https://www.bascombreadco.com", "https://bascombreadco.up.railway.app"],
   methods: ["GET", "POST"],
   credentials: true
 }));
+
+// ✅ Stripe Webhook for Payment Confirmation
+// Webhook endpoint for Stripe
+app.post("/webhook", express.raw({ type: "application/json" }), async (req, res) => {
+  console.log("⚡ Incoming webhook request received.");
+  const sig = req.headers["stripe-signature"];
+
+  let event;
+  try {
+    event = JSON.parse(req.body);
+    console.log("✅ Webhook (fake parsed) event:", event.type);
+  } catch (err) {
+    console.error("❌ Could not parse raw body:", err.message);
+    return res.status(400).send("Invalid body");
+  }
+//REAL WEBHOOK CODE BELOW, FAKE ONE ABOVE
+  //try {
+  //  event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+   // console.log("✅ Webhook Event Received:", event.type); // ✅ Log event type
+  //} catch (err) {
+   // console.error("❌ Webhook signature verification failed:", err.message);
+  //  console.error("⚠️ Full Headers:", req.headers);
+   // console.error("⚠️ Raw Body:", req.body.toString());
+  //  return res.status(400).send(`Webhook Error: ${err.message}`);
+ // }
+
+  // Process only successful payments
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object;
+
+    console.log("✅ Payment received! Processing order:", session);
+
+    const email = session.customer_email;
+    const metadata = session.metadata;
+
+    const orderData = {
+      email,
+      pickup_day: metadata.pickup_day,
+      items: JSON.parse(metadata.cart).map(item => `${item.name} (x${item.quantity})`).join(", "),
+      total_price: parseFloat(metadata.totalAmount).toFixed(2),
+      payment_method: metadata.payment_method,
+      email_opt_in: metadata.emailOptIn && metadata.emailOptIn === "true"
+
+    };
+
+    try {
+      await saveOrderToDatabase(orderData);
+      console.log("✅ Order saved successfully to database!");
+      await sendOrderConfirmationEmail(orderData.email, orderData.items, orderData.pickup_day, orderData.total_price, orderData.payment_method);
+      console.log("✅ Confirmation email sent successfully!");
+    } catch (error) {
+      console.error("❌ Error processing order:", error);
+      return res.status(500).send("Error processing order.");
+    }
+  }
+
+  res.json({ received: true });
+});
+
+
+app.use(express.json());
+app.use(express.static(path.join(__dirname, "public")));
+
 
 const ordersFilePath = "orders.csv"; // Store orders here
 const csvFilePath = "email_subscribers.csv"; // Store opted-in emails
@@ -210,61 +274,6 @@ async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, 
   }
   
 }
-
-
-// ✅ Stripe Webhook for Payment Confirmation
-// Webhook endpoint for Stripe
-app.post("/webhook", express.raw({ type: "application/json" }), async (req, res) => {
-  console.log("⚡ Incoming webhook request received.");
-  const sig = req.headers["stripe-signature"];
-
-  let event;
-  try {
-    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
-    console.log("✅ Webhook Event Received:", event.type); // ✅ Log event type
-  } catch (err) {
-    console.error("❌ Webhook signature verification failed:", err.message);
-    console.error("⚠️ Full Headers:", req.headers);
-    console.error("⚠️ Raw Body:", req.body.toString());
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
-
-  // Process only successful payments
-  if (event.type === "checkout.session.completed") {
-    const session = event.data.object;
-
-    console.log("✅ Payment received! Processing order:", session);
-
-    const email = session.customer_email;
-    const metadata = session.metadata;
-
-    const orderData = {
-      email,
-      pickup_day: metadata.pickup_day,
-      items: JSON.parse(metadata.cart).map(item => `${item.name} (x${item.quantity})`).join(", "),
-      total_price: parseFloat(metadata.totalAmount).toFixed(2),
-      payment_method: metadata.payment_method,
-      email_opt_in: metadata.emailOptIn && metadata.emailOptIn === "true"
-
-    };
-
-    try {
-      await saveOrderToDatabase(orderData);
-      console.log("✅ Order saved successfully to database!");
-      await sendOrderConfirmationEmail(orderData.email, orderData.items, orderData.pickup_day, orderData.total_price, orderData.payment_method);
-      console.log("✅ Confirmation email sent successfully!");
-    } catch (error) {
-      console.error("❌ Error processing order:", error);
-      return res.status(500).send("Error processing order.");
-    }
-  }
-
-  res.json({ received: true });
-});
-
-
-app.use(express.json());
-app.use(express.static(path.join(__dirname, "public")));
 
 
 // ✅ Stripe Checkout API
