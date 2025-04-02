@@ -15,15 +15,9 @@ app.use(cors({
   methods: ["GET", "POST"],
   credentials: true
 }));
-app.use(express.json());
-
-app.use(express.static(path.join(__dirname, "public")));
-
-
 
 const ordersFilePath = "orders.csv"; // Store orders here
 const csvFilePath = "email_subscribers.csv"; // Store opted-in emails
-
 
 // ✅ Setup Email Transporter (For Order Confirmation)
 const transporter = nodemailer.createTransport({
@@ -221,6 +215,7 @@ async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, 
 // ✅ Stripe Webhook for Payment Confirmation
 // Webhook endpoint for Stripe
 app.post("/webhook", express.raw({ type: "application/json" }), async (req, res) => {
+  console.log("⚡ Incoming webhook request received.");
   const sig = req.headers["stripe-signature"];
 
   let event;
@@ -229,6 +224,8 @@ app.post("/webhook", express.raw({ type: "application/json" }), async (req, res)
     console.log("✅ Webhook Event Received:", event.type); // ✅ Log event type
   } catch (err) {
     console.error("❌ Webhook signature verification failed:", err.message);
+    console.error("⚠️ Full Headers:", req.headers);
+    console.error("⚠️ Raw Body:", req.body.toString());
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
@@ -266,6 +263,8 @@ app.post("/webhook", express.raw({ type: "application/json" }), async (req, res)
 });
 
 
+app.use(express.json());
+app.use(express.static(path.join(__dirname, "public")));
 
 
 // ✅ Stripe Checkout API
