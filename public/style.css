@@ -982,3 +982,39 @@ nav ul li a {
   margin-top: 25px;
   padding: 25px;
 }
+
+.reviews-footer {
+  background-color: #FFF7C2; /* Soft pastel yellow for Easter vibe */
+  padding: 40px 20px;
+  text-align: center;
+  border-top: 2px solid #f4e1b0;
+  font-family: 'Open Sans', sans-serif;
+}
+
+.reviews-container h3 {
+  font-size: 1.8rem;
+  margin-bottom: 20px;
+  color: #5C4A1F;
+}
+
+.review-card {
+  max-width: 600px;
+  margin: 0 auto;
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.07);
+}
+
+.review-text {
+  font-style: italic;
+  font-size: 1rem;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.review-author {
+  font-weight: bold;
+  color: #444;
+  font-size: 0.95rem;
+}
