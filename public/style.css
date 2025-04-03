@@ -1018,3 +1018,9 @@ nav ul li a {
   color: #444;
   font-size: 0.95rem;
 }
+
+#easter-specials .grid-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
