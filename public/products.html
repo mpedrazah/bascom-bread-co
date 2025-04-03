@@ -129,29 +129,36 @@
       
   
   <!-- Seasonal Specials Section -->
-  <section id="seasonal-specials" class="hidden">
-    <h2>Seasonal Specials</h2>
+  <div class="seasonal" id="easter-specials" class="hidden">
+    <h3>🌼 Easter & Divine Mercy Sunday Specials 🌼</h3>
     <div class="grid-container">
-       <!-- Easter & Divine Mercy Sunday Specials -->
-       <div class="seasonal" id="easter-specials" class="hidden">
-        <h3>🌸 Easter & Divine Mercy Sunday 🌸</h3>
-        <div class="product-card">
-          <img src="images/bread-logo.webp" alt="Lemon Custard Buns" class="product-image">
-          <div class="product-info">
-            <h3>Lemon Custard Buns (Dozen)</h3>
-            <p class="price">$18.00</p>
-            <button onclick="addToCart('Lemon Custard Buns (Dozen)', 18.00)">Add to Cart 🛒</button>
-          </div>
-        </div>
-        <div class="product-card">
-          <img src="images/bread-logo.webp" alt="Cinnamon Rolls" class="product-image">
-          <div class="product-info">
-            <h3>Cinnamon Rolls (Dozen)</h3>
-            <p class="price">$18.00</p>
-            <button onclick="addToCart('Cinnamon Rolls (Dozen)', 18.00)">Add to Cart 🛒</button>
-          </div>
+      <div class="product-card">
+        <img src="images/bread-logo.webp" alt="Lemon Custard Buns" class="product-image">
+        <div class="product-info">
+          <h3>Lemon Custard Buns (Dozen)</h3>
+          <p class="product-description">
+            Soft sweet rolls filled with homemade lemon custard, perfect for spring celebrations.
+          </p>
+          <p class="price">$24.00</p>
+          <button class="add-to-cart" onclick="addToCart('Lemon Custard Buns (Dozen)', 24.00)">Add to Cart 🛒</button>
         </div>
       </div>
+  
+      <div class="product-card">
+        <img src="images/bread-logo.webp" alt="Cinnamon Rolls" class="product-image">
+        <div class="product-info">
+          <h3>Cinnamon Rolls (Dozen)</h3>
+          <p class="product-description">
+            Classic gooey cinnamon rolls with a soft fluffy texture, baked fresh for your Easter table.
+          </p>
+          <p class="price">$22.00</p>
+          <button class="add-to-cart" onclick="addToCart('Cinnamon Rolls (Dozen)', 22.00)">Add to Cart 🛒</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
       <!-- Mardi Gras Specials -->
       <div class="seasonal" id="mardigras-specials" class="hidden">
         <h3>Mardi Gras Specials</h3>
