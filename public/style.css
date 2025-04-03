@@ -1024,3 +1024,7 @@ nav ul li a {
   flex-wrap: wrap;
   gap: 20px;
 }
+
+html {
+  scroll-behavior: smooth;
+}
