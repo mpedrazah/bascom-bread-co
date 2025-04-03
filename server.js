@@ -10,6 +10,10 @@ const express = require("express");
 const cors = require("cors");
 
 const app = express();
+app.use((req, res, next) => {
+  console.log(`📥 Incoming request: ${req.method} ${req.url}`);
+  next();
+});
 
 app.use(cors({
   origin: ["https://www.bascombreadco.com", "https://bascombreadco.up.railway.app"],
@@ -25,23 +29,15 @@ app.post("/webhook", express.raw({ type: "application/json" }), async (req, res)
 
   let event;
   try {
-    event = JSON.parse(req.body);
-    console.log("✅ Webhook (fake parsed) event:", event.type);
+    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+    console.log("✅ Webhook Event Received:", event.type);
   } catch (err) {
-    console.error("❌ Could not parse raw body:", err.message);
-    return res.status(400).send("Invalid body");
+    console.error("❌ Webhook signature verification failed:", err.message);
+    console.error("⚠️ Full Headers:", req.headers);
+    console.error("⚠️ Raw Body:", req.body.toString());
+    return res.status(400).send(`Webhook Error: ${err.message}`);
   }
-//REAL WEBHOOK CODE BELOW, FAKE ONE ABOVE
-  //try {
-  //  event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
-   // console.log("✅ Webhook Event Received:", event.type); // ✅ Log event type
-  //} catch (err) {
-   // console.error("❌ Webhook signature verification failed:", err.message);
-  //  console.error("⚠️ Full Headers:", req.headers);
-   // console.error("⚠️ Raw Body:", req.body.toString());
-  //  return res.status(400).send(`Webhook Error: ${err.message}`);
- // }
-
+  
   // Process only successful payments
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
