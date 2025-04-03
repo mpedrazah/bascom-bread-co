@@ -3,14 +3,16 @@ document.addEventListener("DOMContentLoaded", function () {
     const seasonalSpecials = document.getElementById("seasonal-specials");
     const easterSpecials = document.getElementById("easter-specials");
     const stPatricksSpecials = document.getElementById("stpatricks-specials");
+    const mardiGrasSpecials = document.getElementById("mardigras-specials");
 
-    // ✅ Toggle these manually (true to show, false to hide)
-    const isEasterActive = true;         // ✅ Enable Easter & Divine Mercy specials
+    // ✅ Toggle these manually
+    const isEasterActive = true;
     const isStPatricksActive = false;
+    const isMardiGrasActive = false;
 
     let specialsActive = false;
 
-    // ⛔ Ensure all are hidden by default
+    // ⛔ Hide all by default
     if (easterSpecials) {
         easterSpecials.classList.add("hidden");
         easterSpecials.style.display = "none";
@@ -21,34 +23,44 @@ document.addEventListener("DOMContentLoaded", function () {
         stPatricksSpecials.style.display = "none";
     }
 
-    // ✅ Show Easter specials
+    if (mardiGrasSpecials) {
+        mardiGrasSpecials.classList.add("hidden");
+        mardiGrasSpecials.style.display = "none";
+    }
+
+    // ✅ Show active sections
     if (isEasterActive && easterSpecials) {
         easterSpecials.classList.remove("hidden");
         easterSpecials.style.display = "block";
         specialsActive = true;
     }
 
-    // ✅ Show St. Patrick's specials if active
     if (isStPatricksActive && stPatricksSpecials) {
         stPatricksSpecials.classList.remove("hidden");
         stPatricksSpecials.style.display = "block";
         specialsActive = true;
     }
 
-    // ✅ Show seasonal section and banner if anything is active
+    if (isMardiGrasActive && mardiGrasSpecials) {
+        mardiGrasSpecials.classList.remove("hidden");
+        mardiGrasSpecials.style.display = "block";
+        specialsActive = true;
+    }
+
+    // ✅ Show seasonal specials section and banner if any are active
     if (specialsActive) {
         seasonalSpecials.classList.remove("hidden");
         specialsBanner?.classList.remove("hidden");
     } else {
         seasonalSpecials.classList.add("hidden");
-        specialsBanner?.classList.add("hidden");
         seasonalSpecials.style.display = "none";
+        specialsBanner?.classList.add("hidden");
         specialsBanner.style.display = "none";
     }
 
-    // 🪵 Debug logs
     console.log("✅ Specials toggled:", {
-        easterVisible: isEasterActive,
-        stPatricksVisible: isStPatricksActive
+        easter: isEasterActive,
+        stPatricks: isStPatricksActive,
+        mardiGras: isMardiGrasActive,
     });
 });
