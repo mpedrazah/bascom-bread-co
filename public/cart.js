@@ -466,22 +466,41 @@ function removeFromCart(index) {
 function checkCartAvailability() {
   const pickupDayElem = document.getElementById("pickup-day");
   const warningMessage = document.getElementById("warning-message");
-  
+  const stripeBtn = document.getElementById("stripe-button");
+  const venmoBtn = document.getElementById("venmo-button");
+
   if (!pickupDayElem || !warningMessage) return;
-  
+
   const pickupDay = pickupDayElem.value;
   const totalQuantity = cart.reduce((total, item) => total + item.quantity, 0);
   const remainingSlots = pickupSlots[pickupDay]?.available - pickupSlots[pickupDay]?.booked || 0;
-  
-  console.log(`Checking availability: Pickup Day = ${pickupDay}, Total Quantity = ${totalQuantity}, Remaining Slots = ${remainingSlots}`);
-  
+
+  console.log(`Checking availability: ${totalQuantity} items, ${remainingSlots} remaining slots for ${pickupDay}`);
+
   if (pickupDay && totalQuantity > remainingSlots) {
     warningMessage.style.display = "block";
-    warningMessage.innerText = `You have ${totalQuantity} items in your cart, but only ${remainingSlots} slots are available. Please update your cart quantity.`;
+    warningMessage.innerText = `⚠️ Only ${remainingSlots} slots left for ${pickupDay}. You have ${totalQuantity} items.`;
+
+    stripeBtn.disabled = true;
+    stripeBtn.style.opacity = "0.5";
+    stripeBtn.style.cursor = "not-allowed";
+
+    venmoBtn.disabled = true;
+    venmoBtn.style.opacity = "0.5";
+    venmoBtn.style.cursor = "not-allowed";
   } else {
     warningMessage.style.display = "none";
+
+    stripeBtn.disabled = false;
+    stripeBtn.style.opacity = "1";
+    stripeBtn.style.cursor = "pointer";
+
+    venmoBtn.disabled = false;
+    venmoBtn.style.opacity = "1";
+    venmoBtn.style.cursor = "pointer";
   }
 }
+
 // Load cart on page load
 document.addEventListener("DOMContentLoaded", () => {
   renderCartItems();
