@@ -382,6 +382,7 @@ function renderCartItems() {
   paymentFeeContainer.innerText = paymentMethod === "Venmo" ? `Venmo Discount: -$${venmoDiscount.toFixed(2)}` : "";
 
   totalContainer.innerText = `Total: $${total.toFixed(2)}`;
+  checkCartAvailability();
 }
 
 
@@ -461,6 +462,7 @@ function removeFromCart(index) {
   localStorage.setItem("cart", JSON.stringify(cart));
   renderCartItems();
   updateCartCount();
+  checkCartAvailability();
 }
 
 // Function to check cart availability against pickup slots
