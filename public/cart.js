@@ -452,6 +452,7 @@ function updateQuantity(index, newQuantity) {
   localStorage.setItem("cart", JSON.stringify(cart));
   renderCartItems();
   updateCartCount();
+  checkCartAvailability(); // ✅ Add this
 }
 
 // ✅ Remove Item from Cart
