@@ -37,7 +37,7 @@ app.post("/webhook", express.raw({ type: "application/json" }), async (req, res)
     console.error("⚠️ Raw Body:", req.body.toString());
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
-  
+
   // Process only successful payments
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
@@ -159,44 +159,49 @@ async function saveOrderToDatabase(order) {
 app.post("/save-order", async (req, res) => {
   try {
     const { email, pickup_day, items, total_price, payment_method, email_opt_in, cart } = req.body;
-
     console.log("🛠 Received order:", req.body);
 
     if (!email || !pickup_day || !items || !total_price || !payment_method || !cart) {
-      console.error("❌ Missing required fields:", { email, pickup_day, items, total_price, payment_method, cart });
       return res.status(400).json({ success: false, error: "All fields are required!" });
+    }
+
+    // 🚨 Enforce limit of 7 orders per day from DB
+    const orderCountResult = await pool.query(
+      "SELECT COUNT(*) FROM orders WHERE pickup_day = $1",
+      [pickup_day]
+    );
+
+    const currentOrderCount = parseInt(orderCountResult.rows[0].count);
+    const cartItemTotal = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+    const sheetLimit = 7; // Can pull from Google Sheet in the future if needed
+    const remainingSlots = sheetLimit - currentOrderCount;
+
+    if (cartItemTotal > remainingSlots) {
+      return res.status(400).json({
+        success: false,
+        error: `Only ${remainingSlots} pickup slots remain for ${pickup_day}. You have ${cartItemTotal} items in your cart.`
+      });
     }
 
     const emailOptInValue = email_opt_in === true;
 
-    const query = `
-      INSERT INTO orders (email, pickup_day, items, total_price, payment_method, email_opt_in, order_date)
-      VALUES ($1, $2, $3, $4, $5, $6, NOW()) RETURNING *;
-    `;
-    const values = [email, pickup_day, items, total_price, payment_method, emailOptInValue];
+    const result = await pool.query(
+      `INSERT INTO orders (email, pickup_day, items, total_price, payment_method, email_opt_in, order_date)
+       VALUES ($1, $2, $3, $4, $5, $6, NOW()) RETURNING *;`,
+      [email, pickup_day, items, total_price, payment_method, emailOptInValue]
+    );
 
-    const result = await pool.query(query, values);
-    console.log("✅ Order saved:", result.rows[0]);
-
-    // ✅ Send Email Confirmation if Opted-in
     if (emailOptInValue) {
       await sendOrderConfirmationEmail(email, items, pickup_day, total_price, payment_method);
     }
 
     res.json({ success: true, order: result.rows[0] });
-
   } catch (error) {
     console.error("❌ Error saving order:", error);
     res.status(500).json({ success: false, error: error.message || "Failed to save order." });
   }
 });
-
-
-
-
-
-
-
 
 
 

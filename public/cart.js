@@ -84,18 +84,19 @@ function populatePickupDayDropdown() {
 
   Object.keys(pickupSlots).forEach(date => {
     const slot = pickupSlots[date];
-    if (!slot) return; // Skip if slot data is missing
-
     const remainingSlots = slot.available - slot.booked;
-    const option = document.createElement("option");
-    option.value = date;
-    option.textContent = remainingSlots < 6 ? `${date} - ${remainingSlots} slots left` : date;
 
-    pickupDayElement.appendChild(option);
+    if (remainingSlots > 0) {
+      const option = document.createElement("option");
+      option.value = date;
+      option.textContent = remainingSlots < 4 ? `${date} - ${remainingSlots} slots left` : date;
+      pickupDayElement.appendChild(option);
+    }
   });
 
   pickupDayElement.addEventListener("change", checkCartAvailability);
 }
+
 
 
 
