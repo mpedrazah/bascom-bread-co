@@ -236,7 +236,9 @@ async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, 
       <p>Thank you for your order!</p>
       <p><strong>You have purchased:</strong></p>
       <p>${orderDetails}</p>
-      <p><strong>Pickup Date:</strong> ${pickupDay}</p>
+      <p><strong>Pickup Date:</strong> ${pickupDay}*</p>
+      <p>*Please pickup your bread within your pickup window. All unclaimed bread will be donated at the end of the day. 
+</p>
       <p> You can pickup your order from the porch at 1508 Cooper Dr., Irving, Texas 75061. 
       <p></p>
       <p><strong>Total after Venmo discount:</strong> $${parseFloat(totalAmount).toFixed(2)}</p>
@@ -250,7 +252,9 @@ async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, 
       <p>Thank you for your order!</p>
       <p><strong>You have purchased:</strong></p>
       <p>${orderDetails}</p>
-      <p><strong>Pickup Date:</strong> ${pickupDay}</p>
+      <p><strong>Pickup Date:</strong> ${pickupDay}*</p>
+      <p>*Please pickup your bread within your pickup window. All unclaimed bread will be donated at the end of the day. 
+</p>
       <p> You can pickup your order from the porch at 1508 Cooper Dr., Irving, Texas 75061. 
       <p></p>
       <br>
