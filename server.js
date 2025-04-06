@@ -435,7 +435,7 @@ app.get("/export-email-optins", async (req, res) => {
 
 
 // ✅ Start Server
-const PORT = process.env.PORT || 0;
+const PORT = process.env.PORT || 8080;
 const server = app.listen(PORT, () => {
   console.log(`✅ Server running on port ${server.address().port}`);
 });
