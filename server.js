@@ -155,17 +155,14 @@ async function saveOrderToDatabase(order) {
 
 
 // ✅ API Endpoint to Save Orders
-
 app.post("/save-order", async (req, res) => {
   try {
-    const { email, pickup_day, items, total_price, payment_method, email_opt_in, cart } = req.body;
-    console.log("🛠 Received order:", req.body);
+    const { email, pickup_day, items, total_price, payment_method, email_opt_in, cart, max_slots } = req.body;
 
     if (!email || !pickup_day || !items || !total_price || !payment_method || !cart) {
       return res.status(400).json({ success: false, error: "All fields are required!" });
     }
 
-    // 🚨 Enforce limit of 7 orders per day from DB
     const orderCountResult = await pool.query(
       "SELECT COUNT(*) FROM orders WHERE pickup_day = $1",
       [pickup_day]
@@ -173,8 +170,7 @@ app.post("/save-order", async (req, res) => {
 
     const currentOrderCount = parseInt(orderCountResult.rows[0].count);
     const cartItemTotal = cart.reduce((sum, item) => sum + item.quantity, 0);
-
-    const sheetLimit = 7; // Can pull from Google Sheet in the future if needed
+    const sheetLimit = parseInt(max_slots || 7);
     const remainingSlots = sheetLimit - currentOrderCount;
 
     if (cartItemTotal > remainingSlots) {
@@ -184,22 +180,20 @@ app.post("/save-order", async (req, res) => {
       });
     }
 
-    const emailOptInValue = email_opt_in === true;
-
     const result = await pool.query(
       `INSERT INTO orders (email, pickup_day, items, total_price, payment_method, email_opt_in, order_date)
        VALUES ($1, $2, $3, $4, $5, $6, NOW()) RETURNING *;`,
-      [email, pickup_day, items, total_price, payment_method, emailOptInValue]
+      [email, pickup_day, items, total_price, payment_method, email_opt_in === true]
     );
 
-    if (emailOptInValue) {
+    if (email_opt_in === true) {
       await sendOrderConfirmationEmail(email, items, pickup_day, total_price, payment_method);
     }
 
     res.json({ success: true, order: result.rows[0] });
   } catch (error) {
     console.error("❌ Error saving order:", error);
-    res.status(500).json({ success: false, error: error.message || "Failed to save order." });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
@@ -407,36 +401,6 @@ app.get("/export-email-optins", async (req, res) => {
   }
 });
 
-app.post("/contact", async (req, res) => {
-  const { name, email, phone, message } = req.body;
-
-  if (!name || !email || !message) {
-    return res.status(400).json({ success: false, error: "Missing required fields." });
-  }
-
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: process.env.EMAIL_USER, // Sends to *you*
-    subject: `📬 New Contact Message from ${name}`,
-    html: `
-      <h2>New Contact Submission</h2>
-      <p><strong>Name:</strong> ${name}</p>
-      <p><strong>Email:</strong> ${email}</p>
-      <p><strong>Phone:</strong> ${phone || "N/A"}</p>
-      <p><strong>Message:</strong></p>
-      <p>${message.replace(/\n/g, "<br>")}</p>
-    `,
-  };
-
-  try {
-    await transporter.sendMail(mailOptions);
-    console.log("✅ Contact form email sent!");
-    res.json({ success: true });
-  } catch (error) {
-    console.error("❌ Error sending contact form email:", error);
-    res.status(500).json({ success: false, error: "Failed to send message." });
-  }
-});
 
 
 // ✅ Start Server

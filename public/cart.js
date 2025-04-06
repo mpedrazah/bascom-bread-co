@@ -165,89 +165,78 @@ function applyDiscount() {
 let venmoPaymentAttempted = false; // ✅ Prevent duplicate submissions
 
 async function payWithVenmo() {
-    if (venmoPaymentAttempted) return; // Prevent double-click issue
-    venmoPaymentAttempted = true; // Lock function execution
+  if (venmoPaymentAttempted) return;
+  venmoPaymentAttempted = true;
 
-    if (cart.length === 0) {
-        alert("Your cart is empty!");
-        venmoPaymentAttempted = false; // Reset flag
-        return;
+  if (cart.length === 0) {
+    alert("Your cart is empty!");
+    venmoPaymentAttempted = false;
+    return;
+  }
+
+  const email = document.getElementById("email")?.value.trim();
+  const pickup_day = document.getElementById("pickup-day")?.value;
+  const emailOptIn = document.getElementById("email-opt-in")?.checked || false;
+
+  if (!email || !pickup_day) {
+    alert("Please enter your email and select a pickup date.");
+    venmoPaymentAttempted = false;
+    return;
+  }
+
+  let subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  let total_price = Math.max(subtotal, 0).toFixed(2);
+
+  const max_slots = pickupSlots[pickup_day]?.available || 7;
+
+  const orderData = {
+    name: email.split("@")[0],
+    email,
+    pickup_day,
+    items: cart.map(item => `${item.name} (x${item.quantity})`).join(", "),
+    total_price: total_price,
+    payment_method: "Venmo",
+    email_opt_in: emailOptIn,
+    cart,
+    max_slots
+  };
+
+  try {
+    const response = await fetch(`${API_BASE}/save-order`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(orderData),
+    });
+
+    const result = await response.json();
+    if (!result.success) throw new Error("Failed to save order.");
+
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    let venmoLink = isMobile
+      ? `venmo://paycharge?txn=pay&recipients=Margaret-Smillie&amount=${total_price}&note=Bascom%20Bread%20Order`
+      : `https://venmo.com/Margaret-Smillie?txn=pay&amount=${total_price}&note=Bascom%20Bread%20Order`;
+
+    if (isMobile) {
+      window.location.href = venmoLink;
+      setTimeout(() => window.location.href = "success.html", 3000);
+    } else {
+      window.open(venmoLink, "_blank");
+      setTimeout(() => window.location.href = "success.html", 5000);
     }
 
-    const email = document.getElementById("email")?.value.trim();
-    const pickup_day = document.getElementById("pickup-day")?.value;
-    const emailOptIn = document.getElementById("email-opt-in")?.checked || false;
+    localStorage.removeItem("cart");
+    updateCartCount();
 
-    if (!email || !pickup_day) {
-        alert("Please enter your email and select a pickup date.");
-        venmoPaymentAttempted = false; // Reset flag
-        return;
-    }
+  } catch (error) {
+    console.error("❌ Venmo order submission failed:", error);
+    alert("There was an issue processing your Venmo payment.");
+  }
 
-    let subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    let total_price = subtotal;
-    total_price = Math.max(total_price, 0).toFixed(2);
-
-    let orderData = {
-        name: email.split("@")[0],
-        email,
-        pickup_day,
-        items: cart.map(item => `${item.name} (x${item.quantity})`).join(", "),
-        total_price: total_price,
-        payment_method: "Venmo",
-        email_opt_in: emailOptIn,
-        cart
-    };
-
-    console.log("📤 Sending Venmo order to server:", orderData);
-
-    try {
-        const response = await fetch(`${API_BASE}/save-order`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(orderData),
-        });
-
-        const result = await response.json();
-        if (!result.success) throw new Error("Failed to save order.");
-
-        console.log("✅ Order saved successfully!");
-
-        // ✅ Open Venmo App on Mobile, New Tab on Desktop
-        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-        let venmoLink = isMobile
-            ? `venmo://paycharge?txn=pay&recipients=Margaret-Smillie&amount=${total_price}&note=Bascom%20Bread%20Order`
-            : `https://venmo.com/Margaret-Smillie?txn=pay&amount=${total_price}&note=Bascom%20Bread%20Order`;
-
-        if (isMobile) {
-            window.location.href = venmoLink; // Opens Venmo App
-            setTimeout(() => {
-                window.location.href = "success.html"; // Redirect to Success Page
-            }, 3000);
-        } else {
-            const venmoWindow = window.open(venmoLink, "_blank");
-            if (!venmoWindow) {
-                alert("Venmo did not open. Please complete payment manually.");
-            }
-            setTimeout(() => {
-                window.location.href = "success.html";
-            }, 5000);
-        }
-
-        // ✅ Clear Cart After Order
-        localStorage.removeItem("cart");
-        updateCartCount();
-
-    } catch (error) {
-        console.error("❌ Venmo order submission failed:", error);
-        alert("There was an issue processing your Venmo payment.");
-    }
-
-    // ✅ Allow function to be called again after 10 seconds
-    setTimeout(() => {
-        venmoPaymentAttempted = false;
-    }, 30000);
+  setTimeout(() => {
+    venmoPaymentAttempted = false;
+  }, 30000);
 }
+
 
 
 // ✅ Make function globally accessible
@@ -255,8 +244,8 @@ window.payWithVenmo = payWithVenmo;
 
 async function checkout() {
   if (cart.length === 0) {
-      alert("Your cart is empty!");
-      return;
+    alert("Your cart is empty!");
+    return;
   }
 
   const email = document.getElementById("email")?.value.trim();
@@ -265,55 +254,50 @@ async function checkout() {
   const discountCode = document.getElementById("discount-code")?.value.trim().toUpperCase() || null;
 
   if (!email || !pickup_day) {
-      alert("Please enter your email and select a pickup date.");
-      return;
+    alert("Please enter your email and select a pickup date.");
+    return;
   }
 
-  // ✅ Apply discounts if available
   let totalDiscountedAmount = 0;
-  let updatedCart = cart.map(item => {
-      let discountedPrice = item.price;
-      if (discountCodes[discountCode]) {
-          discountedPrice -= discountedPrice * discountCodes[discountCode];
-      }
-      totalDiscountedAmount += discountedPrice * item.quantity;
-      return {
-          name: item.name,
-          price: discountedPrice, // ✅ Send discounted price
-          quantity: item.quantity
-      };
+  const updatedCart = cart.map(item => {
+    let price = item.price;
+    if (discountCodes[discountCode]) {
+      price = price - price * discountCodes[discountCode];
+    }
+    totalDiscountedAmount += price * item.quantity;
+    return { name: item.name, price, quantity: item.quantity };
   });
 
-  console.log("📤 Sending Stripe order to Railway Backend...");
+  const max_slots = pickupSlots[pickup_day]?.available || 7;
 
   try {
-      // ✅ Send request to create Stripe session (NO ORDER SAVED YET)
-      const stripeResponse = await fetch(`${API_BASE}/create-checkout-session`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-              cart: updatedCart,
-              email,
-              pickup_day,
-              emailOptIn,
-              discountCode,
-              totalAmount: totalDiscountedAmount,
-              payment_method: "Stripe"
-          })
-      });
+    const response = await fetch(`${API_BASE}/create-checkout-session`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        cart: updatedCart,
+        email,
+        pickup_day,
+        emailOptIn,
+        discountCode,
+        totalAmount: totalDiscountedAmount,
+        payment_method: "Stripe",
+        max_slots
+      })
+    });
 
-      const stripeData = await stripeResponse.json();
-      if (stripeData.url) {
-          window.location.href = stripeData.url; // Redirect to Stripe
-      } else {
-          alert("Error processing payment: " + stripeData.error);
-      }
-
+    const stripeData = await response.json();
+    if (stripeData.url) {
+      window.location.href = stripeData.url;
+    } else {
+      alert("Error processing payment: " + stripeData.error);
+    }
   } catch (error) {
-      console.error("❌ Checkout process failed:", error);
-      alert("There was an error processing your payment. Please try again.");
+    console.error("❌ Checkout failed:", error);
+    alert("There was an error processing your payment.");
   }
 }
+
 
 // ✅ Make function globally accessible
 window.checkout = checkout;
