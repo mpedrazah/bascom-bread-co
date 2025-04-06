@@ -240,9 +240,10 @@ async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, 
       <br>
       <p>Thank you,</p>
       <p>Margaret</p>
-      <p></p>
-      <ul>
+      <br></br>
+      
       <strong>Notes about bread storage: </strong> This bread is extremely fresh and free from all preservatives, which means it has a shorter shelf life than grocery store bread. 
+<ul>
 <li>Bread is best when consumed within 3-5 days.</li>
 <li>Store bread in an airtight bag or beeswax bag.</li>
 <li>Bread will keep well in the freezer for up to 1 month. </li>
@@ -263,9 +264,10 @@ async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, 
       <br>
       <p>Thank you,</p>
       <p>Margaret</p>
-      <p></p>
-      <ul>
+      <br></br>
+      
       <strong>Notes about bread storage: </strong> This bread is extremely fresh and free from all preservatives, which means it has a shorter shelf life than grocery store bread. 
+<ul>
 <li>Bread is best when consumed within 3-5 days.</li>
 <li>Store bread in an airtight bag or beeswax bag.</li>
 <li>Bread will keep well in the freezer for up to 1 month. </li>
