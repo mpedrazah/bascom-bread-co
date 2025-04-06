@@ -349,15 +349,15 @@ function setPaymentMethod(method) {
 function renderCartItems() {
   const cartContainer = document.getElementById("cart-items");
   const totalContainer = document.getElementById("cart-total");
-  const feeContainer = document.getElementById("convenience-fee"); // Add new fee display
-  const paymentFeeContainer = document.getElementById("payment-fee"); // For Venmo fee handling
+  const feeContainer = document.getElementById("convenience-fee");
+  const paymentFeeContainer = document.getElementById("payment-fee");
+  const warningMessage = document.getElementById("warning-message");
 
   if (!cartContainer || !totalContainer) return;
 
   cartContainer.innerHTML = "";
   let subtotal = 0;
 
-  // Render each item and apply discount if applicable
   cart.forEach((item, index) => {
     const imageUrl = item.image || "images/freshmillloaf.jpg";
     const originalPrice = item.price;
@@ -388,11 +388,9 @@ function renderCartItems() {
     `;
   });
 
-  // Calculate fees
   let convenienceFee = subtotal * 0.03;
   convenienceFee = parseFloat(convenienceFee.toFixed(2));
 
-  // Adjust for Venmo
   let venmoDiscount = 0;
   if (paymentMethod === "Venmo") {
     venmoDiscount = convenienceFee;
@@ -400,14 +398,12 @@ function renderCartItems() {
 
   const total = subtotal + convenienceFee - venmoDiscount;
 
-  // Update UI
   feeContainer.innerText = `Online Convenience Fee: $${convenienceFee.toFixed(2)}`;
   paymentFeeContainer.innerText = paymentMethod === "Venmo" ? `Venmo Discount: -$${venmoDiscount.toFixed(2)}` : "";
   totalContainer.innerText = `Total: $${total.toFixed(2)}`;
 
   checkCartAvailability();
 }
-
 
 
 // ✅ Ensures Global Accessibility

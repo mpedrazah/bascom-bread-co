@@ -155,23 +155,33 @@ async function saveOrderToDatabase(order) {
 
 
 // ✅ API Endpoint to Save Orders
+// ✅ Updated API to Save Order with Google Sheet-based limit
 app.post("/save-order", async (req, res) => {
   try {
-    const { email, pickup_day, items, total_price, payment_method, email_opt_in, cart, max_slots } = req.body;
-
+    const { email, pickup_day, items, total_price, payment_method, email_opt_in, cart } = req.body;
     if (!email || !pickup_day || !items || !total_price || !payment_method || !cart) {
       return res.status(400).json({ success: false, error: "All fields are required!" });
     }
 
-    const orderCountResult = await pool.query(
-      "SELECT COUNT(*) FROM orders WHERE pickup_day = $1",
+    // ✅ Fetch limit from Google Sheets
+    const pickupLimit = await getPickupLimitFromGoogleSheets(pickup_day);
+    if (!pickupLimit) {
+      return res.status(400).json({ success: false, error: `Pickup day '${pickup_day}' not found in availability.` });
+    }
+
+    // ✅ Get total items already ordered for that day
+    const itemCountResult = await pool.query(
+      `SELECT SUM(CAST(SPLIT_PART(item, 'x', 2) AS INTEGER)) as total_items
+       FROM (
+         SELECT unnest(string_to_array(items, ',')) as item FROM orders WHERE pickup_day = $1
+       ) as subquery;`,
       [pickup_day]
     );
 
-    const currentOrderCount = parseInt(orderCountResult.rows[0].count);
+    const itemsAlreadyOrdered = parseInt(itemCountResult.rows[0].total_items || 0);
     const cartItemTotal = cart.reduce((sum, item) => sum + item.quantity, 0);
-    const sheetLimit = parseInt(max_slots || 7);
-    const remainingSlots = sheetLimit - currentOrderCount;
+
+    const remainingSlots = pickupLimit - itemsAlreadyOrdered;
 
     if (cartItemTotal > remainingSlots) {
       return res.status(400).json({
@@ -180,20 +190,22 @@ app.post("/save-order", async (req, res) => {
       });
     }
 
+    const emailOptInValue = email_opt_in === true;
+
     const result = await pool.query(
       `INSERT INTO orders (email, pickup_day, items, total_price, payment_method, email_opt_in, order_date)
        VALUES ($1, $2, $3, $4, $5, $6, NOW()) RETURNING *;`,
-      [email, pickup_day, items, total_price, payment_method, email_opt_in === true]
+      [email, pickup_day, items, total_price, payment_method, emailOptInValue]
     );
 
-    if (email_opt_in === true) {
+    if (emailOptInValue) {
       await sendOrderConfirmationEmail(email, items, pickup_day, total_price, payment_method);
     }
 
     res.json({ success: true, order: result.rows[0] });
   } catch (error) {
     console.error("❌ Error saving order:", error);
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, error: error.message || "Failed to save order." });
   }
 });
 
