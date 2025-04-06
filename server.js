@@ -19,6 +19,7 @@ app.use(cors({
 
 // ✅ Stripe Webhook for Payment Confirmation
 // Webhook endpoint for Stripe
+console.log("🚀 Starting Bascom Bread server...")
 app.post("/webhook", express.raw({ type: "application/json" }), async (req, res) => {
   console.log("⚡ Incoming webhook request received.");
   const sig = req.headers["stripe-signature"];
