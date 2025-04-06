@@ -182,6 +182,33 @@ async function saveOrderToDatabase(order) {
   }
 }
 
+app.get("/remaining-slots", async (req, res) => {
+  const pickup_day = req.query.pickup_day;
+  if (!pickup_day) return res.status(400).json({ error: "pickup_day required" });
+
+  const pickupLimit = await getPickupLimitFromGoogleSheets(pickup_day);
+  if (!pickupLimit) return res.status(404).json({ error: "Date not found" });
+
+  const itemCountResult = await pool.query(`
+    SELECT COALESCE(SUM(quantity), 0) AS total_items
+    FROM (
+      SELECT
+        CAST(
+          regexp_replace(subitem, '.*\\(x(\\d+)\\).*', '\\1')
+          AS INTEGER
+        ) AS quantity
+      FROM (
+        SELECT unnest(string_to_array(items, ',')) AS subitem
+        FROM orders
+        WHERE pickup_day = $1
+      ) AS unwrapped
+      WHERE subitem ~ '\\(x\\d+\\)'
+    ) AS counted;
+  `, [pickup_day]);
+
+  const itemsAlreadyOrdered = parseInt(itemCountResult.rows[0].total_items || 0);
+  res.json({ pickupLimit, itemsAlreadyOrdered });
+});
 
 
 // ✅ API Endpoint to Save Orders

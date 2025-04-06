@@ -486,43 +486,56 @@ function removeFromCart(index) {
 }
 
 // Function to check cart availability against pickup slots
-function checkCartAvailability() {
+async function checkCartAvailability() {
   const pickupDayElem = document.getElementById("pickup-day");
   const warningMessage = document.getElementById("warning-message");
   const stripeBtn = document.getElementById("stripe-button");
   const venmoBtn = document.getElementById("venmo-button");
 
-  if (!pickupDayElem || !warningMessage) return;
+  if (!pickupDayElem || !pickupDayElem.value) return;
 
   const pickupDay = pickupDayElem.value;
-  const totalQuantity = cart.reduce((total, item) => total + item.quantity, 0);
-  const remainingSlots = pickupSlots[pickupDay]?.available - pickupSlots[pickupDay]?.booked || 0;
+  const totalCartItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
-  console.log(`Checking availability: ${totalQuantity} items, ${remainingSlots} remaining slots for ${pickupDay}`);
+  try {
+    const response = await fetch(`${API_BASE}/remaining-slots?pickup_day=${encodeURIComponent(pickupDay)}`);
+    const data = await response.json();
 
-  if (pickupDay && totalQuantity > remainingSlots) {
-    warningMessage.style.display = "block";
-    warningMessage.innerText = `⚠️ Only ${remainingSlots} slots left for ${pickupDay}. You have ${totalQuantity} items.`;
+    const { pickupLimit, itemsAlreadyOrdered } = data;
+    const remainingSlots = pickupLimit - itemsAlreadyOrdered;
 
-    stripeBtn.disabled = true;
-    stripeBtn.style.opacity = "0.5";
-    stripeBtn.style.cursor = "not-allowed";
+    console.log(`🧮 Max slots for ${pickupDay}: ${pickupLimit}`);
+    console.log(`📊 Already ordered: ${itemsAlreadyOrdered}`);
+    console.log(`🛒 In your cart: ${totalCartItems}`);
+    console.log(`🧾 Remaining slots: ${remainingSlots}`);
 
-    venmoBtn.disabled = true;
-    venmoBtn.style.opacity = "0.5";
-    venmoBtn.style.cursor = "not-allowed";
-  } else {
-    warningMessage.style.display = "none";
+    if (totalCartItems > remainingSlots) {
+      warningMessage.style.display = "block";
+      warningMessage.innerText = `⚠️ Only ${remainingSlots} slots left for ${pickupDay}. You have ${totalCartItems} items.`;
 
-    stripeBtn.disabled = false;
-    stripeBtn.style.opacity = "1";
-    stripeBtn.style.cursor = "pointer";
+      stripeBtn.disabled = true;
+      stripeBtn.style.opacity = "0.5";
+      stripeBtn.style.cursor = "not-allowed";
 
-    venmoBtn.disabled = false;
-    venmoBtn.style.opacity = "1";
-    venmoBtn.style.cursor = "pointer";
+      venmoBtn.disabled = true;
+      venmoBtn.style.opacity = "0.5";
+      venmoBtn.style.cursor = "not-allowed";
+    } else {
+      warningMessage.style.display = "none";
+
+      stripeBtn.disabled = false;
+      stripeBtn.style.opacity = "1";
+      stripeBtn.style.cursor = "pointer";
+
+      venmoBtn.disabled = false;
+      venmoBtn.style.opacity = "1";
+      venmoBtn.style.cursor = "pointer";
+    }
+  } catch (error) {
+    console.error("❌ Error checking pickup availability:", error);
   }
 }
+
 
 // Load cart on page load
 document.addEventListener("DOMContentLoaded", () => {
