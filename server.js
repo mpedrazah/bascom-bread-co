@@ -10,6 +10,9 @@ const express = require("express");
 const cors = require("cors");
 
 const app = express();
+app.get("/", (req, res) => {
+  res.send("✅ Bascom Bread server is running and alive!");
+});
 const ordersFilePath = "orders.csv"; // Store orders here
 const csvFilePath = "email_subscribers.csv"; // Store opted-in emails
 
