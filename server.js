@@ -1,4 +1,4 @@
-require("dotenv").config();
+
 const fs = require("fs");
 const path = require("path");
 const nodemailer = require("nodemailer");
@@ -10,12 +10,14 @@ const express = require("express");
 const cors = require("cors");
 
 const app = express();
+const ordersFilePath = "orders.csv"; // Store orders here
+const csvFilePath = "email_subscribers.csv"; // Store opted-in emails
 
-app.use(cors({
-  origin: ["https://www.bascombreadco.com", "https://bascombreadco.up.railway.app"],
-  methods: ["GET", "POST"],
-  credentials: true
-}));
+require("dotenv").config();
+app.get("/", (req, res) => {
+  res.send("🎉 Bascom Bread server is running!");
+});
+
 
 // ✅ Stripe Webhook for Payment Confirmation
 // Webhook endpoint for Stripe
@@ -68,13 +70,14 @@ app.post("/webhook", express.raw({ type: "application/json" }), async (req, res)
   res.json({ received: true });
 });
 
-
 app.use(express.json());
+app.use(cors({
+  origin: ["https://www.bascombreadco.com", "https://bascombreadco.up.railway.app"],
+  methods: ["GET", "POST"],
+  credentials: true
+}));
 app.use(express.static(path.join(__dirname, "public")));
 
-
-const ordersFilePath = "orders.csv"; // Store orders here
-const csvFilePath = "email_subscribers.csv"; // Store opted-in emails
 
 // ✅ Setup Email Transporter (For Order Confirmation)
 const transporter = nodemailer.createTransport({
