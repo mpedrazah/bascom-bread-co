@@ -197,6 +197,12 @@ app.post("/save-order", async (req, res) => {
 
     const remainingSlots = pickupLimit - itemsAlreadyOrdered;
 
+    console.log(`📦 Pickup Day: ${pickup_day}`);
+    console.log(`🧮 Max Limit from Google Sheets: ${pickupLimit}`);
+    console.log(`📊 Items Already Ordered (DB): ${itemsAlreadyOrdered}`);
+    console.log(`🛒 Items in Current Cart: ${cartItemTotal}`);
+    console.log(`🧾 Remaining Slots: ${remainingSlots}`);
+    
     if (cartItemTotal > remainingSlots) {
       return res.status(400).json({
         success: false,
