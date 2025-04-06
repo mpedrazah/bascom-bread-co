@@ -444,11 +444,8 @@ app.get("/export-email-optins", async (req, res) => {
 
 
 // ✅ Start Server
-const PORT = process.env.PORT;
-if (!PORT) {
-  console.error("❌ Railway did not provide a PORT env variable. Exiting...");
-  process.exit(1);
-}
-app.listen(PORT, "0.0.0.0", () => {
+const PORT = process.env.PORT || 8080;
+
+const server = app.listen(PORT, "0.0.0.0", () => {
   console.log(`✅ Server listening on port ${PORT}`);
 });
