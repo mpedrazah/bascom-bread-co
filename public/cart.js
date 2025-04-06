@@ -86,30 +86,16 @@ function populatePickupDayDropdown() {
     const slot = pickupSlots[date];
     const remainingSlots = slot.available - slot.booked;
 
-    const option = document.createElement("option");
-    option.value = date;
-
-    if (remainingSlots <= 0) {
-      option.textContent = `${date} - SOLD OUT`;
-      option.disabled = true;
-      option.style.color = "gray"; // Optional styling
-    } else {
-      option.textContent =
-        remainingSlots < 4
-          ? `${date} - ${remainingSlots} slots left`
-          : date;
+    if (remainingSlots > 0) {
+      const option = document.createElement("option");
+      option.value = date;
+      option.textContent = remainingSlots < 4 ? `${date} - ${remainingSlots} slots left` : date;
+      pickupDayElement.appendChild(option);
     }
-
-    pickupDayElement.appendChild(option);
   });
 
   pickupDayElement.addEventListener("change", checkCartAvailability);
-  const firstAvailableOption = [...pickupDayElement.options].find(opt => !opt.disabled);
-  if (firstAvailableOption) {
-    pickupDayElement.value = firstAvailableOption.value;
-  }
 }
-
 
 
 
