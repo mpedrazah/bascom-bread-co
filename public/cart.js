@@ -270,7 +270,6 @@ async function payWithVenmo() {
 
 // ✅ Make function globally accessible
 window.payWithVenmo = payWithVenmo;
-
 async function checkout() {
   if (cart.length === 0) {
     alert("Your cart is empty!");
@@ -297,30 +296,8 @@ async function checkout() {
     return { name: item.name, price, quantity: item.quantity };
   });
 
-  // ✅ Always include convenience fee for Stripe
-  let convenienceFee = subtotal * 0.03;
-  convenienceFee = parseFloat(convenienceFee.toFixed(2));
-  const totalAmount = subtotal + convenienceFee;
-
-  // ✅ Create Stripe line items
-  const lineItems = updatedCart.map(item => ({
-    price_data: {
-      currency: "usd",
-      product_data: { name: item.name },
-      unit_amount: Math.round(item.price * 100),
-    },
-    quantity: item.quantity || 1,
-  }));
-
-  // ✅ Add fee as its own visible line item
-  lineItems.push({
-    price_data: {
-      currency: "usd",
-      product_data: { name: "Online Convenience Fee" },
-      unit_amount: Math.round(convenienceFee * 100),
-    },
-    quantity: 1,
-  });
+  // ✅ Add 3% convenience fee for Stripe
+  const totalAmountWithFee = (subtotal * 1.03).toFixed(2);
 
   try {
     const response = await fetch(`${API_BASE}/create-checkout-session`, {
@@ -332,7 +309,7 @@ async function checkout() {
         pickup_day,
         emailOptIn,
         discountCode,
-        totalAmount: totalAmount.toFixed(2),
+        totalAmount: totalAmountWithFee,
         payment_method: "Stripe",
       })
     });
@@ -348,7 +325,6 @@ async function checkout() {
     alert("There was an error processing your payment.");
   }
 }
-
 
 
 // ✅ Make function globally accessible
