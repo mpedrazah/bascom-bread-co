@@ -286,17 +286,24 @@ async function checkout() {
     return;
   }
 
+  // ✅ Apply discount if any
+  if (discountCodes[discountCode]) {
+    discountAmount = discountCodes[discountCode];
+  } else {
+    discountAmount = 0;
+  }
+
   let subtotal = 0;
   const updatedCart = cart.map(item => {
     let price = item.price;
-    if (discountCodes[discountCode]) {
-      price = price - price * discountCodes[discountCode];
+    if (discountAmount > 0) {
+      price = price - price * discountAmount;
     }
     subtotal += price * item.quantity;
     return { name: item.name, price, quantity: item.quantity };
   });
 
-  // ✅ Add 3% convenience fee for Stripe
+  // ✅ Add 3% Stripe fee to subtotal
   const totalAmountWithFee = (subtotal * 1.03).toFixed(2);
 
   try {
@@ -325,6 +332,7 @@ async function checkout() {
     alert("There was an error processing your payment.");
   }
 }
+
 
 
 // ✅ Make function globally accessible
