@@ -21,6 +21,13 @@ const csvFilePath = "email_subscribers.csv"; // Store opted-in emails
 // ✅ Stripe Webhook for Payment Confirmation
 // Webhook endpoint for Stripe
 console.log("🚀 Starting Bascom Bread server...")
+console.log("🧪 ENV: ", {
+  PORT: process.env.PORT,
+  STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY ? "✅ set" : "❌ missing",
+  STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET ? "✅ set" : "❌ missing",
+  DATABASE_URL: process.env.DATABASE_URL ? "✅ set" : "❌ missing",
+  EMAIL_USER: process.env.EMAIL_USER ? "✅ set" : "❌ missing",
+});
 app.post("/webhook", express.raw({ type: "application/json" }), async (req, res) => {
   console.log("⚡ Incoming webhook request received.");
   const sig = req.headers["stripe-signature"];
@@ -437,7 +444,11 @@ app.get("/export-email-optins", async (req, res) => {
 
 
 // ✅ Start Server
-const PORT = process.env.PORT || 8080;
-const server = app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${server.address().port}`);
+const PORT = process.env.PORT;
+if (!PORT) {
+  console.error("❌ Railway did not provide a PORT env variable. Exiting...");
+  process.exit(1);
+}
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`✅ Server listening on port ${PORT}`);
 });
