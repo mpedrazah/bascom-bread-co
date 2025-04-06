@@ -375,20 +375,27 @@ async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, 
 // ✅ Stripe Checkout API
 app.post("/create-checkout-session", async (req, res) => {
   try {
-    console.log("🛠 Received Stripe checkout request:", req.body); // ✅ Log incoming request
+    console.log("🛠 Received Stripe checkout request:", req.body);
 
-    const { cart, email, pickup_day, totalAmount, payment_method, emailOptIn } = req.body;
+    const { cart, email, pickup_day, payment_method, emailOptIn } = req.body;
 
-    if (!cart || !email || !pickup_day || !totalAmount || !payment_method) {
-      console.error("❌ Missing required fields:", { cart, email, pickup_day, totalAmount, payment_method });
+    if (!cart || !email || !pickup_day || !payment_method) {
+      console.error("❌ Missing required fields:", { cart, email, pickup_day, payment_method });
       return res.status(400).json({ error: "Missing required fields for Stripe checkout." });
     }
 
-    console.log("✅ All required fields are present. Proceeding to Stripe API...");
+    // ✅ Calculate subtotal
+    const subtotal = cart.reduce((sum, item) => {
+      const price = parseFloat(item.price);
+      return sum + price * item.quantity;
+    }, 0);
 
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
-      line_items: cart.map(item => ({
+    // ✅ Calculate 3% fee
+    const convenienceFee = parseFloat((subtotal * 0.03).toFixed(2));
+
+    // ✅ Add fee as separate Stripe line item
+    const lineItems = [
+      ...cart.map(item => ({
         price_data: {
           currency: "usd",
           product_data: { name: item.name },
@@ -396,6 +403,19 @@ app.post("/create-checkout-session", async (req, res) => {
         },
         quantity: item.quantity || 1,
       })),
+      {
+        price_data: {
+          currency: "usd",
+          product_data: { name: "Online Convenience Fee" },
+          unit_amount: Math.round(convenienceFee * 100),
+        },
+        quantity: 1,
+      }
+    ];
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      line_items: lineItems,
       mode: "payment",
       success_url: "https://www.bascombreadco.com/success.html",
       cancel_url: "https://www.bascombreadco.com/cancel.html",
@@ -403,12 +423,10 @@ app.post("/create-checkout-session", async (req, res) => {
       metadata: {
         cart: JSON.stringify(cart),
         pickup_day,
-        totalAmount,
         payment_method,
-        emailOptIn: emailOptIn.toString()
+        emailOptIn: emailOptIn?.toString() || "false"
       }
     });
-    
 
     console.log("✅ Stripe Session Created:", session.url);
     res.json({ url: session.url });
