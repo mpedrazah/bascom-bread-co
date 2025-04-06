@@ -407,6 +407,37 @@ app.get("/export-email-optins", async (req, res) => {
   }
 });
 
+app.post("/contact", async (req, res) => {
+  const { name, email, phone, message } = req.body;
+
+  if (!name || !email || !message) {
+    return res.status(400).json({ success: false, error: "Missing required fields." });
+  }
+
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: process.env.EMAIL_USER, // Sends to *you*
+    subject: `📬 New Contact Message from ${name}`,
+    html: `
+      <h2>New Contact Submission</h2>
+      <p><strong>Name:</strong> ${name}</p>
+      <p><strong>Email:</strong> ${email}</p>
+      <p><strong>Phone:</strong> ${phone || "N/A"}</p>
+      <p><strong>Message:</strong></p>
+      <p>${message.replace(/\n/g, "<br>")}</p>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log("✅ Contact form email sent!");
+    res.json({ success: true });
+  } catch (error) {
+    console.error("❌ Error sending contact form email:", error);
+    res.status(500).json({ success: false, error: "Failed to send message." });
+  }
+});
+
 
 // ✅ Start Server
 const PORT = process.env.PORT || 0;
