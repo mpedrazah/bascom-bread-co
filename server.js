@@ -155,6 +155,28 @@ async function saveOrderToDatabase(order) {
   }
 }
 
+async function getPickupLimitFromGoogleSheets(pickupDay) {
+  const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRLeiHAcr4m4Q_4yFuZXtxlj_kqc6V8ZKaPOgsZS0HHCZReMr-vTX2KEXOB8qqgduHPZLsbIF281YoA/pub?output=csv";
+
+  try {
+    const response = await fetch(sheetURL);
+    if (!response.ok) throw new Error("Failed to fetch Google Sheets");
+
+    const csvText = await response.text();
+    const rows = csvText.trim().split("\n").slice(1);
+
+    for (const row of rows) {
+      const [date, limit] = row.split(",");
+      if (date.trim() === pickupDay.trim()) {
+        return parseInt(limit.trim());
+      }
+    }
+    return null; // Not found
+  } catch (error) {
+    console.error("❌ Error fetching from Google Sheets:", error);
+    return null;
+  }
+}
 app.get("/remaining-slots", async (req, res) => {
   const pickup_day = req.query.pickup_day;
   if (!pickup_day) return res.status(400).json({ error: "pickup_day required" });
