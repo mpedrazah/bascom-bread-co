@@ -92,7 +92,7 @@ async function getPickupLimitFromGoogleSheets(pickupDay) {
     if (!response.ok) throw new Error("Failed to fetch Google Sheets");
 
     const csvText = await response.text();
-    const rows = csvText.trim().split("\n").slice(1); // Skip the header
+    const rows = csvText.trim().split("\n").slice(1);
 
     for (const row of rows) {
       const [date, limit] = row.split(",");
@@ -100,14 +100,12 @@ async function getPickupLimitFromGoogleSheets(pickupDay) {
         return parseInt(limit.trim());
       }
     }
-
     return null; // Not found
   } catch (error) {
     console.error("❌ Error fetching from Google Sheets:", error);
     return null;
   }
 }
-
 
 // ✅ Setup Email Transporter (For Order Confirmation)
 const transporter = nodemailer.createTransport({
@@ -212,7 +210,6 @@ app.get("/remaining-slots", async (req, res) => {
 
 
 // ✅ API Endpoint to Save Orders
-// ✅ Updated API to Save Order with Google Sheet-based limit
 app.post("/save-order", async (req, res) => {
   try {
     const { email, pickup_day, items, total_price, payment_method, email_opt_in, cart } = req.body;
@@ -246,20 +243,12 @@ app.post("/save-order", async (req, res) => {
       `,
       [pickup_day]
     );
-    
-    
 
     const itemsAlreadyOrdered = parseInt(itemCountResult.rows[0].total_items || 0);
     const cartItemTotal = cart.reduce((sum, item) => sum + item.quantity, 0);
 
     const remainingSlots = pickupLimit - itemsAlreadyOrdered;
 
-    console.log(`📦 Pickup Day: ${pickup_day}`);
-    console.log(`🧮 Max Limit from Google Sheets: ${pickupLimit}`);
-    console.log(`📊 Items Already Ordered (DB): ${itemsAlreadyOrdered}`);
-    console.log(`🛒 Items in Current Cart: ${cartItemTotal}`);
-    console.log(`🧾 Remaining Slots: ${remainingSlots}`);
-    
     if (cartItemTotal > remainingSlots) {
       return res.status(400).json({
         success: false,
@@ -285,6 +274,7 @@ app.post("/save-order", async (req, res) => {
     res.status(500).json({ success: false, error: error.message || "Failed to save order." });
   }
 });
+
 
 
 
