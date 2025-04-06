@@ -10,9 +10,6 @@ const express = require("express");
 const cors = require("cors");
 
 const app = express();
-app.use((req, res, next) => {
-  next();
-});
 
 app.use(cors({
   origin: ["https://www.bascombreadco.com", "https://bascombreadco.up.railway.app"],
