@@ -8,9 +8,9 @@ let pickupSlots = {};
 let discountAmount = 0; // Stores the applied discount
 const discountCodes = {
   "ICON10": 0.10,  // 10% off
-  "VENMO10": 0.10,  // 10% off
-  "BREAD5": 0.05, // 5% off
-  "TEST90": 0.50 // 50% off for test purposes
+  "APRIL10": 0.10,  // 10% off
+  "LAUNCH10": 0.10, // 5% off
+  "TEST90": 0.90 // 50% off for test purposes
 };
 
 
@@ -345,45 +345,57 @@ function renderCartItems() {
   cartContainer.innerHTML = "";
   let subtotal = 0;
 
-  // Calculate subtotal
+  // Render each item and apply discount if applicable
   cart.forEach((item, index) => {
-      const imageUrl = item.image || "images/freshmillloaf.jpg";
-      subtotal += item.price * item.quantity;
+    const imageUrl = item.image || "images/freshmillloaf.jpg";
+    const originalPrice = item.price;
+    const discountedPrice = discountAmount > 0 ? originalPrice * (1 - discountAmount) : originalPrice;
 
-      cartContainer.innerHTML += `
-          <div class="cart-item">
-              <div class="item-info">
-                  <img src="${imageUrl}" alt="${item.name}">
-                  <div>
-                      <h4>${item.name}</h4>
-                      <p>Price: $${item.price.toFixed(2)}</p>
-                  </div>
-              </div>
-              <input type="number" value="${item.quantity}" min="1" onchange="updateQuantity(${index}, this.value)" />
-              <button onclick="removeFromCart(${index})">Remove</button>
+    subtotal += discountedPrice * item.quantity;
+
+    cartContainer.innerHTML += `
+      <div class="cart-item">
+        <div class="item-info">
+          <img src="${imageUrl}" alt="${item.name}">
+          <div>
+            <h4>${item.name}</h4>
+            <p>
+              Price:
+              ${
+                discountAmount > 0
+                  ? `<span style="text-decoration: line-through; color: gray;">$${originalPrice.toFixed(2)}</span>
+                     <span style="color: green;"> $${discountedPrice.toFixed(2)}</span>`
+                  : `$${originalPrice.toFixed(2)}`
+              }
+            </p>
           </div>
-      `;
+        </div>
+        <input type="number" value="${item.quantity}" min="1" onchange="updateQuantity(${index}, this.value)" />
+        <button onclick="removeFromCart(${index})">Remove</button>
+      </div>
+    `;
   });
 
-  // **Calculate Convenience Fee (3%)**
+  // Calculate fees
   let convenienceFee = subtotal * 0.03;
-  convenienceFee = parseFloat(convenienceFee.toFixed(2)); // Ensure 2 decimal places
+  convenienceFee = parseFloat(convenienceFee.toFixed(2));
 
-  // **Adjust for Venmo Payment**
-  let venmoDiscount = 0; 
+  // Adjust for Venmo
+  let venmoDiscount = 0;
   if (paymentMethod === "Venmo") {
-      venmoDiscount = convenienceFee; // Remove 3% fee
+    venmoDiscount = convenienceFee;
   }
 
-  let total = subtotal + convenienceFee - venmoDiscount;
+  const total = subtotal + convenienceFee - venmoDiscount;
 
-  // **Update UI**
+  // Update UI
   feeContainer.innerText = `Online Convenience Fee: $${convenienceFee.toFixed(2)}`;
   paymentFeeContainer.innerText = paymentMethod === "Venmo" ? `Venmo Discount: -$${venmoDiscount.toFixed(2)}` : "";
-
   totalContainer.innerText = `Total: $${total.toFixed(2)}`;
+
   checkCartAvailability();
 }
+
 
 
 // ✅ Ensures Global Accessibility
