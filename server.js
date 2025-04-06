@@ -8,8 +8,13 @@ const createCsvWriter = require("csv-writer").createObjectCsvWriter;
 const { Pool } = require("pg");
 const express = require("express");
 const cors = require("cors");
-
 const app = express();
+app.use(cors({
+  origin: ["https://www.bascombreadco.com", "https://bascombreadco.up.railway.app"],
+  methods: ["GET", "POST"],
+  credentials: true
+}));
+app.use(express.static(path.join(__dirname, "public")));
 
 
 const ordersFilePath = "orders.csv"; // Store orders here
@@ -75,12 +80,6 @@ app.post("/webhook", express.raw({ type: "application/json" }), async (req, res)
 });
 
 app.use(express.json());
-app.use(cors({
-  origin: ["https://www.bascombreadco.com", "https://bascombreadco.up.railway.app"],
-  methods: ["GET", "POST"],
-  credentials: true
-}));
-app.use(express.static(path.join(__dirname, "public")));
 
 
 // ✅ Setup Email Transporter (For Order Confirmation)
