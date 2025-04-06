@@ -297,10 +297,30 @@ async function checkout() {
     return { name: item.name, price, quantity: item.quantity };
   });
 
-  const convenienceFee = subtotal * 0.03;
-  const totalDiscountedAmount = subtotal + convenienceFee;
+  // ✅ Always include convenience fee for Stripe
+  let convenienceFee = subtotal * 0.03;
+  convenienceFee = parseFloat(convenienceFee.toFixed(2));
+  const totalAmount = subtotal + convenienceFee;
 
-  const max_slots = pickupSlots[pickup_day]?.available || 7;
+  // ✅ Create Stripe line items
+  const lineItems = updatedCart.map(item => ({
+    price_data: {
+      currency: "usd",
+      product_data: { name: item.name },
+      unit_amount: Math.round(item.price * 100),
+    },
+    quantity: item.quantity || 1,
+  }));
+
+  // ✅ Add fee as its own visible line item
+  lineItems.push({
+    price_data: {
+      currency: "usd",
+      product_data: { name: "Online Convenience Fee" },
+      unit_amount: Math.round(convenienceFee * 100),
+    },
+    quantity: 1,
+  });
 
   try {
     const response = await fetch(`${API_BASE}/create-checkout-session`, {
@@ -312,9 +332,8 @@ async function checkout() {
         pickup_day,
         emailOptIn,
         discountCode,
-        totalAmount: totalDiscountedAmount.toFixed(2),
+        totalAmount: totalAmount.toFixed(2),
         payment_method: "Stripe",
-        max_slots
       })
     });
 
