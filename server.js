@@ -171,12 +171,19 @@ app.post("/save-order", async (req, res) => {
 
     // ✅ Get total items already ordered for that day
     const itemCountResult = await pool.query(
-      `SELECT SUM(CAST(SPLIT_PART(item, 'x', 2) AS INTEGER)) as total_items
+      `SELECT COALESCE(SUM(quantity), 0) AS total_items
        FROM (
-         SELECT unnest(string_to_array(items, ',')) as item FROM orders WHERE pickup_day = $1
-       ) as subquery;`,
+         SELECT pickup_day,
+                CAST(regexp_replace(trim(subitem), '[^0-9]', '', 'g') AS INTEGER) AS quantity
+         FROM (
+           SELECT pickup_day, unnest(string_to_array(items, ',')) AS subitem
+           FROM orders
+           WHERE pickup_day = $1
+         ) AS inner_sub
+       ) AS final_count;`,
       [pickup_day]
     );
+    
 
     const itemsAlreadyOrdered = parseInt(itemCountResult.rows[0].total_items || 0);
     const cartItemTotal = cart.reduce((sum, item) => sum + item.quantity, 0);
