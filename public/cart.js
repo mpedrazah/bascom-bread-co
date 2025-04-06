@@ -184,22 +184,32 @@ async function payWithVenmo() {
     return;
   }
 
-  let subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  let total_price = Math.max(subtotal, 0).toFixed(2);
+  // ✅ Apply discount
+  let subtotal = 0;
+  const discountedCart = cart.map(item => {
+    const discountedPrice = discountAmount > 0 ? item.price * (1 - discountAmount) : item.price;
+    subtotal += discountedPrice * item.quantity;
+    return {
+      ...item,
+      price: discountedPrice,
+    };
+  });
 
-  const max_slots = pickupSlots[pickup_day]?.available || 7;
+  // ✅ No convenience fee for Venmo
+  const total_price = Math.max(subtotal, 0).toFixed(2);
 
   const orderData = {
     name: email.split("@")[0],
     email,
     pickup_day,
-    items: cart.map(item => `${item.name} (x${item.quantity})`).join(", "),
-    total_price: total_price,
+    items: discountedCart.map(item => `${item.name} (x${item.quantity})`).join(", "),
+    total_price,
     payment_method: "Venmo",
     email_opt_in: emailOptIn,
-    cart,
-    max_slots
+    cart: discountedCart,
   };
+
+  console.log("📤 Sending Venmo order to server:", orderData);
 
   try {
     const response = await fetch(`${API_BASE}/save-order`, {
@@ -211,22 +221,34 @@ async function payWithVenmo() {
     const result = await response.json();
     if (!result.success) throw new Error("Failed to save order.");
 
+    console.log("✅ Order saved successfully!");
+
+    // ✅ Format Venmo link with correct amount
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    let venmoLink = isMobile
-      ? `venmo://paycharge?txn=pay&recipients=Margaret-Smillie&amount=${total_price}&note=Bascom%20Bread%20Order`
-      : `https://venmo.com/Margaret-Smillie?txn=pay&amount=${total_price}&note=Bascom%20Bread%20Order`;
+    const note = encodeURIComponent("Bascom Bread Order");
+    const venmoAmount = total_price;
+
+    const venmoLink = isMobile
+      ? `venmo://paycharge?txn=pay&recipients=Margaret-Smillie&amount=${venmoAmount}&note=${note}`
+      : `https://venmo.com/Margaret-Smillie?txn=pay&amount=${venmoAmount}&note=${note}`;
 
     if (isMobile) {
       window.location.href = venmoLink;
-      setTimeout(() => window.location.href = "success.html", 3000);
+      setTimeout(() => {
+        window.location.href = "success.html";
+      }, 3000);
     } else {
-      window.open(venmoLink, "_blank");
-      setTimeout(() => window.location.href = "success.html", 5000);
+      const venmoWindow = window.open(venmoLink, "_blank");
+      if (!venmoWindow) {
+        alert("Venmo did not open. Please complete payment manually.");
+      }
+      setTimeout(() => {
+        window.location.href = "success.html";
+      }, 5000);
     }
 
     localStorage.removeItem("cart");
     updateCartCount();
-
   } catch (error) {
     console.error("❌ Venmo order submission failed:", error);
     alert("There was an issue processing your Venmo payment.");
@@ -236,6 +258,7 @@ async function payWithVenmo() {
     venmoPaymentAttempted = false;
   }, 30000);
 }
+
 
 
 
