@@ -171,18 +171,25 @@ app.post("/save-order", async (req, res) => {
 
     // ✅ Get total items already ordered for that day
     const itemCountResult = await pool.query(
-      `SELECT COALESCE(SUM(quantity), 0) AS total_items
-       FROM (
-         SELECT pickup_day,
-                CAST(regexp_replace(trim(subitem), '[^0-9]', '', 'g') AS INTEGER) AS quantity
-         FROM (
-           SELECT pickup_day, unnest(string_to_array(items, ',')) AS subitem
-           FROM orders
-           WHERE pickup_day = $1
-         ) AS inner_sub
-       ) AS final_count;`,
+      `
+      SELECT COALESCE(SUM(quantity), 0) AS total_items
+      FROM (
+        SELECT
+          CAST(
+            regexp_replace(subitem, '.*\\(x(\\d+)\\).*', '\\1')
+            AS INTEGER
+          ) AS quantity
+        FROM (
+          SELECT unnest(string_to_array(items, ',')) AS subitem
+          FROM orders
+          WHERE pickup_day = $1
+        ) AS unwrapped
+        WHERE subitem ~ '\\(x\\d+\\)'
+      ) AS counted;
+      `,
       [pickup_day]
     );
+    
     
 
     const itemsAlreadyOrdered = parseInt(itemCountResult.rows[0].total_items || 0);
