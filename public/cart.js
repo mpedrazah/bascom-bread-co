@@ -104,6 +104,10 @@ function populatePickupDayDropdown() {
   });
 
   pickupDayElement.addEventListener("change", checkCartAvailability);
+  const firstAvailableOption = [...pickupDayElement.options].find(opt => !opt.disabled);
+  if (firstAvailableOption) {
+    pickupDayElement.value = firstAvailableOption.value;
+  }
 }
 
 
