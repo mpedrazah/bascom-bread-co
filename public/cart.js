@@ -13,28 +13,7 @@ const discountCodes = {
   "TEST90": 0.90 // 50% off for test purposes
 };
 
-async function getPickupLimitFromGoogleSheets(pickupDay) {
-  const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRLeiHAcr4m4Q_4yFuZXtxlj_kqc6V8ZKaPOgsZS0HHCZReMr-vTX2KEXOB8qqgduHPZLsbIF281YoA/pub?output=csv";
 
-  try {
-    const response = await fetch(sheetURL);
-    if (!response.ok) throw new Error("Failed to fetch Google Sheets");
-
-    const csvText = await response.text();
-    const rows = csvText.trim().split("\n").slice(1);
-
-    for (const row of rows) {
-      const [date, limit] = row.split(",");
-      if (date.trim() === pickupDay.trim()) {
-        return parseInt(limit.trim());
-      }
-    }
-    return null; // Not found
-  } catch (error) {
-    console.error("❌ Error fetching from Google Sheets:", error);
-    return null;
-  }
-}
 
 // ✅ Fetch Pickup Slots from Google Sheets
 async function fetchPickupSlotsFromGoogleSheets() {
@@ -308,15 +287,18 @@ async function checkout() {
     return;
   }
 
-  let totalDiscountedAmount = 0;
+  let subtotal = 0;
   const updatedCart = cart.map(item => {
     let price = item.price;
     if (discountCodes[discountCode]) {
       price = price - price * discountCodes[discountCode];
     }
-    totalDiscountedAmount += price * item.quantity;
+    subtotal += price * item.quantity;
     return { name: item.name, price, quantity: item.quantity };
   });
+
+  const convenienceFee = subtotal * 0.03;
+  const totalDiscountedAmount = subtotal + convenienceFee;
 
   const max_slots = pickupSlots[pickup_day]?.available || 7;
 
@@ -330,7 +312,7 @@ async function checkout() {
         pickup_day,
         emailOptIn,
         discountCode,
-        totalAmount: totalDiscountedAmount,
+        totalAmount: totalDiscountedAmount.toFixed(2),
         payment_method: "Stripe",
         max_slots
       })
@@ -347,6 +329,7 @@ async function checkout() {
     alert("There was an error processing your payment.");
   }
 }
+
 
 
 // ✅ Make function globally accessible
