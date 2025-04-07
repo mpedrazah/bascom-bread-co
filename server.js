@@ -31,6 +31,7 @@ console.log("🧪 ENV: ", {
   DATABASE_URL: process.env.DATABASE_URL ? "✅ set" : "❌ missing",
   EMAIL_USER: process.env.EMAIL_USER ? "✅ set" : "❌ missing",
 });
+
 app.post("/webhook", express.raw({ type: "application/json" }), async (req, res) => {
   console.log("⚡ Incoming webhook request received.");
   const sig = req.headers["stripe-signature"];
@@ -41,8 +42,6 @@ app.post("/webhook", express.raw({ type: "application/json" }), async (req, res)
     console.log("✅ Webhook Event Received:", event.type);
   } catch (err) {
     console.error("❌ Webhook signature verification failed:", err.message);
-    console.error("⚠️ Full Headers:", req.headers);
-    console.error("⚠️ Raw Body:", req.body.toString());
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
@@ -55,14 +54,17 @@ app.post("/webhook", express.raw({ type: "application/json" }), async (req, res)
     const email = session.customer_email;
     const metadata = session.metadata;
 
+    // ✅ Safe parsing of totalAmount
+    const rawAmount = parseFloat(metadata.totalAmount);
+    const total_price = isNaN(rawAmount) ? 0.00 : parseFloat(rawAmount.toFixed(2));
+
     const orderData = {
       email,
       pickup_day: metadata.pickup_day,
       items: JSON.parse(metadata.cart).map(item => `${item.name} (x${item.quantity})`).join(", "),
-      total_price: parseFloat(metadata.totalAmount).toFixed(2),
+      total_price,
       payment_method: metadata.payment_method,
       email_opt_in: metadata.emailOptIn && metadata.emailOptIn === "true"
-
     };
 
     try {
@@ -78,6 +80,7 @@ app.post("/webhook", express.raw({ type: "application/json" }), async (req, res)
 
   res.json({ received: true });
 });
+
 
 app.use(express.json());
 
