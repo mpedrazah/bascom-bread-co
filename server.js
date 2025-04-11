@@ -360,6 +360,7 @@ async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, 
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to: email, // ✅ Ensure `email` is valid before sending
+    cc: "bascombreadco@gmail.com", 
     subject: "Your Bascom Bread Order Confirmation",
     html: emailBody,
   };
@@ -427,7 +428,8 @@ app.post("/create-checkout-session", async (req, res) => {
         cart: JSON.stringify(cart),
         pickup_day,
         payment_method,
-        emailOptIn: emailOptIn?.toString() || "false"
+        emailOptIn: emailOptIn?.toString() || "false",
+        totalAmount: (subtotal + convenienceFee).toFixed(2)  // 👈 Add this line
       }
     });
 
