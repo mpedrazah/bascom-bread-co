@@ -442,6 +442,50 @@ app.post("/create-checkout-session", async (req, res) => {
   }
 });
 
+app.get("/pickup-slot-status", async (req, res) => {
+  const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRLeiHAcr4m4Q_4yFuZXtxlj_kqc6V8ZKaPOgsZS0HHCZReMr-vTX2KEXOB8qqgduHPZLsbIF281YoA/pub?output=csv";
+  try {
+    const response = await fetch(sheetURL);
+    const csvText = await response.text();
+    const rows = csvText.trim().split("\n").slice(1); // Skip header
+
+    const allDays = rows.map(row => {
+      const [date, available] = row.split(",");
+      return { date: date.trim(), available: parseInt(available.trim()) };
+    });
+
+    const query = await pool.query(`
+      SELECT pickup_day,
+        SUM(CAST(regexp_replace(subitem, '.*\\(x(\\d+)\\).*', '\\1') AS INTEGER)) AS items_ordered
+      FROM (
+        SELECT pickup_day, unnest(string_to_array(items, ',')) AS subitem
+        FROM orders
+      ) AS flattened
+      WHERE subitem ~ '\\(x\\d+\\)'
+      GROUP BY pickup_day;
+    `);
+
+    const orderedMap = {};
+    query.rows.forEach(row => {
+      orderedMap[row.pickup_day.trim()] = parseInt(row.items_ordered);
+    });
+
+    const result = allDays.map(day => {
+      const ordered = orderedMap[day.date] || 0;
+      return {
+        date: day.date,
+        available: day.available,
+        ordered,
+        remaining: day.available - ordered
+      };
+    });
+
+    res.json(result);
+  } catch (err) {
+    console.error("❌ Error building pickup-slot-status:", err);
+    res.status(500).json({ error: "Failed to get pickup slot status" });
+  }
+});
 
 // ✅ Export Orders as CSV for Admin Download
 app.get("/export-orders", async (req, res) => {

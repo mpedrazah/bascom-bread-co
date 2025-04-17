@@ -78,29 +78,44 @@ function parsePickupSlotsData(csvText) {
 // Call this function when the page loads
 document.addEventListener("DOMContentLoaded", fetchPickupSlotsFromGoogleSheets);
 
-function populatePickupDayDropdown() {
+async function populatePickupDayDropdown() {
   const pickupDayElement = document.getElementById("pickup-day");
   if (!pickupDayElement) return;
 
-  pickupDayElement.innerHTML = ""; // Clear existing options
+  try {
+    const response = await fetch(`${API_BASE}/pickup-slot-status`);
+    const pickupData = await response.json();
 
-  Object.keys(pickupSlots).forEach(date => {
-    const slot = pickupSlots[date];
-    const remainingSlots = slot.available - slot.booked;
+    pickupDayElement.innerHTML = ""; // Clear existing
 
-    if (remainingSlots > 0) {
+    pickupData.forEach(({ date, remaining }) => {
       const option = document.createElement("option");
       option.value = date;
-      option.textContent = remainingSlots < 4 ? `${date} - ${remainingSlots} slots left` : date;
-      pickupDayElement.appendChild(option);
-    }
-  });
 
-  pickupDayElement.addEventListener("change", () => {
-    const selectedDay = pickupDayElement.value;
-    loadRemainingSlots(selectedDay);
-  });
+      if (remaining <= 0) {
+        option.disabled = true;
+        option.textContent = `${date} - SOLD OUT`;
+      } else if (remaining < 4) {
+        option.textContent = `${date} - ${remaining} slots left`;
+      } else {
+        option.textContent = date;
+      }
+
+      pickupDayElement.appendChild(option);
+    });
+
+    // Trigger initial loadRemainingSlots if any date is preselected
+    const initialDate = pickupDayElement.value;
+    if (initialDate) loadRemainingSlots(initialDate);
+
+    pickupDayElement.addEventListener("change", () => {
+      loadRemainingSlots(pickupDayElement.value);
+    });
+  } catch (err) {
+    console.error("❌ Error populating pickup days:", err);
+  }
 }
+
 
 
 
