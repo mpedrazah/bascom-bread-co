@@ -60,14 +60,15 @@ async function fetchPickupSlotStatus() {
     const data = await response.json();
 
     pickupSlotStatus = data.reduce((acc, row) => {
-      const remaining = row.pickupLimit - row.itemsAlreadyOrdered;
-      acc[row.pickup_day] = {
-        pickupLimit: row.pickupLimit,
-        itemsAlreadyOrdered: row.itemsAlreadyOrdered,
+      const remaining = row.remaining;
+      acc[row.date] = {
+        pickupLimit: row.available,
+        itemsAlreadyOrdered: row.ordered,
         remaining
       };
       return acc;
     }, {});
+    
 
     console.log("✅ Loaded pickup slot status:", pickupSlotStatus);
 
