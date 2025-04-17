@@ -118,8 +118,6 @@ async function populatePickupDayDropdown() {
 
 
 
-
-
 // ✅ Call this function when the checkout page loads
 document.addEventListener("DOMContentLoaded", populatePickupDayDropdown);
 
