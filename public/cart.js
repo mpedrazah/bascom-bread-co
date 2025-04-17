@@ -115,6 +115,8 @@ function populatePickupDayDropdown() {
 
   pickupDayElement.innerHTML = ""; // Clear old options
 
+  let firstAvailable = null;
+
   // Build dropdown options
   Object.keys(pickupSlotStatus).forEach(date => {
     const { remaining } = pickupSlotStatus[date];
@@ -124,34 +126,41 @@ function populatePickupDayDropdown() {
     if (remaining <= 0) {
       option.disabled = true;
       option.textContent = `${date} - SOLD OUT`;
-    } else if (remaining < 4) {
-      option.textContent = `${date} - ${remaining} slots left`;
     } else {
-      option.textContent = date;
+      option.textContent = remaining < 4
+        ? `${date} - ${remaining} slots left`
+        : date;
+
+      if (!firstAvailable) {
+        firstAvailable = date; // Pick the first available date
+      }
     }
 
     pickupDayElement.appendChild(option);
   });
 
-  // Set first available date as default
-  const firstAvailable = Object.keys(pickupSlotStatus).find(
-    date => pickupSlotStatus[date].remaining > 0
-  );
-
+  // ✅ Set default selection
   if (firstAvailable) {
     pickupDayElement.value = firstAvailable;
     remainingSlotsForSelectedDay = pickupSlotStatus[firstAvailable].remaining;
-    checkCartAvailability();
+  } else {
+    pickupDayElement.value = ""; // No available options
+    remainingSlotsForSelectedDay = 0;
   }
 
-  // Add change listener
+  console.log("📌 Initial pickup day selected:", pickupDayElement.value);
+  console.log("📦 Remaining slots for selected:", remainingSlotsForSelectedDay);
+
+  checkCartAvailability();
+
+  // ✅ Add change listener AFTER setting value
   pickupDayElement.addEventListener("change", () => {
     const selectedDay = pickupDayElement.value;
     remainingSlotsForSelectedDay = pickupSlotStatus[selectedDay]?.remaining || 0;
+    console.log("🔁 Pickup day changed:", selectedDay);
     checkCartAvailability();
   });
 }
-
 
 
 
