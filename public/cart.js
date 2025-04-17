@@ -54,6 +54,31 @@ async function saveOrderToCSV(orderData) {
 
 document.addEventListener("DOMContentLoaded", fetchPickupSlotsFromGoogleSheets);
 
+let pickupSlotStatus = {}; // global cache
+
+async function fetchPickupSlotStatus() {
+  try {
+    const response = await fetch(`${API_BASE}/pickup-slot-status`);
+    const data = await response.json();
+
+    // Build lookup object by pickup_day
+    pickupSlotStatus = data.reduce((acc, row) => {
+      const remaining = row.pickupLimit - row.itemsAlreadyOrdered;
+      acc[row.pickup_day] = {
+        pickupLimit: row.pickupLimit,
+        itemsAlreadyOrdered: row.itemsAlreadyOrdered,
+        remaining
+      };
+      return acc;
+    }, {});
+
+    console.log("✅ Loaded pickup slot status:", pickupSlotStatus);
+    populatePickupDayDropdown(); // Now populate dropdown with this data
+
+  } catch (err) {
+    console.error("❌ Failed to load pickup slot status:", err);
+  }
+}
 
 
 // Convert CSV into JavaScript Object
@@ -78,42 +103,31 @@ function parsePickupSlotsData(csvText) {
 // Call this function when the page loads
 document.addEventListener("DOMContentLoaded", fetchPickupSlotsFromGoogleSheets);
 
-async function populatePickupDayDropdown() {
+function populatePickupDayDropdown() {
   const pickupDayElement = document.getElementById("pickup-day");
   if (!pickupDayElement) return;
 
-  try {
-    const response = await fetch(`${API_BASE}/pickup-slot-status`);
-    const pickupData = await response.json();
+  pickupDayElement.innerHTML = ""; // Clear old options
 
-    pickupDayElement.innerHTML = ""; // Clear existing
+  Object.keys(pickupSlotStatus).forEach(date => {
+    const { remaining } = pickupSlotStatus[date];
+    const option = document.createElement("option");
+    option.value = date;
+    option.textContent = remaining < 4 ? `${date} - ${remaining} slots left` : date;
+    if (remaining <= 0) option.disabled = true; // Gray it out
+    pickupDayElement.appendChild(option);
+  });
 
-    pickupData.forEach(({ date, remaining }) => {
-      const option = document.createElement("option");
-      option.value = date;
+  pickupDayElement.addEventListener("change", () => {
+    const selectedDay = pickupDayElement.value;
+    remainingSlotsForSelectedDay = pickupSlotStatus[selectedDay]?.remaining || 0;
+    checkCartAvailability();
+  });
 
-      if (remaining <= 0) {
-        option.disabled = true;
-        option.textContent = `${date} - SOLD OUT`;
-      } else if (remaining < 4) {
-        option.textContent = `${date} - ${remaining} slots left`;
-      } else {
-        option.textContent = date;
-      }
-
-      pickupDayElement.appendChild(option);
-    });
-
-    // Trigger initial loadRemainingSlots if any date is preselected
-    const initialDate = pickupDayElement.value;
-    if (initialDate) loadRemainingSlots(initialDate);
-
-    pickupDayElement.addEventListener("change", () => {
-      loadRemainingSlots(pickupDayElement.value);
-    });
-  } catch (err) {
-    console.error("❌ Error populating pickup days:", err);
-  }
+  // Trigger default selection check
+  const selectedDay = pickupDayElement.value;
+  remainingSlotsForSelectedDay = pickupSlotStatus[selectedDay]?.remaining || 0;
+  checkCartAvailability();
 }
 
 
@@ -564,15 +578,11 @@ function checkCartAvailability() {
 
 // Load cart on page load
 document.addEventListener("DOMContentLoaded", () => {
+  fetchPickupSlotStatus();  // 🔁 new function replaces fetchPickupSlotsFromGoogleSheets
   renderCartItems();
   updateCartCount();
-  fetchPickupSlotsFromGoogleSheets().then(() => {
-    populatePickupDayDropdown();
-    const initialPickupDay = document.getElementById("pickup-day")?.value;
-if (initialPickupDay) loadRemainingSlots(initialPickupDay);
-
-  });
 });
+
 
 // Ensure functions are accessible globally
 window.renderCartItems = renderCartItems;
