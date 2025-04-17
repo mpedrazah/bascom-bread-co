@@ -139,6 +139,10 @@ function populatePickupDayDropdown() {
   if (firstAvailable) {
     pickupDayElement.value = firstAvailable;
     remainingSlotsForSelectedDay = pickupSlotStatus[firstAvailable].remaining;
+
+    console.log("✅ pickupDayElement.value = ", pickupDayElement.value);
+    console.log("✅ remainingSlotsForSelectedDay = ", remainingSlotsForSelectedDay);
+
   } else {
     pickupDayElement.value = ""; // No available options
     remainingSlotsForSelectedDay = 0;
