@@ -160,6 +160,17 @@ function populatePickupDayDropdown() {
     console.log("🔁 Pickup day changed:", selectedDay);
     checkCartAvailability();
   });
+
+  // Ensure a valid option is selected
+  const validOption = [...pickupDayElement.options].find(option => !option.disabled);
+  if (validOption) {
+    pickupDayElement.value = validOption.value;
+    remainingSlotsForSelectedDay = pickupSlotStatus[validOption.value]?.remaining || 0;
+  } else {
+    pickupDayElement.value = "";
+    remainingSlotsForSelectedDay = 0;
+  }
+
 }
 
 
