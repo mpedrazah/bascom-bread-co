@@ -52,8 +52,6 @@ async function saveOrderToCSV(orderData) {
 }
 
 
-document.addEventListener("DOMContentLoaded", fetchPickupSlotsFromGoogleSheets);
-
 let pickupSlotStatus = {}; // global cache
 
 async function fetchPickupSlotStatus() {
@@ -106,8 +104,6 @@ function parsePickupSlotsData(csvText) {
   console.log("✅ Processed Pickup Slots:", pickupSlots);
 }
 
-// Call this function when the page loads
-document.addEventListener("DOMContentLoaded", fetchPickupSlotsFromGoogleSheets);
 
 function populatePickupDayDropdown() {
   const pickupDayElement = document.getElementById("pickup-day");
