@@ -663,7 +663,7 @@ button:hover {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
-  flex-direction: 'column';
+  flex-direction: column;
   align-items: stretch;
   max-width: 600px;
   margin: 20px auto;
