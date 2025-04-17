@@ -61,7 +61,6 @@ async function fetchPickupSlotStatus() {
     const response = await fetch(`${API_BASE}/pickup-slot-status`);
     const data = await response.json();
 
-    // Build lookup object by pickup_day
     pickupSlotStatus = data.reduce((acc, row) => {
       const remaining = row.pickupLimit - row.itemsAlreadyOrdered;
       acc[row.pickup_day] = {
@@ -73,7 +72,15 @@ async function fetchPickupSlotStatus() {
     }, {});
 
     console.log("✅ Loaded pickup slot status:", pickupSlotStatus);
-    populatePickupDayDropdown(); // Now populate dropdown with this data
+
+    // ✅ Wait to populate dropdown
+    populatePickupDayDropdown();
+
+    // ✅ Set default pickup_day manually (important!)
+    const pickupDayElement = document.getElementById("pickup-day");
+    if (pickupDayElement && pickupDayElement.value) {
+      remainingSlotsForSelectedDay = pickupSlotStatus[pickupDayElement.value]?.remaining || 0;
+    }
 
   } catch (err) {
     console.error("❌ Failed to load pickup slot status:", err);
