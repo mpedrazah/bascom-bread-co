@@ -114,7 +114,6 @@ function populatePickupDayDropdown() {
 
   let firstAvailable = null;
 
-  // Build dropdown options
   Object.keys(pickupSlotStatus).forEach(date => {
     const { remaining } = pickupSlotStatus[date];
     const option = document.createElement("option");
@@ -124,28 +123,24 @@ function populatePickupDayDropdown() {
       option.disabled = true;
       option.textContent = `${date} - SOLD OUT`;
     } else {
-      option.textContent = remaining < 4
-        ? `${date} - ${remaining} slots left`
-        : date;
+      option.textContent = `${date} - ${remaining} slots left`;
 
       if (!firstAvailable) {
-        firstAvailable = date; // Pick the first available date
+        firstAvailable = date;
       }
     }
 
     pickupDayElement.appendChild(option);
   });
 
-  // ✅ Set default selection
   if (firstAvailable) {
     pickupDayElement.value = firstAvailable;
     remainingSlotsForSelectedDay = pickupSlotStatus[firstAvailable].remaining;
 
     console.log("✅ pickupDayElement.value = ", pickupDayElement.value);
     console.log("✅ remainingSlotsForSelectedDay = ", remainingSlotsForSelectedDay);
-
   } else {
-    pickupDayElement.value = ""; // No available options
+    pickupDayElement.value = "";
     remainingSlotsForSelectedDay = 0;
   }
 
@@ -154,25 +149,14 @@ function populatePickupDayDropdown() {
 
   checkCartAvailability();
 
-  // ✅ Add change listener AFTER setting value
   pickupDayElement.addEventListener("change", () => {
     const selectedDay = pickupDayElement.value;
     remainingSlotsForSelectedDay = pickupSlotStatus[selectedDay]?.remaining || 0;
     console.log("🔁 Pickup day changed:", selectedDay);
     checkCartAvailability();
   });
-
-  // Ensure a valid option is selected
-  const validOption = [...pickupDayElement.options].find(option => !option.disabled);
-  if (validOption) {
-    pickupDayElement.value = validOption.value;
-    remainingSlotsForSelectedDay = pickupSlotStatus[validOption.value]?.remaining || 0;
-  } else {
-    pickupDayElement.value = "";
-    remainingSlotsForSelectedDay = 0;
-  }
-
 }
+
 
 
 
