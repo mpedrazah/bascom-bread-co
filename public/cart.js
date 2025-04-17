@@ -97,7 +97,6 @@ function parsePickupSlotsData(csvText) {
   });
 
   console.log("✅ Processed Pickup Slots:", pickupSlots);
-  populatePickupDayDropdown();
 }
 
 // Call this function when the page loads
@@ -147,10 +146,6 @@ function populatePickupDayDropdown() {
 }
 
 
-
-
-// ✅ Call this function when the checkout page loads
-document.addEventListener("DOMContentLoaded", populatePickupDayDropdown);
 
 
 // ✅ Toast Notification Function
