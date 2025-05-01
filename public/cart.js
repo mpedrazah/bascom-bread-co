@@ -9,9 +9,7 @@ let remainingSlotsForSelectedDay = null;
 let discountAmount = 0; // Stores the applied discount
 const discountCodes = {
   "ICON10": 0.10,  // 10% off
-  "APRIL10": 0.10,  // 10% off
-  "LAUNCH10": 0.10, // 5% off
-  "TEST90": 0.90 // 50% off for test purposes
+  "TEST100": 1 // 50% off for test purposes
 };
 
 
