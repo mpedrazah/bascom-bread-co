@@ -1020,7 +1020,7 @@ nav ul li a {
   font-size: 0.95rem;
 }
 
-#easter-specials .grid-container {
+#specials.grid-container {
   display: flex;
   flex-wrap: wrap;
   gap: 20px;
