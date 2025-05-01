@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const mardiGrasSpecials = document.getElementById("mardigras-specials");
 
     // ✅ Toggle these manually
-    const isEasterActive = true;
+    const isEasterActive = false;
     const isStPatricksActive = false;
     const isMardiGrasActive = false
 
