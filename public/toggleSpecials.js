@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // ✅ Toggle these manually
     const isEasterActive = true;
     const isStPatricksActive = false;
-    const isMardiGrasActive = false;
+    const isMardiGrasActive = false
 
     let specialsActive = false;
 
