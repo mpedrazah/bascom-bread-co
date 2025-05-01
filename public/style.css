@@ -882,6 +882,13 @@ button:hover {
 }
 
 
+.seasonal .grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  width: 100%;
+}
+
 /* Ensure Seasonal Specials follow the same grid layout */
 #seasonal-specials .grid-container {
   display: grid;
