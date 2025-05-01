@@ -675,14 +675,20 @@ function updateBBCPrice() {
 }
 
 function addBBCToCart() {
-  const select = document.getElementById("bbc-variant");
-  const quantity = select.value;
-  const price = parseFloat(select.options[select.selectedIndex].dataset.price);
+  const select = document.getElementById("bbc-option");
+  const value = select.value;
 
-  let name = "The BBC Classic";
-  if (quantity === "12") name += " (dozen)";
-  else name += " (two)";
+  let name, price;
 
-  addToCart(name, price);
+  if (value === "two") {
+    name = "The BBC Classic";
+    price = 4.00;
+  } else {
+    name = "The BBC Classic (dozen)";
+    price = 18.00;
+  }
+
+  const image = "images/cookies.webp";
+  addToCart(name, price, image);
 }
 
