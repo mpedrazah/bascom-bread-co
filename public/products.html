@@ -122,20 +122,19 @@
       </div>
     </div> 
 <!-- The BBC Classic -->
-<div class="product-card" id="bbc-classic-card">
+<div class="product-card">
   <img src="images/cookies.webp" alt="The BBC Classic" class="product-image">
   <div class="product-info">
     <h3>The BBC Classic</h3>
     <p class="product-description">
-      This is not your average cookie. Made with freshly milled soft white wheat, toasted oats, rich browned butter, sweetened naturally with organic coconut sugar, and just the right amount of chocolate chips, each one is deeply flavorful, soft and chewy. A cookie you can feel good about eating!
+      This is not your average cookie. Made with freshly milled soft white wheat, toasted oats, rich browned butter, sweetened naturally with organic coconut sugar, and just the right amount of chocolate chips, each one is deeply flavorful, soft and chewy.
     </p>
-    <label for="bbc-variant">Choose quantity:</label>
-    <select id="bbc-variant" onchange="updateBBCPrice()">
-      <option value="2" data-price="4.00">2 cookies - $4.00</option>
-      <option value="12" data-price="18.00">Dozen (12) - $18.00</option>
-    </select>
-
-    <p class="price" id="bbc-price">$4.00</p>
+    <p>
+      <select id="bbc-option">
+        <option value="two">2 Cookies – $4</option>
+        <option value="dozen">Dozen – $18</option>
+      </select>
+    </p>
     <button class="add-to-cart" onclick="addBBCToCart()">Add to Cart 🛒</button>
   </div>
 </div>
