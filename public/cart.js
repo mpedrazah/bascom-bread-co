@@ -181,17 +181,19 @@ function showToast(message) {
 
 
 // Function to add item to cart
-function addToCart(name, price) {
-  const imageSrc = document.querySelector(`img[alt='${name}']`)?.src || 'images/freshmillloaf.jpg';
+function addToCart(name, price, image) {
+  const cart = JSON.parse(localStorage.getItem("cart")) || [];
+
   const existingItem = cart.find(item => item.name === name);
   if (existingItem) {
     existingItem.quantity += 1;
   } else {
-    cart.push({ name, price, quantity: 1, image: imageSrc });
+    cart.push({ name, price, quantity: 1, image });
   }
+
   localStorage.setItem("cart", JSON.stringify(cart));
   updateCartCount();
-  showToast(`${name} added to cart!`);
+  showToast(`${name} added to cart.`);
 }
 
 
