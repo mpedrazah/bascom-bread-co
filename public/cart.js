@@ -667,3 +667,22 @@ function updateCartCount() {
   }
 }
 
+function updateBBCPrice() {
+  const select = document.getElementById("bbc-variant");
+  const selectedOption = select.options[select.selectedIndex];
+  const price = parseFloat(selectedOption.dataset.price).toFixed(2);
+  document.getElementById("bbc-price").textContent = `$${price}`;
+}
+
+function addBBCToCart() {
+  const select = document.getElementById("bbc-variant");
+  const quantity = select.value;
+  const price = parseFloat(select.options[select.selectedIndex].dataset.price);
+
+  let name = "The BBC Classic";
+  if (quantity === "12") name += " (dozen)";
+  else name += " (two)";
+
+  addToCart(name, price);
+}
+
