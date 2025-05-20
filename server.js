@@ -547,6 +547,10 @@ app.get("/export-email-optins", async (req, res) => {
   }
 });
 
+app.get('/health', (req, res) => {
+  res.status(200).send("OK");
+});
+
 
 
 // ✅ Start Server
