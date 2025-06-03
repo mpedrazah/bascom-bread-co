@@ -701,15 +701,14 @@ function addClassicToCart() {
   let name, price;
 
   if (value === "Sandwich") {
-    name = "Classic Loaf (Sandwich)";
+    name = "Sandwich";
     price = 12.00;
-    const image = "images/classic_rectangle.webp";
+    img_src= "images/classic_sandwich.webp";
   } else {
-    name = "Classic Loaf (Boule)";
+    name = "Boule";
     price = 12.00;
-    const image = "images/classic_round.webp";
+    img_src= "images/classic_round.webp";
   }
-
-  
+  const image = img_src
   addToCart(name, price, image);
 }
