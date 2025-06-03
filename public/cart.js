@@ -703,7 +703,7 @@ function addClassicToCart() {
   if (value === "Sandwich") {
     name = "Sandwich";
     price = 12.00;
-    img_src= "images/classic_sandwich.webp";
+    img_src= "images/classic_rectangle.webp";
   } else {
     name = "Boule";
     price = 12.00;
@@ -712,3 +712,5 @@ function addClassicToCart() {
   const image = img_src
   addToCart(name, price, image);
 }
+
+
