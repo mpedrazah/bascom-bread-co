@@ -694,3 +694,22 @@ function addBBCToCart() {
   addToCart(name, price, image);
 }
 
+function addClassicToCart() {
+  const select = document.getElementById("classic-option");
+  const value = select.value;
+
+  let name, price;
+
+  if (value === "Sandwich") {
+    name = "Classic Loaf (Sandwich)";
+    price = 12.00;
+    const image = "images/classic_rectangle.webp";
+  } else {
+    name = "Classic Loaf (Boule)";
+    price = 12.00;
+    const image = "images/classic_round.webp";
+  }
+
+  
+  addToCart(name, price, image);
+}
