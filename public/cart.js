@@ -501,26 +501,20 @@ function updateCartCount() {
   console.log("🔄 Running updateCartCount()...");
 
   let cart = JSON.parse(localStorage.getItem("cart")) || [];
-  let totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
-  
-  let cartCountElement = document.getElementById("cart-count");
 
+  // Show total number of items, including flour
+  const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  const cartCountElement = document.getElementById("cart-count");
   if (cartCountElement) {
-      cartCountElement.textContent = totalCount;
-      console.log("✅ Cart count updated:", totalCount);
+    cartCountElement.textContent = totalCount;
+    console.log("✅ Cart count updated:", totalCount);
   } else {
-      console.warn("❌ `#cart-count` element not found. Retrying in 100ms...");
-      setTimeout(updateCartCount, 5000);  // Retry after 100ms
+    console.warn("❌ `#cart-count` element not found. Retrying in 5s...");
+    setTimeout(updateCartCount, 5000);
   }
 }
 
-// ✅ Ensure the function runs after the page loads
-document.addEventListener("DOMContentLoaded", function () {
-  console.log("✅ DOM fully loaded. Updating cart count...");
-  updateCartCount();  // Run once when page loads
-
-  setInterval(updateCartCount, 3000);  // ✅ Ensure it updates every 3 seconds
-});
 
 
 
@@ -571,7 +565,9 @@ function checkCartAvailability() {
 
   if (!pickupDayElem || !pickupDayElem.value || remainingSlotsForSelectedDay === null) return;
 
-  const totalCartItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const totalCartItems = cart.reduce((sum, item) => {
+  return item.isFlour ? sum : sum + item.quantity;
+}, 0);
   const remaining = remainingSlotsForSelectedDay;
 
   console.log(`🛒 Cart total: ${totalCartItems} vs Remaining slots: ${remaining}`);
@@ -714,3 +710,39 @@ function addClassicToCart() {
 }
 
 
+function addFlourToCart(type) {
+  let selectId = "";
+  let image = "";
+  let pricePerLb = 0;
+
+  switch (type) {
+    case "Hard Red Wheat Flour":
+      selectId = "red-wheat-option";
+      image = "images/hard-red-wheat.jpg";
+      pricePerLb = 3;
+      break;
+    case "Hard White Wheat Flour":
+      selectId = "white-wheat-option";
+      image = "images/hard-white-wheat.jpg";
+      pricePerLb = 3;
+      break;
+    case "Soft White Wheat Flour":
+      selectId = "soft-wheat-option";
+      image = "images/soft-white-wheat.jpg";
+      pricePerLb = 2;
+      break;
+  }
+
+  const selected = document.getElementById(selectId).value;
+  const weight = parseFloat(selected);
+  const price = (weight * pricePerLb).toFixed(2);
+  const itemName = `${type} (${weight} lb)`;
+
+  // Tag item so it doesn't count toward slot limit
+  const cart = JSON.parse(localStorage.getItem("cart")) || [];
+  cart.push({ name: itemName, price: parseFloat(price), quantity: 1, image, isFlour: true });
+  localStorage.setItem("cart", JSON.stringify(cart));
+
+  updateCartCount();
+  showToast(`${itemName} added to cart.`);
+}

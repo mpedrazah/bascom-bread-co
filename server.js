@@ -189,19 +189,21 @@ app.get("/remaining-slots", async (req, res) => {
 
   const itemCountResult = await pool.query(`
     SELECT COALESCE(SUM(quantity), 0) AS total_items
-    FROM (
-      SELECT
-        CAST(
-          regexp_replace(subitem, '.*\\(x(\\d+)\\).*', '\\1')
-          AS INTEGER
-        ) AS quantity
-      FROM (
-        SELECT unnest(string_to_array(items, ',')) AS subitem
-        FROM orders
-        WHERE pickup_day = $1
-      ) AS unwrapped
-      WHERE subitem ~ '\\(x\\d+\\)'
-    ) AS counted;
+FROM (
+  SELECT
+    CAST(
+      regexp_replace(subitem, '.*\\(x(\\d+)\\).*', '\\1')
+      AS INTEGER
+    ) AS quantity
+  FROM (
+    SELECT unnest(string_to_array(items, ',')) AS subitem
+    FROM orders
+    WHERE pickup_day = $1
+  ) AS unwrapped
+  WHERE subitem ~ '\\(x\\d+\\)'
+    AND subitem NOT ILIKE '%Flour%'
+) AS counted;
+
   `, [pickup_day]);
 
   const itemsAlreadyOrdered = parseInt(itemCountResult.rows[0].total_items || 0);
@@ -246,7 +248,11 @@ app.post("/save-order", async (req, res) => {
     );
 
     const itemsAlreadyOrdered = parseInt(itemCountResult.rows[0].total_items || 0);
-    const cartItemTotal = cart.reduce((sum, item) => sum + item.quantity, 0);
+    const cartItemTotal = cart.reduce((sum, item) => {
+      return item.isFlour ? sum : sum + item.quantity;
+    }, 0);
+
+
 
     const remainingSlots = pickupLimit - itemsAlreadyOrdered;
 
@@ -461,7 +467,7 @@ app.get("/pickup-slot-status", async (req, res) => {
         SELECT pickup_day, unnest(string_to_array(items, ',')) AS subitem
         FROM orders
       ) AS flattened
-      WHERE subitem ~ '\\(x\\d+\\)'
+      WHERE subitem ~ '\\(x\\d+\\)' AND subitem NOT ILIKE '%Flour%'
       GROUP BY pickup_day;
     `);
 
