@@ -494,13 +494,11 @@ app.get("/pickup-slot-status", async (req, res) => {
 });
 
 // ✅ Export Orders as CSV for Admin Download
-const { Parser } = require('json2csv');
-
 app.get("/export-orders", async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT id, name, email, pickup_day, items, total_price, payment_method, order_date 
-      FROM orders 
+      SELECT id, name, email, pickup_day, items, total_price, payment_method, order_date
+      FROM orders
       ORDER BY id DESC
     `);
 
@@ -508,18 +506,45 @@ app.get("/export-orders", async (req, res) => {
       return res.status(404).json({ message: "No orders found." });
     }
 
-    const fields = ["id", "name", "email", "pickup_day", "items", "total_price", "payment_method", "order_date"];
-    const json2csvParser = new Parser({ fields });
-    const csv = json2csvParser.parse(result.rows);
+    const headers = [
+      "Order ID",
+      "Name",
+      "Email",
+      "Pickup Day",
+      "Items",
+      "Total Price",
+      "Payment Method",
+      "Order Date"
+    ];
+
+    // Convert rows to CSV
+    const csvRows = [
+      headers.join(","), // Header line
+      ...result.rows.map(row =>
+        [
+          row.id,
+          `"${row.name || ""}"`,  // Quote text fields
+          `"${row.email || ""}"`,
+          `"${row.pickup_day || ""}"`,
+          `"${row.items || ""}"`,
+          row.total_price?.toFixed(2) || "0.00",
+          `"${row.payment_method || ""}"`,
+          row.order_date?.toISOString() || ""
+        ].join(",")
+      )
+    ];
+
+    const csvContent = csvRows.join("\n");
 
     res.header("Content-Type", "text/csv");
     res.attachment("orders.csv");
-    return res.send(csv);
+    return res.send(csvContent);
   } catch (error) {
     console.error("❌ Error exporting orders:", error);
     res.status(500).json({ error: "Failed to export orders." });
   }
 });
+
 
 
 // ✅ Export Email Subscribers
