@@ -718,17 +718,17 @@ function addFlourToCart(type) {
   switch (type) {
     case "Hard Red Wheat Flour":
       selectId = "red-wheat-option";
-      image = "images/hard-red-flour.jpg";
+      image = "images/hard-red-flour.jpeg";
       pricePerLb = 3;
       break;
     case "Hard White Wheat Flour":
       selectId = "white-wheat-option";
-      image = "images/hard-white-flour.jpg";
+      image = "images/hard-white-flour.jpeg";
       pricePerLb = 3;
       break;
     case "Soft White Wheat Flour":
       selectId = "soft-wheat-option";
-      image = "images/soft-white-flour.jpg";
+      image = "images/soft-white-flour.jpeg";
       pricePerLb = 2;
       break;
   }
