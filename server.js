@@ -494,36 +494,30 @@ app.get("/pickup-slot-status", async (req, res) => {
 });
 
 // ✅ Export Orders as CSV for Admin Download
+const { Parser } = require('json2csv');
+
 app.get("/export-orders", async (req, res) => {
   try {
-      const result = await pool.query("SELECT id, name, email, pickup_day, items, total_price, payment_method, order_date FROM orders ORDER BY id DESC");
+    const result = await pool.query(`
+      SELECT id, name, email, pickup_day, items, total_price, payment_method, order_date 
+      FROM orders 
+      ORDER BY id DESC
+    `);
 
-      if (result.rows.length === 0) {
-          return res.status(404).json({ message: "No orders found." });
-      }
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "No orders found." });
+    }
 
-      const csvWriter = createCsvWriter({
-          path: "orders.csv",
-          header: [
-              { id: "id", title: "Order ID" },
-              { id: "name", title: "Name" },
-              { id: "email", title: "Email" },
-              { id: "pickup_day", title: "Pickup Day" },
-              { id: "items", title: "Items" },
-              { id: "total_price", title: "Total Price" },
-              { id: "payment_method", title: "Payment Method" },
-              { id: "order_date", title: "Order Date" }
-          ],
-      });
+    const fields = ["id", "name", "email", "pickup_day", "items", "total_price", "payment_method", "order_date"];
+    const json2csvParser = new Parser({ fields });
+    const csv = json2csvParser.parse(result.rows);
 
-      await csvWriter.writeRecords(result.rows);
-      console.log("✅ Orders exported successfully!");
-
-      res.download("orders.csv");
-
+    res.header("Content-Type", "text/csv");
+    res.attachment("orders.csv");
+    return res.send(csv);
   } catch (error) {
-      console.error("❌ Error exporting orders:", error);
-      res.status(500).json({ error: "Failed to export orders." });
+    console.error("❌ Error exporting orders:", error);
+    res.status(500).json({ error: "Failed to export orders." });
   }
 });
 
