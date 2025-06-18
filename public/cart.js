@@ -53,20 +53,24 @@ async function saveOrderToCSV(orderData) {
 let pickupSlotStatus = {}; // global cache
 
 async function fetchPickupSlotStatus() {
+  function normalizeDateString(dateStr) {
+    // Trim, collapse multiple spaces, and remove accidental trailing commas or whitespace
+    return dateStr.trim().replace(/\s+/g, " ").replace(/,\s*$/, "");
+  }
+
   try {
     const response = await fetch(`${API_BASE}/pickup-slot-status`);
     const data = await response.json();
 
     pickupSlotStatus = data.reduce((acc, row) => {
-      const remaining = row.remaining;
-      acc[row.date] = {
+      const cleanDate = normalizeDateString(row.date);
+      acc[cleanDate] = {
         pickupLimit: row.available,
         itemsAlreadyOrdered: row.ordered,
-        remaining
+        remaining: row.remaining
       };
       return acc;
     }, {});
-    
 
     console.log("✅ Loaded pickup slot status:", pickupSlotStatus);
 
@@ -76,14 +80,14 @@ async function fetchPickupSlotStatus() {
     // ✅ Set default pickup_day manually (important!)
     const pickupDayElement = document.getElementById("pickup-day");
     if (pickupDayElement && pickupDayElement.value) {
-      remainingSlotsForSelectedDay = pickupSlotStatus[pickupDayElement.value]?.remaining || 0;
+      const normalized = normalizeDateString(pickupDayElement.value);
+      remainingSlotsForSelectedDay = pickupSlotStatus[normalized]?.remaining || 0;
     }
 
   } catch (err) {
     console.error("❌ Failed to load pickup slot status:", err);
   }
 }
-
 
 // Convert CSV into JavaScript Object
 function parsePickupSlotsData(csvText) {
