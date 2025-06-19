@@ -506,36 +506,30 @@ app.get("/export-orders", async (req, res) => {
       return res.status(404).json({ message: "No orders found." });
     }
 
-    const headers = [
-      "Order ID",
-      "Email",
-      "Pickup Day",
-      "Items",
-      "Total Price",
-      "Payment Method",
-      "Order Date"
-    ];
+    const csvWriter = createCsvWriter({
+      path: "orders.csv",
+      header: [
+        { id: "id", title: "Order ID" },
+        { id: "email", title: "Email" },
+        { id: "pickup_day", title: "Pickup Day" },
+        { id: "items", title: "Items" },
+        { id: "total_price", title: "Total Price" },
+        { id: "payment_method", title: "Payment Method" },
+        { id: "order_date", title: "Order Date" },
+      ],
+    });
 
-    const csvRows = [
-      headers.join(","),
-      ...result.rows.map(row =>
-        [
-          row.id,
-          `"${row.email || ""}"`,
-          `"${row.pickup_day || ""}"`,
-          `"${row.items || ""}"`,
-          row.total_price?.toFixed(2) || "0.00",
-          `"${row.payment_method || ""}"`,
-          row.order_date?.toISOString() || ""
-        ].join(",")
-      )
-    ];
+    // Format fields if needed
+    const formattedRows = result.rows.map(row => ({
+      ...row,
+      total_price: parseFloat(row.total_price).toFixed(2),
+      order_date: row.order_date?.toISOString() || ""
+    }));
 
-    const csvContent = csvRows.join("\n");
+    await csvWriter.writeRecords(formattedRows);
+    console.log("✅ Orders exported successfully!");
 
-    res.header("Content-Type", "text/csv");
-    res.attachment("orders.csv");
-    return res.send(csvContent);
+    res.download("orders.csv");
   } catch (error) {
     console.error("❌ Error exporting orders:", error);
     res.status(500).json({ error: "Failed to export orders." });
