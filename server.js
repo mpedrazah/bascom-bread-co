@@ -497,7 +497,7 @@ app.get("/pickup-slot-status", async (req, res) => {
 app.get("/export-orders", async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT id, name, email, pickup_day, items, total_price, payment_method, order_date
+      SELECT id, email, pickup_day, items, total_price, payment_method, order_date
       FROM orders
       ORDER BY id DESC
     `);
@@ -508,7 +508,6 @@ app.get("/export-orders", async (req, res) => {
 
     const headers = [
       "Order ID",
-      "Name",
       "Email",
       "Pickup Day",
       "Items",
@@ -517,13 +516,11 @@ app.get("/export-orders", async (req, res) => {
       "Order Date"
     ];
 
-    // Convert rows to CSV
     const csvRows = [
-      headers.join(","), // Header line
+      headers.join(","),
       ...result.rows.map(row =>
         [
           row.id,
-          `"${row.name || ""}"`,  // Quote text fields
           `"${row.email || ""}"`,
           `"${row.pickup_day || ""}"`,
           `"${row.items || ""}"`,
@@ -544,6 +541,7 @@ app.get("/export-orders", async (req, res) => {
     res.status(500).json({ error: "Failed to export orders." });
   }
 });
+
 
 
 
