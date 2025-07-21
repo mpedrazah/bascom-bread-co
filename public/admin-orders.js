@@ -63,3 +63,30 @@ function exportOrders() {
   console.log("📤 Exporting orders...");
   window.location.href = `${API_BASE}/export-orders`;
 }
+
+// ✅ Handle recipe upload
+document.getElementById("recipe-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const formData = new FormData(form);
+  const statusEl = document.getElementById("upload-status");
+  statusEl.textContent = "Uploading...";
+
+  try {
+    const res = await fetch(`${API_BASE}/upload-recipe`, {
+      method: "POST",
+      body: formData,
+    });
+
+    const result = await res.json();
+    if (result.success) {
+      statusEl.textContent = "✅ Recipe uploaded successfully!";
+      form.reset();
+    } else {
+      throw new Error(result.error || "Upload failed");
+    }
+  } catch (err) {
+    console.error("❌ Upload error:", err);
+    statusEl.textContent = `❌ ${err.message}`;
+  }
+});

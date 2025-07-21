@@ -20,12 +20,32 @@
             <ul>
                 <li><a href="index.html">Home</a></li>
                 <li><a href="products.html">Products</a></li>
+                <li><a href="blog.html">Blog</a></li>
                 <li><a href="admin-orders.html">Admin Orders</a></li>
             </ul>
         </nav>
     </header>
 
     <!-- Orders Section -->
+        <section class="admin-recipes-container">
+    <h2>Submit New Recipe</h2>
+    <form id="recipe-form" enctype="multipart/form-data">
+        <label>Title:</label>
+        <input type="text" name="title" required>
+
+        <label>Short Description:</label>
+        <textarea name="description" rows="2" required></textarea>
+
+        <label>Full Recipe:</label>
+        <textarea name="content" rows="5" required></textarea>
+
+        <label>Upload Image:</label>
+        <input type="file" name="image" accept="image/*" required>
+
+        <button type="submit">Upload Recipe</button>
+        <p id="upload-status"></p>
+    </form>
+    </section>
 
     <section class="admin-orders-container">
         <h2>Customer Orders</h2>

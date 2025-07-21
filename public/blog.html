@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Recipes & Blog - Bascom Bread</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="logo-container">
+      <img src="images/bread-logoV2.webp" alt="Bascom Bread Logo" class="logo">
+    </div>
+    <nav>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="products.html">Shop</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="blog.html">Blog</a></li>
+        <li><a href="checkout.html">Cart (<span id="cart-count">0</span>)</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Blog Title -->
+  <section class="blog-header">
+    <h1>Our Favorite Recipes</h1>
+    <p>Simple, wholesome ideas from our kitchen to yours.</p>
+  </section>
+
+  <!-- Blog Grid -->
+  <section class="recipe-grid">
+    <!-- Recipe 1 -->
+    <div class="recipe-card">
+      <img src="images/blueberry-muffins.jpg" alt="Blueberry Muffins">
+      <div class="recipe-text">
+        <h3>Blueberry Honey Oat Muffins</h3>
+        <p>Sweetened with honey and bursting with blueberries. These muffins are great to bake with kids and don’t require milk!</p>
+        <a href="recipe-blueberry-muffins.html" class="read-more">View Recipe →</a>
+      </div>
+    </div>
+
+    <!-- Recipe 2 -->
+    <div class="recipe-card">
+      <img src="images/sourdough-waffles.jpg" alt="Sourdough Waffles">
+      <div class="recipe-text">
+        <h3>Overnight Sourdough Waffles</h3>
+        <p>Crispy, tangy, and perfect for lazy Saturdays. Made with discard and pantry staples.</p>
+        <a href="recipe-sourdough-waffles.html" class="read-more">View Recipe →</a>
+      </div>
+    </div>
+
+    <!-- Recipe 3 -->
+    <div class="recipe-card">
+      <img src="images/babka.jpg" alt="Chocolate Babka">
+      <div class="recipe-text">
+        <h3>Chocolate Chunk Sourdough Babka</h3>
+        <p>Our customer-favorite babka recipe made easy. Rich, swirled, and naturally leavened.</p>
+        <a href="recipe-babka.html" class="read-more">View Recipe →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- JS for cart count -->
+  <script defer src="cart.js"></script>
+
+</body>
+</html>

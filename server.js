@@ -20,6 +20,24 @@ app.use(express.static(path.join(__dirname, "public")));
 const ordersFilePath = "orders.csv"; // Store orders here
 const csvFilePath = "email_subscribers.csv"; // Store opted-in emails
 
+// Blog/recipe upload section
+const multer = require("multer");
+
+// Set up Multer to store uploads in public/uploads/
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const dir = path.join(__dirname, "public/uploads");
+    fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
+  filename: function (req, file, cb) {
+    const ext = path.extname(file.originalname);
+    const name = file.originalname.replace(/\s+/g, "-").toLowerCase();
+    const uniqueName = `${Date.now()}-${name}`;
+    cb(null, uniqueName);
+  },
+});
+const upload = multer({ storage });
 
 // ✅ Stripe Webhook for Payment Confirmation
 // Webhook endpoint for Stripe
@@ -31,6 +49,43 @@ console.log("🧪 ENV: ", {
   DATABASE_URL: process.env.DATABASE_URL ? "✅ set" : "❌ missing",
   EMAIL_USER: process.env.EMAIL_USER ? "✅ set" : "❌ missing",
 });
+
+// ✅ Recipe Upload Route
+app.post("/upload-recipe", upload.single("image"), async (req, res) => {
+  try {
+    const { title, description, content } = req.body;
+    const image = req.file;
+
+    if (!title || !description || !content || !image) {
+      return res.status(400).json({ success: false, error: "All fields are required." });
+    }
+
+    const newRecipe = {
+      id: Date.now(),
+      title,
+      description,
+      content,
+      imageUrl: `/uploads/${image.filename}`
+    };
+
+    const recipeFilePath = path.join(__dirname, "public/recipes.json");
+
+    let existingRecipes = [];
+    if (fs.existsSync(recipeFilePath)) {
+      const data = fs.readFileSync(recipeFilePath, "utf-8");
+      existingRecipes = JSON.parse(data);
+    }
+
+    existingRecipes.unshift(newRecipe); // Add newest first
+
+    fs.writeFileSync(recipeFilePath, JSON.stringify(existingRecipes, null, 2));
+    res.json({ success: true });
+  } catch (err) {
+    console.error("❌ Error saving recipe:", err);
+    res.status(500).json({ success: false, error: "Failed to save recipe." });
+  }
+});
+
 
 app.post("/webhook", express.raw({ type: "application/json" }), async (req, res) => {
   console.log("⚡ Incoming webhook request received.");
