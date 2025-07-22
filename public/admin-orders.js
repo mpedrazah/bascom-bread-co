@@ -102,7 +102,8 @@ document.getElementById('delete-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const id = document.getElementById('delete-id').value;
 
-  const res = await fetch(`/delete-recipe?id=${id}`, { method: 'DELETE' });
+  const res = await fetch(`${API_BASE}/delete-recipe?id=${id}`, { method: 'DELETE' });
+
   const result = await res.json();
 
   const status = document.getElementById('delete-status');
@@ -114,3 +115,5 @@ document.getElementById('delete-form').addEventListener('submit', async (e) => {
     status.style.color = "red";
   }
 });
+document.getElementById('delete-id').value = '';
+setTimeout(() => status.textContent = '', 3000);

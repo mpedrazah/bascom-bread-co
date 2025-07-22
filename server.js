@@ -119,6 +119,32 @@ app.delete("/delete-recipe", (req, res) => {
   res.json({ success: true });
 });
 
+// Fetch all posts (for blog.html)
+app.get("/api/posts", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM posts ORDER BY created_at DESC");
+    res.json(result.rows);
+  } catch (err) {
+    console.error("❌ Failed to fetch posts:", err);
+    res.status(500).json({ error: "Failed to fetch posts" });
+  }
+});
+
+// Fetch individual post by ID (for recipe.html)
+app.get("/api/post/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query("SELECT * FROM posts WHERE id = $1", [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Post not found" });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("❌ Error loading post:", err);
+    res.status(500).json({ error: "Error loading post" });
+  }
+});
+
 
 
 app.post("/webhook", express.raw({ type: "application/json" }), async (req, res) => {
