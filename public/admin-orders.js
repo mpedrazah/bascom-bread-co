@@ -74,10 +74,10 @@ document.getElementById("recipe-form").addEventListener("submit", async (e) => {
 
   try {
     const res = await fetch(`${API_BASE}/submit-post`, {
- {
       method: "POST",
       body: formData,
     });
+
 
     const result = await res.json();
     if (result.success) {
