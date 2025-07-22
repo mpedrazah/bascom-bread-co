@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Recipe</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .recipe-container {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 1rem;
+    }
+    .recipe-header img {
+      width: 100%;
+      border-radius: 10px;
+    }
+    .jump-button {
+      margin: 1rem 0;
+      background: #b8860b;
+      color: white;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .share-buttons a {
+      margin-right: 10px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="recipe-container" id="recipe-container">
+    <p>Loading recipe...</p>
+  </div>
+
+  <script>
+    async function loadRecipe() {
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get('id');
+
+      const container = document.getElementById('recipe-container');
+      try {
+        const res = await fetch('/recipes.json');
+        const recipes = await res.json();
+        const recipe = recipes.find(r => r.id == id);
+
+        if (!recipe) {
+          container.innerHTML = "<p>Recipe not found.</p>";
+          return;
+        }
+
+        const pageUrl = window.location.href;
+        const fbShare = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(pageUrl)}`;
+        const xShare = `https://twitter.com/intent/tweet?url=${encodeURIComponent(pageUrl)}&text=Check out this recipe!`;
+        const igShare = `https://www.instagram.com`; // Instagram doesn't support direct sharing
+
+        container.innerHTML = `
+          <div class="recipe-header">
+            <h1>${recipe.title}</h1>
+            <img src="${recipe.imageUrl}" alt="${recipe.title}">
+          </div>
+
+          <button class="jump-button" onclick="document.getElementById('recipe-instructions').scrollIntoView({behavior:'smooth'})">Jump to Recipe ↓</button>
+
+          <p><strong>Story:</strong><br>${recipe.story || 'No story yet.'}</p>
+
+          <h2>Ingredients</h2>
+          <pre>${recipe.ingredients || 'No ingredients listed.'}</pre>
+
+          <h2 id="recipe-instructions">Recipe</h2>
+          <pre>${recipe.instructions || recipe.content || 'No instructions.'}</pre>
+
+          <div class="share-buttons">
+            <h3>Share This Recipe:</h3>
+            <a href="${fbShare}" target="_blank">📘 Facebook</a>
+            <a href="${xShare}" target="_blank">🐦 X</a>
+            <a href="${igShare}" target="_blank">📸 Instagram</a>
+          </div>
+        `;
+      } catch (err) {
+        console.error("Failed to load recipe:", err);
+        container.innerHTML = "<p>Error loading recipe.</p>";
+      }
+    }
+
+    loadRecipe();
+  </script>
+</body>
+</html>
