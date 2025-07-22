@@ -4,89 +4,173 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Recipe</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+
   <style>
+    body {
+      font-family: 'Open Sans', sans-serif;
+      background: #fffdf8;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+
     .recipe-container {
       max-width: 800px;
-      margin: 2rem auto;
-      padding: 1rem;
+      margin: 3rem auto;
+      padding: 0 1.5rem;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.06);
     }
+
+    .recipe-header {
+      text-align: center;
+      padding: 2rem 1rem 0;
+    }
+
+    .recipe-header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+
     .recipe-header img {
       width: 100%;
-      border-radius: 10px;
+      max-height: 400px;
+      object-fit: cover;
+      border-radius: 12px;
+      margin-bottom: 2rem;
     }
+
     .jump-button {
-      margin: 1rem 0;
+      display: inline-block;
+      margin: 1rem auto;
       background: #b8860b;
       color: white;
       border: none;
-      padding: 0.6rem 1.2rem;
-      cursor: pointer;
+      padding: 0.75rem 1.5rem;
       font-weight: bold;
+      cursor: pointer;
+      border-radius: 4px;
     }
+
+    .recipe-section {
+      padding: 1.5rem;
+      border-top: 1px solid #eee;
+    }
+
+    .recipe-section h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem;
+      margin-top: 0;
+    }
+
+    .recipe-section p,
+    .recipe-section pre {
+      font-size: 1rem;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+
+    .ingredients-list pre {
+      background: #f9f5e9;
+      padding: 1rem;
+      border-left: 4px solid #b8860b;
+      border-radius: 6px;
+    }
+
+    .instructions pre {
+      background: #f3f3f3;
+      padding: 1rem;
+      border-radius: 6px;
+    }
+
+    .share-buttons {
+      padding: 1.5rem;
+      border-top: 1px solid #eee;
+      text-align: center;
+    }
+
+    .share-buttons h3 {
+      font-family: 'Playfair Display', serif;
+    }
+
     .share-buttons a {
-      margin-right: 10px;
+      margin: 0 0.5rem;
       text-decoration: none;
       font-weight: bold;
+      color: #b8860b;
     }
   </style>
 </head>
 <body>
+
   <div class="recipe-container" id="recipe-container">
-    <p>Loading recipe...</p>
+    <p style="padding: 2rem; text-align: center;">Loading recipe...</p>
   </div>
 
   <script>
     async function loadRecipe() {
       const params = new URLSearchParams(window.location.search);
       const id = params.get('id');
-
       const container = document.getElementById('recipe-container');
+
       try {
         const res = await fetch('/recipes.json');
         const recipes = await res.json();
         const recipe = recipes.find(r => r.id == id);
 
         if (!recipe) {
-          container.innerHTML = "<p>Recipe not found.</p>";
+          container.innerHTML = "<p style='padding:2rem;'>Recipe not found.</p>";
           return;
         }
 
         const pageUrl = window.location.href;
         const fbShare = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(pageUrl)}`;
-        const xShare = `https://twitter.com/intent/tweet?url=${encodeURIComponent(pageUrl)}&text=Check out this recipe!`;
-        const igShare = `https://www.instagram.com`; // Instagram doesn't support direct sharing
+        const xShare = `https://twitter.com/intent/tweet?url=${encodeURIComponent(pageUrl)}&text=${encodeURIComponent(recipe.title)}`;
+        const igShare = `https://www.instagram.com`; // Placeholder only
 
         container.innerHTML = `
           <div class="recipe-header">
             <h1>${recipe.title}</h1>
             <img src="${recipe.imageUrl}" alt="${recipe.title}">
+            <button class="jump-button" onclick="document.getElementById('recipe-instructions').scrollIntoView({behavior:'smooth'})">
+              Jump to Recipe ↓
+            </button>
           </div>
 
-          <button class="jump-button" onclick="document.getElementById('recipe-instructions').scrollIntoView({behavior:'smooth'})">Jump to Recipe ↓</button>
+          <div class="recipe-section">
+            <h2>Backstory</h2>
+            <p>${recipe.story || 'No story provided.'}</p>
+          </div>
 
-          <p><strong>Story:</strong><br>${recipe.story || 'No story yet.'}</p>
+          <div class="recipe-section ingredients-list">
+            <h2>Ingredients</h2>
+            <pre>${recipe.ingredients || 'No ingredients listed.'}</pre>
+          </div>
 
-          <h2>Ingredients</h2>
-          <pre>${recipe.ingredients || 'No ingredients listed.'}</pre>
-
-          <h2 id="recipe-instructions">Recipe</h2>
-          <pre>${recipe.instructions || recipe.content || 'No instructions.'}</pre>
+          <div class="recipe-section instructions" id="recipe-instructions">
+            <h2>Instructions</h2>
+            <pre>${recipe.instructions || recipe.content || 'No instructions.'}</pre>
+          </div>
 
           <div class="share-buttons">
-            <h3>Share This Recipe:</h3>
+            <h3>Share This Recipe</h3>
             <a href="${fbShare}" target="_blank">📘 Facebook</a>
             <a href="${xShare}" target="_blank">🐦 X</a>
             <a href="${igShare}" target="_blank">📸 Instagram</a>
           </div>
         `;
       } catch (err) {
-        console.error("Failed to load recipe:", err);
-        container.innerHTML = "<p>Error loading recipe.</p>";
+        console.error("Error loading recipe:", err);
+        container.innerHTML = "<p style='padding:2rem;'>Error loading recipe.</p>";
       }
     }
 
     loadRecipe();
   </script>
+
 </body>
 </html>
