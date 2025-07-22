@@ -33,40 +33,42 @@
   </section>
 
   <!-- Blog Grid -->
-  <section class="recipe-grid">
-    <!-- Recipe 1 -->
-    <div class="recipe-card">
-      <img src="images/blueberry-muffins.jpg" alt="Blueberry Muffins">
-      <div class="recipe-text">
-        <h3>Blueberry Honey Oat Muffins</h3>
-        <p>Sweetened with honey and bursting with blueberries. These muffins are great to bake with kids and don’t require milk!</p>
-        <a href="recipe-blueberry-muffins.html" class="read-more">View Recipe →</a>
-      </div>
-    </div>
-
-    <!-- Recipe 2 -->
-    <div class="recipe-card">
-      <img src="images/sourdough-waffles.jpg" alt="Sourdough Waffles">
-      <div class="recipe-text">
-        <h3>Overnight Sourdough Waffles</h3>
-        <p>Crispy, tangy, and perfect for lazy Saturdays. Made with discard and pantry staples.</p>
-        <a href="recipe-sourdough-waffles.html" class="read-more">View Recipe →</a>
-      </div>
-    </div>
-
-    <!-- Recipe 3 -->
-    <div class="recipe-card">
-      <img src="images/babka.jpg" alt="Chocolate Babka">
-      <div class="recipe-text">
-        <h3>Chocolate Chunk Sourdough Babka</h3>
-        <p>Our customer-favorite babka recipe made easy. Rich, swirled, and naturally leavened.</p>
-        <a href="recipe-babka.html" class="read-more">View Recipe →</a>
-      </div>
-    </div>
-  </section>
+  <section class="recipe-grid" id="recipe-grid">
+  <p>Loading recipes...</p>
+</section>
 
   <!-- JS for cart count -->
   <script defer src="cart.js"></script>
+  <script>
+  async function loadRecipes() {
+    try {
+      const res = await fetch('/recipes.json');
+      const recipes = await res.json();
+      const container = document.getElementById('recipe-grid');
+
+      if (!recipes.length) {
+        container.innerHTML = "<p>No recipes found.</p>";
+        return;
+      }
+
+      container.innerHTML = recipes.map(recipe => `
+        <div class="recipe-card">
+          <img src="${recipe.imageUrl}" alt="${recipe.title}">
+          <div class="recipe-text">
+            <h3>${recipe.title}</h3>
+            <p>${recipe.description}</p>
+            <a href="recipe.html?id=${recipe.id}" class="read-more">View Recipe →</a>
+          </div>
+        </div>
+      `).join('');
+    } catch (err) {
+      console.error("❌ Failed to load recipes:", err);
+      document.getElementById('recipe-grid').innerHTML = "<p>Error loading recipes.</p>";
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', loadRecipes);
+</script>
 
 </body>
 </html>
