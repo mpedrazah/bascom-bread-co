@@ -52,7 +52,7 @@ console.log("🧪 ENV: ", {
 
 // ✅ Recipe Upload Route
 // ✅ Updated Recipe Upload Route with full fields
-app.post("/upload-recipe", upload.single("image"), async (req, res) => {
+app.post("/submit-post", upload.single("image"), async (req, res) => {
   try {
     const {
       title, description, story,
@@ -61,63 +61,50 @@ app.post("/upload-recipe", upload.single("image"), async (req, res) => {
     } = req.body;
 
     const image = req.file;
-    const isBlog = isBlogPost === "on"; // checkbox comes as "on"
+    const isBlog = isBlogPost === "on";
 
     if (!title?.trim() || !description?.trim() || !story?.trim() || !image) {
-      return res.status(400).json({ success: false, error: "All required fields missing." });
+      return res.status(400).json({ success: false, error: "Missing required fields." });
     }
 
-    const newPost = {
-      id: Date.now(),
-      type: isBlog ? "blog" : "recipe",
+    const result = await pool.query(`
+      INSERT INTO posts (
+        type, title, description, story, image_url, ingredients, instructions, created_at
+      ) VALUES (
+        $1, $2, $3, $4, $5, $6, $7, NOW()
+      ) RETURNING *;
+    `, [
+      isBlog ? 'blog' : 'recipe',
       title,
       description,
       story,
-      imageUrl: `/uploads/${image.filename}`,
-      ...(isBlog ? {} : {
-        ingredients,
-        instructions
-      })
-    };
+      `/uploads/${image.filename}`,
+      isBlog ? null : ingredients,
+      isBlog ? null : instructions
+    ]);
 
-    const recipeFilePath = path.join(__dirname, "public/recipes.json");
-    let existing = [];
+    res.json({ success: true, post: result.rows[0] });
 
-    if (fs.existsSync(recipeFilePath)) {
-      existing = JSON.parse(fs.readFileSync(recipeFilePath, "utf-8"));
-    }
-
-    existing.unshift(newPost);
-    fs.writeFileSync(recipeFilePath, JSON.stringify(existing, null, 2));
-
-    res.json({ success: true });
   } catch (err) {
-    console.error("❌ Upload failed:", err);
-    res.status(500).json({ success: false, error: "Server error saving post." });
+    console.error("❌ Error uploading post:", err);
+    res.status(500).json({ success: false, error: "Server error uploading post." });
   }
 });
 
-app.delete("/delete-recipe", (req, res) => {
-  const idToDelete = parseInt(req.query.id);
-  const recipeFilePath = path.join(__dirname, "public/recipes.json");
-
-  if (!fs.existsSync(recipeFilePath)) {
-    return res.status(404).json({ success: false, error: "recipes.json not found." });
+app.delete("/api/post/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query("DELETE FROM posts WHERE id = $1 RETURNING *", [id]);
+    if (result.rowCount === 0) {
+      return res.status(404).json({ success: false, error: "Post not found" });
+    }
+    res.json({ success: true, deleted: result.rows[0] });
+  } catch (err) {
+    console.error("❌ Error deleting post:", err);
+    res.status(500).json({ success: false, error: "Error deleting post" });
   }
-
-  const data = fs.readFileSync(recipeFilePath, "utf-8");
-  let posts = JSON.parse(data);
-  const initialLength = posts.length;
-
-  posts = posts.filter(post => post.id !== idToDelete);
-
-  if (posts.length === initialLength) {
-    return res.status(404).json({ success: false, error: "Post not found." });
-  }
-
-  fs.writeFileSync(recipeFilePath, JSON.stringify(posts, null, 2));
-  res.json({ success: true });
 });
+
 
 // Fetch all posts (for blog.html)
 app.get("/api/posts", async (req, res) => {
