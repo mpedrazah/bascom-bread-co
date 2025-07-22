@@ -132,36 +132,42 @@
         const xShare = `https://twitter.com/intent/tweet?url=${encodeURIComponent(pageUrl)}&text=${encodeURIComponent(recipe.title)}`;
         const igShare = `https://www.instagram.com`; // Placeholder only
 
-        container.innerHTML = `
-          <div class="recipe-header">
-            <h1>${recipe.title}</h1>
-            <img src="${recipe.imageUrl}" alt="${recipe.title}">
-            <button class="jump-button" onclick="document.getElementById('recipe-instructions').scrollIntoView({behavior:'smooth'})">
-              Jump to Recipe ↓
-            </button>
-          </div>
+       container.innerHTML = `
+    <div class="recipe-header">
+        <h1>${recipe.title}</h1>
+        <img src="${recipe.imageUrl}" alt="${recipe.title}">
+        ${recipe.type !== 'blog' ? `
+        <button class="jump-button" onclick="document.getElementById('recipe-instructions').scrollIntoView({behavior:'smooth'})">
+            Jump to Recipe ↓
+        </button>` : ''
+        }
+    </div>
 
-          <div class="recipe-section">
-            <h2>Backstory</h2>
-            <p>${recipe.story || 'No story provided.'}</p>
-          </div>
+    <div class="recipe-section">
+        <h2>Backstory</h2>
+        <p>${recipe.story || 'No story provided.'}</p>
+    </div>
 
-          <div class="recipe-section ingredients-list">
-            <h2>Ingredients</h2>
-            <pre>${recipe.ingredients || 'No ingredients listed.'}</pre>
-          </div>
+    ${recipe.type !== 'blog' ? `
+        <div class="recipe-section ingredients-list">
+        <h2>Ingredients</h2>
+        <pre>${recipe.ingredients || 'No ingredients listed.'}</pre>
+        </div>
 
-          <div class="recipe-section instructions" id="recipe-instructions">
-            <h2>Instructions</h2>
-            <pre>${recipe.instructions || recipe.content || 'No instructions.'}</pre>
-          </div>
+        <div class="recipe-section instructions" id="recipe-instructions">
+        <h2>Instructions</h2>
+        <pre>${recipe.instructions || recipe.content || 'No instructions.'}</pre>
+        </div>
+    ` : ''}
 
-          <div class="share-buttons">
-            <h3>Share This Recipe</h3>
-            <a href="${fbShare}" target="_blank">📘 Facebook</a>
-            <a href="${xShare}" target="_blank">🐦 X</a>
-            <a href="${igShare}" target="_blank">📸 Instagram</a>
-          </div>
+    <div class="share-buttons">
+        <h3>Share This ${recipe.type === 'blog' ? 'Post' : 'Recipe'}</h3>
+        <a href="${fbShare}" target="_blank">📘 Facebook</a>
+        <a href="${xShare}" target="_blank">🐦 X</a>
+        <a href="${igShare}" target="_blank">📸 Instagram</a>
+    </div>
+    `;
+
         `;
       } catch (err) {
         console.error("Error loading recipe:", err);

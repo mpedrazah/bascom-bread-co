@@ -97,6 +97,27 @@ app.post("/upload-recipe", upload.single("image"), async (req, res) => {
   }
 });
 
+app.delete("/delete-recipe", (req, res) => {
+  const idToDelete = parseInt(req.query.id);
+  const recipeFilePath = path.join(__dirname, "public/recipes.json");
+
+  if (!fs.existsSync(recipeFilePath)) {
+    return res.status(404).json({ success: false, error: "recipes.json not found." });
+  }
+
+  const data = fs.readFileSync(recipeFilePath, "utf-8");
+  let posts = JSON.parse(data);
+  const initialLength = posts.length;
+
+  posts = posts.filter(post => post.id !== idToDelete);
+
+  if (posts.length === initialLength) {
+    return res.status(404).json({ success: false, error: "Post not found." });
+  }
+
+  fs.writeFileSync(recipeFilePath, JSON.stringify(posts, null, 2));
+  res.json({ success: true });
+});
 
 
 

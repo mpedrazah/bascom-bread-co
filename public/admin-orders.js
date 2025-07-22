@@ -97,3 +97,20 @@ document.getElementById('isBlogPost').addEventListener('change', (e) => {
     el.style.display = isBlog ? 'none' : 'block';
   });
 });
+
+document.getElementById('delete-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const id = document.getElementById('delete-id').value;
+
+  const res = await fetch(`/delete-recipe?id=${id}`, { method: 'DELETE' });
+  const result = await res.json();
+
+  const status = document.getElementById('delete-status');
+  if (result.success) {
+    status.textContent = "✅ Post deleted.";
+    status.style.color = "green";
+  } else {
+    status.textContent = `❌ Error: ${result.error}`;
+    status.style.color = "red";
+  }
+});
