@@ -51,12 +51,21 @@ console.log("🧪 ENV: ", {
 });
 
 // ✅ Recipe Upload Route
+// ✅ Updated Recipe Upload Route with full fields
 app.post("/upload-recipe", upload.single("image"), async (req, res) => {
   try {
-    const { title, description, content } = req.body;
+    const { title, description, story, ingredients, instructions } = req.body;
     const image = req.file;
 
-    if (!title || !description || !content || !image) {
+    // Validate all fields
+    if (
+      !title?.trim() ||
+      !description?.trim() ||
+      !story?.trim() ||
+      !ingredients?.trim() ||
+      !instructions?.trim() ||
+      !image
+    ) {
       return res.status(400).json({ success: false, error: "All fields are required." });
     }
 
@@ -64,8 +73,10 @@ app.post("/upload-recipe", upload.single("image"), async (req, res) => {
       id: Date.now(),
       title,
       description,
-      content,
-      imageUrl: `/uploads/${image.filename}`
+      story,
+      ingredients,
+      instructions,
+      imageUrl: `/uploads/${image.filename}`,
     };
 
     const recipeFilePath = path.join(__dirname, "public/recipes.json");
@@ -76,7 +87,7 @@ app.post("/upload-recipe", upload.single("image"), async (req, res) => {
       existingRecipes = JSON.parse(data);
     }
 
-    existingRecipes.unshift(newRecipe); // Add newest first
+    existingRecipes.unshift(newRecipe); // Newest at top
 
     fs.writeFileSync(recipeFilePath, JSON.stringify(existingRecipes, null, 2));
     res.json({ success: true });
@@ -85,6 +96,7 @@ app.post("/upload-recipe", upload.single("image"), async (req, res) => {
     res.status(500).json({ success: false, error: "Failed to save recipe." });
   }
 });
+
 
 
 app.post("/webhook", express.raw({ type: "application/json" }), async (req, res) => {
