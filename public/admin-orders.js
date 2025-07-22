@@ -73,7 +73,8 @@ document.getElementById("recipe-form").addEventListener("submit", async (e) => {
   statusEl.textContent = "Uploading...";
 
   try {
-    const res = await fetch(`${API_BASE}/upload-recipe`, {
+    const res = await fetch(`${API_BASE}/submit-post`, {
+ {
       method: "POST",
       body: formData,
     });
@@ -115,5 +116,4 @@ document.getElementById('delete-form').addEventListener('submit', async (e) => {
     status.style.color = "red";
   }
 });
-document.getElementById('delete-id').value = '';
-setTimeout(() => status.textContent = '', 3000);
+
