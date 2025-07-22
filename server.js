@@ -15,7 +15,7 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.static(path.join(__dirname, "public")));
-
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 const ordersFilePath = "orders.csv"; // Store orders here
 const csvFilePath = "email_subscribers.csv"; // Store opted-in emails
