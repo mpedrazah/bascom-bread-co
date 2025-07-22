@@ -90,3 +90,10 @@ document.getElementById("recipe-form").addEventListener("submit", async (e) => {
     statusEl.textContent = `❌ ${err.message}`;
   }
 });
+
+document.getElementById('isBlogPost').addEventListener('change', (e) => {
+  const isBlog = e.target.checked;
+  document.querySelectorAll('.recipe-only').forEach(el => {
+    el.style.display = isBlog ? 'none' : 'block';
+  });
+});

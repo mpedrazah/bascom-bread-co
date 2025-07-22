@@ -54,48 +54,49 @@ console.log("🧪 ENV: ", {
 // ✅ Updated Recipe Upload Route with full fields
 app.post("/upload-recipe", upload.single("image"), async (req, res) => {
   try {
-    const { title, description, story, ingredients, instructions } = req.body;
-    const image = req.file;
+    const {
+      title, description, story,
+      ingredients, instructions,
+      isBlogPost
+    } = req.body;
 
-    // Validate all fields
-    if (
-      !title?.trim() ||
-      !description?.trim() ||
-      !story?.trim() ||
-      !ingredients?.trim() ||
-      !instructions?.trim() ||
-      !image
-    ) {
-      return res.status(400).json({ success: false, error: "All fields are required." });
+    const image = req.file;
+    const isBlog = isBlogPost === "on"; // checkbox comes as "on"
+
+    if (!title?.trim() || !description?.trim() || !story?.trim() || !image) {
+      return res.status(400).json({ success: false, error: "All required fields missing." });
     }
 
-    const newRecipe = {
+    const newPost = {
       id: Date.now(),
+      type: isBlog ? "blog" : "recipe",
       title,
       description,
       story,
-      ingredients,
-      instructions,
       imageUrl: `/uploads/${image.filename}`,
+      ...(isBlog ? {} : {
+        ingredients,
+        instructions
+      })
     };
 
     const recipeFilePath = path.join(__dirname, "public/recipes.json");
+    let existing = [];
 
-    let existingRecipes = [];
     if (fs.existsSync(recipeFilePath)) {
-      const data = fs.readFileSync(recipeFilePath, "utf-8");
-      existingRecipes = JSON.parse(data);
+      existing = JSON.parse(fs.readFileSync(recipeFilePath, "utf-8"));
     }
 
-    existingRecipes.unshift(newRecipe); // Newest at top
+    existing.unshift(newPost);
+    fs.writeFileSync(recipeFilePath, JSON.stringify(existing, null, 2));
 
-    fs.writeFileSync(recipeFilePath, JSON.stringify(existingRecipes, null, 2));
     res.json({ success: true });
   } catch (err) {
-    console.error("❌ Error saving recipe:", err);
-    res.status(500).json({ success: false, error: "Failed to save recipe." });
+    console.error("❌ Upload failed:", err);
+    res.status(500).json({ success: false, error: "Server error saving post." });
   }
 });
+
 
 
 

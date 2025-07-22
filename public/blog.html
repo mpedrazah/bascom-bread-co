@@ -39,25 +39,27 @@
 
   <!-- JS for cart count -->
   <script defer src="cart.js"></script>
-  <script>
+<script>
   async function loadRecipes() {
     try {
       const res = await fetch('/recipes.json');
-      const recipes = await res.json();
+      const posts = await res.json();
       const container = document.getElementById('recipe-grid');
 
-      if (!recipes.length) {
-        container.innerHTML = "<p>No recipes found.</p>";
+      if (!posts.length) {
+        container.innerHTML = "<p>No recipes or blog posts found.</p>";
         return;
       }
 
-      container.innerHTML = recipes.map(recipe => `
+      container.innerHTML = posts.map(post => `
         <div class="recipe-card">
-          <img src="${recipe.imageUrl}" alt="${recipe.title}">
+          <img src="${post.imageUrl}" alt="${post.title}">
           <div class="recipe-text">
-            <h3>${recipe.title}</h3>
-            <p>${recipe.description}</p>
-            <a href="recipe.html?id=${recipe.id}" class="read-more">View Recipe →</a>
+            <h3>${post.title}</h3>
+            <p>${post.description}</p>
+            <a href="recipe.html?id=${post.id}" class="read-more">
+              ${post.type === 'blog' ? 'View Blog Post →' : 'View Recipe →'}
+            </a>
           </div>
         </div>
       `).join('');
