@@ -6,10 +6,35 @@
   <title>Recipes & Blog - Bascom Bread</title>
   <link rel="stylesheet" href="style.css" />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    .recipe-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+      padding: 2rem;
+    }
+    .recipe-card {
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .recipe-card img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+    }
+    .recipe-text {
+      padding: 1rem;
+    }
+    .recipe-text h3 {
+      margin-top: 0;
+    }
+  </style>
 </head>
 <body>
 
-  <!-- Header -->
   <header>
     <div class="logo-container">
       <img src="images/bread-logoV2.webp" alt="Bascom Bread Logo" class="logo">
@@ -26,52 +51,49 @@
     </nav>
   </header>
 
-  <!-- Blog Title -->
   <section class="blog-header">
     <h1>Our Recipes & Blog Posts</h1>
     <p>Simple, wholesome ideas from our kitchen to yours.</p>
   </section>
 
-  <!-- Blog Grid -->
   <section class="recipe-grid" id="recipe-grid">
-  <p>Loading recipes...</p>
-</section>
+    <p>Loading recipes...</p>
+  </section>
 
-  <!-- JS for cart count -->
   <script defer src="cart.js"></script>
-<script>
-  async function loadRecipes() {
-    try {
-      const res = await fetch('/api/posts');
+  <script>
+    async function loadRecipes() {
+      try {
+        const res = await fetch('/api/posts');
+        const posts = await res.json();
+        const container = document.getElementById('recipe-grid');
 
-      const posts = await res.json();
-      const container = document.getElementById('recipe-grid');
+        if (!posts.length) {
+          container.innerHTML = "<p>No recipes or blog posts found.</p>";
+          return;
+        }
 
-      if (!posts.length) {
-        container.innerHTML = "<p>No recipes or blog posts found.</p>";
-        return;
-      }
-
-      container.innerHTML = posts.map(post => `
-        <div class="recipe-card">
-          <img src="${post.imageUrl}" alt="${post.title}">
-          <div class="recipe-text">
-            <h3>${post.title}</h3>
-            <p>${post.description}</p>
-            <a href="recipe.html?id=${post.id}" class="read-more">
-            ${post.type === 'recipe' ? "View Recipe →" : "Read Blog →"}
-            </a>
+        container.innerHTML = posts.map(post => `
+          <div class="recipe-card">
+            <img src="${post.image_url}" alt="${post.title}">
+            <div class="recipe-text">
+              <h3>${post.title}</h3>
+              <small>Posted on ${new Date(post.created_at).toLocaleDateString()}</small>
+              <p>${post.description}</p>
+              <a href="recipe.html?id=${post.id}" class="read-more">
+                ${post.type === 'recipe' ? "View Recipe →" : "Read Blog →"}
+              </a>
+            </div>
           </div>
-        </div>
-      `).join('');
-    } catch (err) {
-      console.error("❌ Failed to load recipes:", err);
-      document.getElementById('recipe-grid').innerHTML = "<p>Error loading recipes.</p>";
+        `).join('');
+      } catch (err) {
+        console.error("❌ Failed to load recipes:", err);
+        document.getElementById('recipe-grid').innerHTML = "<p>Error loading posts.</p>";
+      }
     }
-  }
 
-  document.addEventListener('DOMContentLoaded', loadRecipes);
-</script>
+    document.addEventListener('DOMContentLoaded', loadRecipes);
+  </script>
 
 </body>
 </html>
