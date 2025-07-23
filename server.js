@@ -51,12 +51,12 @@ app.post("/submit-post", async (req, res) => {
     title, description, story,
     ingredients, instructions,
     isBlogPost,
-    imageUrl
+    image_url 
   } = req.body;
 
   const isBlog = isBlogPost === "on";
 
-  if (!title?.trim() || !description?.trim() || !story?.trim() || !imageUrl?.trim()) {
+  if (!title?.trim() || !description?.trim() || !story?.trim() || !image_url ?.trim()) {
     return res.status(400).json({ success: false, error: "Missing required fields." });
   }
 
@@ -71,7 +71,7 @@ app.post("/submit-post", async (req, res) => {
     title,
     description,
     story,
-    imageUrl,
+    image_url ,
     isBlog ? null : ingredients,
     isBlog ? null : instructions
   ]);
