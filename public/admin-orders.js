@@ -68,21 +68,42 @@ function exportOrders() {
 document.getElementById("recipe-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const form = e.target;
-  const formData = new FormData(form);
   const statusEl = document.getElementById("upload-status");
   statusEl.textContent = "Uploading...";
+
+  // Get form fields manually
+  const isBlogPost = document.getElementById("isBlogPost").checked;
+  const title = form.title.value;
+  const description = form.description.value;
+  const story = form.story.value;
+  const ingredients = form.ingredients.value;
+  const instructions = form.instructions.value;
+  const imageUrl = document.getElementById("imageUrl").value;
+
+  const payload = {
+    type: isBlogPost ? "blog" : "recipe",
+    title,
+    description,
+    story,
+    ingredients,
+    instructions,
+    image_url: imageUrl
+  };
 
   try {
     const res = await fetch(`${API_BASE}/submit-post`, {
       method: "POST",
-      body: formData,
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
     });
-
 
     const result = await res.json();
     if (result.success) {
-      statusEl.textContent = "✅ Recipe uploaded successfully!";
+      statusEl.textContent = "✅ Post uploaded successfully!";
       form.reset();
+      document.getElementById("previewImage").style.display = "none";
     } else {
       throw new Error(result.error || "Upload failed");
     }
@@ -91,6 +112,7 @@ document.getElementById("recipe-form").addEventListener("submit", async (e) => {
     statusEl.textContent = `❌ ${err.message}`;
   }
 });
+
 
 document.getElementById('isBlogPost').addEventListener('change', (e) => {
   const isBlog = e.target.checked;

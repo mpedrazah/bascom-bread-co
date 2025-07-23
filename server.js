@@ -9,6 +9,8 @@ const { Pool } = require("pg");
 const express = require("express");
 const cors = require("cors");
 const app = express();
+app.use(express.json());
+
 app.use(cors({
   origin: ["https://www.bascombreadco.com", "https://bascombreadco.up.railway.app"],
   methods: ["GET", "POST"],
@@ -17,27 +19,19 @@ app.use(cors({
 app.use(express.static(path.join(__dirname, "public")));
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
+const cloudinary = require('cloudinary').v2;
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUD_NAME,
+  api_key:    process.env.API_CLOUD,
+  api_secret: process.env.API_CLOUD_SECRET,
+});
+
 const ordersFilePath = "orders.csv"; // Store orders here
 const csvFilePath = "email_subscribers.csv"; // Store opted-in emails
 
-// Blog/recipe upload section
-const multer = require("multer");
 
-// Set up Multer to store uploads in public/uploads/
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const dir = path.join(__dirname, "public/uploads");
-    fs.mkdirSync(dir, { recursive: true });
-    cb(null, dir);
-  },
-  filename: function (req, file, cb) {
-    const ext = path.extname(file.originalname);
-    const name = file.originalname.replace(/\s+/g, "-").toLowerCase();
-    const uniqueName = `${Date.now()}-${name}`;
-    cb(null, uniqueName);
-  },
-});
-const upload = multer({ storage });
 
 // ✅ Stripe Webhook for Payment Confirmation
 // Webhook endpoint for Stripe
@@ -52,43 +46,37 @@ console.log("🧪 ENV: ", {
 
 // ✅ Recipe Upload Route
 // ✅ Updated Recipe Upload Route with full fields
-app.post("/submit-post", upload.single("image"), async (req, res) => {
-  try {
-    const {
-      title, description, story,
-      ingredients, instructions,
-      isBlogPost
-    } = req.body;
+app.post("/submit-post", async (req, res) => {
+  const {
+    title, description, story,
+    ingredients, instructions,
+    isBlogPost,
+    imageUrl
+  } = req.body;
 
-    const image = req.file;
-    const isBlog = isBlogPost === "on";
+  const isBlog = isBlogPost === "on";
 
-    if (!title?.trim() || !description?.trim() || !story?.trim() || !image) {
-      return res.status(400).json({ success: false, error: "Missing required fields." });
-    }
-
-    const result = await pool.query(`
-      INSERT INTO posts (
-        type, title, description, story, image_url, ingredients, instructions, created_at
-      ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, NOW()
-      ) RETURNING *;
-    `, [
-      isBlog ? 'blog' : 'recipe',
-      title,
-      description,
-      story,
-      `/uploads/${image.filename}`,
-      isBlog ? null : ingredients,
-      isBlog ? null : instructions
-    ]);
-
-    res.json({ success: true, post: result.rows[0] });
-
-  } catch (err) {
-    console.error("❌ Error uploading post:", err);
-    res.status(500).json({ success: false, error: "Server error uploading post." });
+  if (!title?.trim() || !description?.trim() || !story?.trim() || !imageUrl?.trim()) {
+    return res.status(400).json({ success: false, error: "Missing required fields." });
   }
+
+  const result = await pool.query(`
+    INSERT INTO posts (
+      type, title, description, story, image_url, ingredients, instructions, created_at
+    ) VALUES (
+      $1, $2, $3, $4, $5, $6, $7, NOW()
+    ) RETURNING *;
+  `, [
+    isBlog ? 'blog' : 'recipe',
+    title,
+    description,
+    story,
+    imageUrl,
+    isBlog ? null : ingredients,
+    isBlog ? null : instructions
+  ]);
+
+  res.json({ success: true, post: result.rows[0] });
 });
 
 app.delete("/api/post/:id", async (req, res) => {
@@ -179,7 +167,6 @@ app.post("/webhook", express.raw({ type: "application/json" }), async (req, res)
 });
 
 
-app.use(express.json());
 
 
 // ✅ Setup Email Transporter (For Order Confirmation)

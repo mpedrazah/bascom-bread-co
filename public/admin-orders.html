@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="style.css">
     <!-- ✅ Firebase SDK via CDN -->
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://widget.cloudinary.com/v2.0/global/all.js" type="text/javascript"></script>
 
 </head>
 <body>
@@ -54,8 +55,16 @@
   <textarea name="instructions"></textarea>
 </div>
 
-<label for="image">Upload Image</label>
-<input type="file" name="image" accept="image/*" required>
+<!-- Cloudinary Upload Button -->
+<label for="upload_widget">Upload Image</label>
+<button type="button" id="upload_widget">Choose Image</button>
+
+<!-- Hidden input to store uploaded image URL -->
+<input type="hidden" name="imageUrl" id="imageUrl" required>
+
+<!-- Optional: preview uploaded image -->
+<img id="previewImage" src="" style="max-width: 200px; display: none; margin-top: 1rem;">
+
 
 <button type="submit">Submit Post</button>
 
@@ -94,6 +103,26 @@
         window.location.href = "/export-email-optins";
     }
     </script>
+ 
+<script>
+  const uploadWidget = cloudinary.createUploadWidget({
+    cloudName: 'drtwswup6', // replace with your actual Cloudinary cloud name
+    uploadPreset: 'unsigned_bascom' // replace with your unsigned preset
+  }, (error, result) => {
+    if (!error && result && result.event === "success") {
+      const imageUrl = result.info.secure_url;
+      document.getElementById("imageUrl").value = imageUrl;
+      const preview = document.getElementById("previewImage");
+      preview.src = imageUrl;
+      preview.style.display = "block";
+    }
+  });
+
+  document.getElementById("upload_widget").addEventListener("click", function () {
+    uploadWidget.open();
+  }, false);
+</script>
+
     <script src="admin-orders.js"></script>
 </body>
 </html>
