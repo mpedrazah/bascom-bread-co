@@ -43,36 +43,43 @@
 
   <script>
     async function loadPost() {
-      const params = new URLSearchParams(window.location.search);
-      const id = params.get("id");
-      if (!id) return;
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get("id");
+  if (!id) return;
 
-      const res = await fetch(`/api/posts/${id}`);
-      const post = await res.json();
+  const container = document.getElementById("post-container");
 
-      const container = document.getElementById("post-container");
+  try {
+    const res = await fetch(`/api/posts/${id}`);
+    if (!res.ok) throw new Error(`Failed to fetch post: ${res.status}`);
+    const post = await res.json();
 
-      container.innerHTML = `
-        <h1>${post.title}</h1>
-        <img src="${post.image_url}" alt="${post.title}">
-        <small>Posted on ${new Date(post.created_at).toLocaleDateString()}</small>
-        <p>${post.story}</p>
+    container.innerHTML = `
+      <h1>${post.title}</h1>
+      <img src="${post.image_url}" alt="${post.title}">
+      <small>Posted on ${new Date(post.created_at).toLocaleDateString()}</small>
+      <p>${post.story}</p>
 
-        ${post.type === 'recipe' ? `
-          <a href="#ingredients" style="display: inline-block; margin-top: 1rem;">↓ Jump to Recipe</a>
+      ${post.type === 'recipe' ? `
+        <a href="#ingredients" style="display: inline-block; margin-top: 1rem;">↓ Jump to Recipe</a>
 
-          <div id="ingredients" class="ingredients">
-            <h2>Ingredients</h2>
-            <ul>${post.ingredients.split('\n').map(i => `<li>${i}</li>`).join('')}</ul>
-          </div>
+        <div id="ingredients" class="ingredients">
+          <h2>Ingredients</h2>
+          <ul>${post.ingredients.split('\n').map(i => `<li>${i}</li>`).join('')}</ul>
+        </div>
 
-          <div class="instructions">
-            <h2>Instructions</h2>
-            <ol>${post.instructions.split('\n').map(i => `<li>${i}</li>`).join('')}</ol>
-          </div>
-        ` : ""}
-      `;
-    }
+        <div class="instructions">
+          <h2>Instructions</h2>
+          <ol>${post.instructions.split('\n').map(i => `<li>${i}</li>`).join('')}</ol>
+        </div>
+      ` : ""}
+    `;
+  } catch (err) {
+    console.error("❌ Failed to load post:", err);
+    container.innerHTML = `<p style="color:red;">Error loading post. Try again later.</p>`;
+  }
+}
+
 
     document.addEventListener("DOMContentLoaded", loadPost);
   </script>
