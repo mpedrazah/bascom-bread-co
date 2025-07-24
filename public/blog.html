@@ -80,9 +80,9 @@
               <h3>${post.title}</h3>
               <small>Posted on ${new Date(post.created_at).toLocaleDateString()}</small>
               <p>${post.description}</p>
-              <a href="recipe.html?id=${post.id}" class="read-more">
-                ${post.type === 'recipe' ? "View Recipe →" : "Read Blog →"}
-              </a>
+              <a href="${post.type === 'recipe' ? 'recipe.html' : 'blog-post.html'}?id=${post.id}" class="read-more">
+  ${post.type === 'recipe' ? "View Recipe →" : "Read Blog →"}
+</a>
             </div>
           </div>
         `).join('');
