@@ -81,14 +81,14 @@ document.getElementById("recipe-form").addEventListener("submit", async (e) => {
   const imageUrl = document.getElementById("imageUrl").value;
 
   const payload = {
-    type: isBlogPost ? "blog" : "recipe",
-    title,
-    description,
-    story,
-    ingredients,
-    instructions,
-    image_url: imageUrl
-  };
+  isBlogPost: isBlogPost ? "on" : "off", // 👈 Let server determine type
+  title,
+  description,
+  story,
+  ingredients,
+  instructions,
+  image_url: imageUrl
+};
 
   try {
     const res = await fetch(`${API_BASE}/submit-post`, {
