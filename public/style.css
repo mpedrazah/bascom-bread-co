@@ -1184,3 +1184,23 @@ html {
 .blog-story em {
   color: #b8860b;
 }
+
+.jump-to-recipe {
+  display: inline-block;
+  margin-top: 1.5rem;
+  padding: 10px 20px;
+  background-color: #b8860b;
+  color: white;
+  font-weight: bold;
+  text-decoration: none;
+  border-radius: 30px;
+  font-size: 1rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.jump-to-recipe:hover {
+  background-color: #8b6508;
+  transform: translateY(-2px);
+  text-decoration: none;
+}
