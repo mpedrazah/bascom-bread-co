@@ -1163,3 +1163,24 @@ html {
     border-radius: 10px;
     margin: 1rem 0;
   }
+
+.blog-story p {
+  line-height: 1.7;
+  margin-bottom: 1.2rem;
+  font-size: 1.05rem;
+  color: #444;
+}
+
+.blog-story p:first-of-type {
+  font-size: 1.15rem;
+  font-weight: 500;
+}
+
+.blog-story strong {
+  color: #6a8667;
+  font-weight: bold;
+}
+
+.blog-story em {
+  color: #b8860b;
+}

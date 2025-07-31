@@ -47,7 +47,23 @@ function displayOrders(orders) {
 document.addEventListener("DOMContentLoaded", () => {
   console.log("✅ DOM fully loaded. Initializing admin page...");
 
-  // ✅ Check if the button exists before adding event listener
+  // ✅ Initialize Quill
+  const quillContainer = document.getElementById("quill-editor");
+  if (quillContainer) {
+    window.quill = new Quill("#quill-editor", {
+      theme: "snow",
+      placeholder: "Write your story here...",
+      modules: {
+        toolbar: [
+          [{ header: [1, 2, false] }],
+          ["bold", "italic", "underline"],
+          [{ list: "ordered" }, { list: "bullet" }],
+          ["link", "clean"]
+        ]
+      }
+    });
+  }
+
   const exportOrdersBtn = document.getElementById("export-orders-btn");
   if (exportOrdersBtn) {
     exportOrdersBtn.addEventListener("click", exportOrders);
@@ -55,8 +71,9 @@ document.addEventListener("DOMContentLoaded", () => {
     console.warn("⚠️ Warning: #export-orders-btn not found in DOM.");
   }
 
-  fetchOrders(); // Ensure orders are fetched when the page loads
+  fetchOrders();
 });
+
 
 // ✅ Export Orders as CSV
 function exportOrders() {
@@ -75,7 +92,7 @@ document.getElementById("recipe-form").addEventListener("submit", async (e) => {
   const isBlogPost = document.getElementById("isBlogPost").checked;
   const title = form.title.value;
   const description = form.description.value;
-  const story = form.story.value;
+ const story = quill.root.innerHTML;
   const ingredients = form.ingredients.value;
   const instructions = form.instructions.value;
   const imageUrl = document.getElementById("imageUrl").value;
