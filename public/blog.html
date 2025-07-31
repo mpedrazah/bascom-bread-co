@@ -74,18 +74,20 @@
         }
 
         container.innerHTML = posts.map(post => `
-          <div class="recipe-card">
-            <img src="${post.image_url}" alt="${post.title}">
-            <div class="recipe-text">
-              <h3>${post.title}</h3>
-              <small>Posted on ${new Date(post.created_at).toLocaleDateString()}</small>
-              <p>${post.description}</p>
-              <a href="${post.type === 'recipe' ? 'recipe.html' : 'blog-post.html'}?id=${post.id}" class="read-more">
-  ${post.type === 'recipe' ? "View Recipe →" : "Read Blog →"}
-</a>
-            </div>
-          </div>
-        `).join('');
+  <div class="recipe-card">
+    <img src="${post.image_url}" alt="${post.title}">
+    <div class="recipe-text">
+      <h3>${post.title}</h3>
+      <small>Posted on ${new Date(post.created_at).toLocaleDateString()}</small>
+      <p>${post.description}</p>
+      <a href="${post.ingredients && post.instructions ? 'recipe.html' : 'blog-post.html'}?id=${post.id}" class="read-more">
+        ${post.ingredients && post.instructions ? "View Recipe →" : "Read Blog →"}
+      </a>
+      <p style="font-size: 0.75rem; color: #999; margin-top: 4px;">Post ID: ${post.id}</p>
+    </div>
+  </div>
+`).join('');
+
       } catch (err) {
         console.error("❌ Failed to load recipes:", err);
         document.getElementById('recipe-grid').innerHTML = "<p>Error loading posts.</p>";
