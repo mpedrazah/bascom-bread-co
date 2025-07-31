@@ -125,7 +125,7 @@ document.getElementById('delete-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const id = document.getElementById('delete-id').value;
 
-  const res = await fetch(`${API_BASE}/delete-recipe?id=${id}`, { method: 'DELETE' });
+  const res = await fetch(`${API_BASE}/api/post/${id}`, { method: 'DELETE' });
 
   const result = await res.json();
 
@@ -138,4 +138,5 @@ document.getElementById('delete-form').addEventListener('submit', async (e) => {
     status.style.color = "red";
   }
 });
+
 
