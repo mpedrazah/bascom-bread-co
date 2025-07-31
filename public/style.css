@@ -9,8 +9,8 @@ body {
   margin: 0;
   padding: 0;
   background-color: #fff;
+  padding-top: 120px; /* Increase this (try 120px or 130px) */
   color: #333;
-  padding-top: 90px; /* Adjust this padding to account for the fixed nav bar */
   height: 100vh;
   box-sizing: border-box;
 }
@@ -1153,10 +1153,10 @@ html {
 }
 
 .post-container {
-    max-width: 800px;
-    margin: 6rem auto 2rem auto; /* ⬅️ This moves it down */
-    padding: 2rem;
-  }
+  max-width: 800px;
+  margin: 0 auto 2rem auto; /* Remove top margin */
+  padding: 2rem;
+}
 
   .post-container img {
     max-width: 100%;
