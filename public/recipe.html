@@ -60,19 +60,19 @@
       <small>Posted on ${new Date(post.created_at).toLocaleDateString()}</small>
       <p>${post.story}</p>
 
-      ${post.type === 'recipe' ? `
-        <a href="#ingredients" style="display: inline-block; margin-top: 1rem;">↓ Jump to Recipe</a>
+      ${post.type === 'recipe' && post.ingredients && post.instructions ? `
+  <a href="#ingredients" style="display: inline-block; margin-top: 1rem;">↓ Jump to Recipe</a>
 
-        <div id="ingredients" class="ingredients">
-          <h2>Ingredients</h2>
-          <ul>${post.ingredients.split('\n').map(i => `<li>${i}</li>`).join('')}</ul>
-        </div>
+  <div id="ingredients" class="ingredients">
+    <h2>Ingredients</h2>
+    <ul>${post.ingredients.split('\n').map(i => `<li>${i}</li>`).join('')}</ul>
+  </div>
 
-        <div class="instructions">
-          <h2>Instructions</h2>
-          <ol>${post.instructions.split('\n').map(i => `<li>${i}</li>`).join('')}</ol>
-        </div>
-      ` : ""}
+  <div class="instructions">
+    <h2>Instructions</h2>
+    <ol>${post.instructions.split('\n').map(i => `<li>${i}</li>`).join('')}</ol>
+  </div>
+` : ""}
     `;
   } catch (err) {
     console.error("❌ Failed to load post:", err);
