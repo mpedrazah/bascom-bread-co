@@ -1235,3 +1235,6 @@ html {
   display: block;
   clear: both;
 }
+
+/* last-resort guard against any overlaying container */
+.post * { position: relative; }
