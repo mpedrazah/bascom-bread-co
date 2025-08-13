@@ -95,7 +95,7 @@ body {
 }
 
 .hero-image {
-  margin-top: 100px; /* Adjust to match your nav bar height */
+  margin-top: 80px; /* Adjust to match your nav bar height */
 }
 
 
@@ -1167,6 +1167,7 @@ html {
     max-width: 100%;
     border-radius: 10px;
     margin: 1rem 0;
+    margin-top: 100px;
   }
 
 .blog-story p {
