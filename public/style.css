@@ -1171,11 +1171,11 @@ html {
 
   .post-hero img {
   display: block;
-  margin-top: 20px;
+  margin-top: 0px;
 }
 
 .post-body img:first-of-type {
-  margin-top: 20px;
+  margin-top: 0px;
 }
 
 .blog-story p {
