@@ -94,6 +94,20 @@ body {
   max-width: 600px;
 }
 
+.hero-image {
+  margin-top: 80px; /* Adjust to match your nav bar height */
+}
+
+nav {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 1000; /* Ensure it is above the image */
+}
+.hero-image {
+  position: relative;
+  z-index: 1;
+}
 
 .hero p {
   font-size: 1.2rem;
