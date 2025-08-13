@@ -1251,7 +1251,7 @@ html {
 }
 
 /* last-resort guard against any overlaying container this is how to avoid overlap with navbar!!*/
-.post * { position: relative; margin-top: 100px;}
+.post * { position: relative; margin-top: 150px;}
 
 /* Keep header above everything */
 header { z-index: 10000; }
