@@ -87,47 +87,48 @@
   </main>
 
   <script>
-    async function loadPost() {
-      const params = new URLSearchParams(window.location.search);
-      const id = params.get("id");
-      if (!id) return;
+  async function loadPost() {
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("id");
+    if (!id) return;
 
-      const container = document.getElementById("post-container");
+    const container = document.getElementById("post-container");
 
-      try {
-        const res = await fetch(`/api/posts/${id}`);
-        if (!res.ok) throw new Error(\`Failed to fetch post: \${res.status}\`);
-        const post = await res.json();
+    try {
+      const res = await fetch(`/api/posts/${id}`);
+      if (!res.ok) throw new Error(`Failed to fetch post: ${res.status}`);
+      const post = await res.json();
 
-        // If story is plain text (no tags), convert newlines to paragraphs.
-        const storyLooksHtml = /<[^>]+>/.test(post.story || "");
-        const storyHtml = storyLooksHtml
-          ? post.story
-          : \`<p>\${(post.story || "")
-                .trim()
-                .replace(/\\n{2,}/g, "</p><p>")
-                .replace(/\\n/g, "<br>")}</p>\`;
+      // If story is plain text (no tags), convert newlines to paragraphs.
+      const storyLooksHtml = /<[^>]+>/.test(post.story || "");
+      const storyHtml = storyLooksHtml
+        ? post.story
+        : `<p>${(post.story || "")
+              .trim()
+              .replace(/\n{2,}/g, "</p><p>")
+              .replace(/\n/g, "<br>")}</p>`;
 
-        container.innerHTML = \`
-          <article>
-            <header class="post-header">
-              <h1 class="post-title">\${post.title}</h1>
-              <p class="post-meta">Posted on \${new Date(post.created_at).toLocaleDateString()}</p>
-              \${post.image_url ? \`
-                <figure class="post-hero">
-                  <img src="\${post.image_url}" alt="\${post.title}">
-                </figure>\` : "" }
-            </header>
-            <div class="post-body">\${storyHtml}</div>
-          </article>
-        \`;
-      } catch (err) {
-        console.error("❌ Failed to load post:", err);
-        container.innerHTML = \`<p style="color:red;">Error loading post. Try again later.</p>\`;
-      }
+      container.innerHTML = `
+        <article>
+          <header class="post-header">
+            <h1 class="post-title">${post.title}</h1>
+            <p class="post-meta">Posted on ${new Date(post.created_at).toLocaleDateString()}</p>
+            ${post.image_url ? `
+              <figure class="post-hero">
+                <img src="${post.image_url}" alt="${post.title}">
+              </figure>` : "" }
+          </header>
+          <div class="post-body">${storyHtml}</div>
+        </article>
+      `;
+    } catch (err) {
+      console.error("❌ Failed to load post:", err);
+      container.innerHTML = `<p style="color:red;">Error loading post. Try again later.</p>`;
     }
+  }
 
-    document.addEventListener("DOMContentLoaded", loadPost);
-  </script>
+  document.addEventListener("DOMContentLoaded", loadPost);
+</script>
+
 </body>
 </html>
