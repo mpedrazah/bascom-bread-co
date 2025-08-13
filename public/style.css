@@ -1170,6 +1170,11 @@ html {
     margin-top: 100px;
   }
 
+  .post-hero img {
+  display: block;
+  margin-top: 20px;
+}
+
 .blog-story p {
   line-height: 1.7;
   margin-bottom: 1.2rem;
