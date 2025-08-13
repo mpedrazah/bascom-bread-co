@@ -1257,7 +1257,7 @@ html {
 header { z-index: 10000; }
 
 /* Push this page’s content far enough below the fixed header */
-body.blog-post { padding-top: 160px; }   /* tweak to taste */
+body.blog-post { padding-top: 10px; }   /* tweak to taste */
 
 /* Nudge the hero image down a bit more */
 body.blog-post .post-hero { margin-top: 20px; }
