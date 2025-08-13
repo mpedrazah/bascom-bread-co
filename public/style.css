@@ -1260,7 +1260,7 @@ header { z-index: 10000; }
 body.blog-post { padding-top: 160px; }   /* tweak to taste */
 
 /* Nudge the hero image down a bit more */
-body.blog-post .post-hero { margin-top: 200px; }
+body.blog-post .post-hero { margin-top: 20px; }
 
 /* Optional: a little less padding on small screens */
 @media (max-width: 768px) {
