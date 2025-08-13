@@ -1251,7 +1251,7 @@ html {
 }
 
 /* last-resort guard against any overlaying container */
-.post * { position: relative; margin-top: 100px;}
+.post * { position: relative; margin-top: 50px;}
 
 /* Keep header above everything */
 header { z-index: 10000; }
