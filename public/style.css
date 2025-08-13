@@ -1250,7 +1250,7 @@ html {
   clear: both;
 }
 
-/* last-resort guard against any overlaying container */
+/* last-resort guard against any overlaying container this is how to avoid overlap with navbar!!*/
 .post * { position: relative; margin-top: 50px;}
 
 /* Keep header above everything */
