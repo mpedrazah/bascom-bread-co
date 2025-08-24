@@ -12,6 +12,31 @@ const discountCodes = {
   "TEST100": 1 // 50% off for test purposes
 };
 
+// === Bread Club discount model ===
+let currentDiscount = null; // { type: "perItem" | "percent", value: number, appliesTo?: "bread"|"all" }
+
+function isBreadItem(name, item = {}) {
+  if (item.isFlour) return false; // never discount flour
+  const n = (name || "").toLowerCase();
+  // Add/adjust keywords you sell as “loaves”
+  const loafKeywords = ["sandwich", "boule", "sourdough", "baguette", "loaf", "classic"];
+  return loafKeywords.some(k => n.includes(k));
+}
+
+function priceWithDiscount(itemPrice, itemName, itemObj = {}) {
+  if (!currentDiscount) return itemPrice;
+
+  if (currentDiscount.type === "percent") {
+    return itemPrice * (1 - currentDiscount.value);
+  }
+  if (currentDiscount.type === "perItem") {
+    const qualifies = currentDiscount.appliesTo === "bread"
+      ? isBreadItem(itemName, itemObj)
+      : true;
+    return qualifies ? Math.max(0, itemPrice - currentDiscount.value) : itemPrice;
+  }
+  return itemPrice;
+}
 
 
 // ✅ Fetch Pickup Slots from Google Sheets
@@ -206,20 +231,40 @@ window.showToast = showToast;
 
 
 function applyDiscount() {
-  const discountInput = document.getElementById("discount-code").value.trim().toUpperCase();
+  const input = document.getElementById("discount-code");
   const discountMessage = document.getElementById("discount-message");
+  const code = (input?.value || "").trim().toUpperCase();
 
-  if (discountCodes[discountInput]) {
-    discountAmount = discountCodes[discountInput]; // Store discount percentage
-    discountMessage.innerText = `✅ Discount applied: ${discountAmount * 100}% off!`;
+  currentDiscount = null; // reset
+
+  // percent codes you already had
+  const percentCodes = {
+    "ICON10": 0.10,
+    "TEST100": 1.00
+  };
+
+  if (percentCodes[code] != null) {
+    currentDiscount = { type: "percent", value: percentCodes[code], appliesTo: "all" };
+    discountMessage.innerText =
+      `✅ ${percentCodes[code] * 100}% off applied to everything.`;
     discountMessage.style.color = "green";
-  } else {
-    discountAmount = 0;
+  }
+  // NEW: $1.50 off per loaf when they commit weekly (use this code for your members)
+  else if (code === "BREADCLUB") {
+    currentDiscount = { type: "perItem", value: 1.50, appliesTo: "bread" };
+    discountMessage.innerText = "✅ Bread Club: $1.50 off each loaf (bread items only).";
+    discountMessage.style.color = "green";
+  } else if (code) {
     discountMessage.innerText = "❌ Invalid discount code.";
     discountMessage.style.color = "red";
+  } else {
+    discountMessage.innerText = "";
   }
 
-  renderCartItems(); // Update total price after discount
+  // Keep the legacy numeric for UI that still references it (optional)
+  discountAmount = currentDiscount?.type === "percent" ? currentDiscount.value : 0;
+
+  renderCartItems(); // refresh prices
 }
 
 let venmoPaymentAttempted = false; // ✅ Prevent duplicate submissions
@@ -246,17 +291,16 @@ async function payWithVenmo() {
   }
 
   // Apply discount
+  // inside payWithVenmo()
   let subtotal = 0;
   let updatedCart = cart.map(item => {
-    let price = item.price;
-    if (discountCodes[discountCode]) {
-      price -= price * discountCodes[discountCode];
-    }
-    subtotal += price * item.quantity;
+    const discountedUnit = priceWithDiscount(Number(item.price), item.name, item);
+    subtotal += discountedUnit * item.quantity;
     return {
       name: item.name,
-      price,
-      quantity: item.quantity
+      price: discountedUnit,
+      quantity: item.quantity,
+      isFlour: !!item.isFlour
     };
   });
 
@@ -345,38 +389,31 @@ async function checkout() {
     return;
   }
 
-  // ✅ Apply discount if any
-  if (discountCodes[discountCode]) {
-    discountAmount = discountCodes[discountCode];
-  } else {
-    discountAmount = 0;
-  }
-
+  // Build the cart with any active discount ($1.50/loaf or % codes)
   let subtotal = 0;
   const updatedCart = cart.map(item => {
-    let price = item.price;
-    if (discountAmount > 0) {
-      price = price - price * discountAmount;
-    }
-    subtotal += price * item.quantity;
-    return { name: item.name, price, quantity: item.quantity };
+    const unit = Number(item.price);
+    const discountedUnit = priceWithDiscount(unit, item.name, item); // ⬅️ uses Bread Club helper
+    subtotal += discountedUnit * item.quantity;
+    return {
+      name: item.name,
+      price: discountedUnit,        // ⬅️ send discounted price to server/Stripe
+      quantity: item.quantity,
+      isFlour: !!item.isFlour
+    };
   });
-
-  // ✅ Add 3% Stripe fee to subtotal
-  const totalAmountWithFee = (subtotal * 1.03).toFixed(2);
 
   try {
     const response = await fetch(`${API_BASE}/create-checkout-session`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        cart: updatedCart,
+        cart: updatedCart,          // ⬅️ discounted prices go to Stripe
         email,
         pickup_day,
         emailOptIn,
         discountCode,
-        totalAmount: totalAmountWithFee,
-        payment_method: "Stripe",
+        payment_method: "Stripe"
       })
     });
 
@@ -391,6 +428,7 @@ async function checkout() {
     alert("There was an error processing your payment.");
   }
 }
+
 
 
 
@@ -427,10 +465,16 @@ function renderCartItems() {
 
   cart.forEach((item, index) => {
     const imageUrl = item.image || "images/freshmillloaf.jpg";
-    const originalPrice = item.price;
-    const discountedPrice = discountAmount > 0 ? originalPrice * (1 - discountAmount) : originalPrice;
+    const originalPrice = Number(item.price);
+    const discountedPrice = priceWithDiscount(originalPrice, item.name, item);
 
     subtotal += discountedPrice * item.quantity;
+
+    const priceHtml =
+      discountedPrice !== originalPrice
+        ? `<span style="text-decoration: line-through; color: gray;">$${originalPrice.toFixed(2)}</span>
+           <span style="margin-left:6px; color: green;">$${discountedPrice.toFixed(2)}</span>`
+        : `$${originalPrice.toFixed(2)}`;
 
     cartContainer.innerHTML += `
       <div class="cart-item">
@@ -438,39 +482,33 @@ function renderCartItems() {
           <img src="${imageUrl}" alt="${item.name}">
           <div>
             <h4>${item.name}</h4>
-            <p>
-              Price:
-              ${
-                discountAmount > 0
-                  ? `<span style="text-decoration: line-through; color: gray;">$${originalPrice.toFixed(2)}</span>
-                     <span style="color: green;"> $${discountedPrice.toFixed(2)}</span>`
-                  : `$${originalPrice.toFixed(2)}`
-              }
-            </p>
+            <p>Price: ${priceHtml}</p>
           </div>
         </div>
-        <input type="number" value="${item.quantity}" min="1" onchange="updateQuantity(${index}, this.value)" />
+        <input type="number" value="${item.quantity}" min="1"
+               onchange="updateQuantity(${index}, this.value)" />
         <button onclick="removeFromCart(${index})">Remove</button>
       </div>
     `;
   });
 
-  let convenienceFee = subtotal * 0.03;
-  convenienceFee = parseFloat(convenienceFee.toFixed(2));
-
-  let venmoDiscount = 0;
-  if (paymentMethod === "Venmo") {
-    venmoDiscount = convenienceFee;
-  }
-
+  // 3% convenience fee (Venmo removes it)
+  let convenienceFee = parseFloat((subtotal * 0.03).toFixed(2));
+  let venmoDiscount = paymentMethod === "Venmo" ? convenienceFee : 0;
   const total = subtotal + convenienceFee - venmoDiscount;
 
-  feeContainer.innerText = `Online Convenience Fee: $${convenienceFee.toFixed(2)}`;
-  paymentFeeContainer.innerText = paymentMethod === "Venmo" ? `Venmo Discount: -$${venmoDiscount.toFixed(2)}` : "";
+  if (feeContainer) {
+    feeContainer.innerText = `Online Convenience Fee: $${convenienceFee.toFixed(2)}`;
+  }
+  if (paymentFeeContainer) {
+    paymentFeeContainer.innerText =
+      venmoDiscount > 0 ? `Venmo Discount: -$${venmoDiscount.toFixed(2)}` : "";
+  }
   totalContainer.innerText = `Total: $${total.toFixed(2)}`;
 
   checkCartAvailability();
 }
+
 
 
 // ✅ Ensures Global Accessibility
