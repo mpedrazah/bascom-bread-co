@@ -56,11 +56,16 @@ app.post("/webhook", express.raw({ type: "application/json" }), async (req, res)
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
+  // Process only successful payments
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
+
+    console.log("✅ Payment received! Processing order:", session);
+
     const email = session.customer_email;
     const metadata = session.metadata;
 
+    // ✅ Safe parsing of totalAmount
     const rawAmount = parseFloat(metadata.totalAmount);
     const total_price = isNaN(rawAmount) ? 0.00 : parseFloat(rawAmount.toFixed(2));
 
@@ -70,23 +75,14 @@ app.post("/webhook", express.raw({ type: "application/json" }), async (req, res)
       items: JSON.parse(metadata.cart).map(item => `${item.name} (x${item.quantity})`).join(", "),
       total_price,
       payment_method: metadata.payment_method,
-      email_opt_in: metadata.emailOptIn === "true"   // only for marketing
+      email_opt_in: metadata.emailOptIn && metadata.emailOptIn === "true"
     };
 
     try {
       await saveOrderToDatabase(orderData);
-      console.log("✅ Order saved to database!");
-
-      // ALWAYS send confirmation
-      await sendOrderConfirmationEmail(
-        orderData.email,
-        orderData.items,
-        orderData.pickup_day,
-        orderData.total_price,
-        orderData.payment_method
-      );
-      console.log("✅ Confirmation email sent!");
-
+      console.log("✅ Order saved successfully to database!");
+      await sendOrderConfirmationEmail(orderData.email, orderData.items, orderData.pickup_day, orderData.total_price, orderData.payment_method);
+      console.log("✅ Confirmation email sent successfully!");
     } catch (error) {
       console.error("❌ Error processing order:", error);
       return res.status(500).send("Error processing order.");
@@ -95,7 +91,6 @@ app.post("/webhook", express.raw({ type: "application/json" }), async (req, res)
 
   res.json({ received: true });
 });
-
 
 
 
@@ -281,25 +276,24 @@ app.get("/remaining-slots", async (req, res) => {
   const pickupLimit = await getPickupLimitFromGoogleSheets(pickup_day);
   if (!pickupLimit) return res.status(404).json({ error: "Date not found" });
 
-  const itemCountResult = await pool.query(
-  `
-  SELECT COALESCE(SUM(quantity), 0) AS total_items
+  const itemCountResult = await pool.query(`
+    SELECT COALESCE(SUM(quantity), 0) AS total_items
+FROM (
+  SELECT
+    CAST(
+      regexp_replace(subitem, '.*\\(x(\\d+)\\).*', '\\1')
+      AS INTEGER
+    ) AS quantity
   FROM (
-    SELECT
-      CAST(
-        substring(subitem from '\\(x([0-9]+)\\)$')
-        AS INTEGER
-      ) AS quantity
-    FROM (
-      SELECT unnest(string_to_array(items, ',')) AS subitem
-      FROM orders
-      WHERE pickup_day = $1
-    ) AS unwrapped
-    WHERE subitem ~ '\\(x[0-9]+\\)'
-  ) AS counted;
-  `,
-  [pickup_day]
-);
+    SELECT unnest(string_to_array(items, ',')) AS subitem
+    FROM orders
+    WHERE pickup_day = $1
+  ) AS unwrapped
+  WHERE subitem ~ '\\(x\\d+\\)'
+    AND subitem NOT ILIKE '%Flour%'
+) AS counted;
+
+  `, [pickup_day]);
 
   const itemsAlreadyOrdered = parseInt(itemCountResult.rows[0].total_items || 0);
   res.json({ pickupLimit, itemsAlreadyOrdered });
@@ -308,11 +302,9 @@ app.get("/remaining-slots", async (req, res) => {
 
 
 // ✅ API Endpoint to Save Orders
-// ✅ API Endpoint to Save Orders (patched regex)
 app.post("/save-order", async (req, res) => {
   try {
     const { email, pickup_day, items, total_price, payment_method, email_opt_in, cart } = req.body;
-
     if (!email || !pickup_day || !items || !total_price || !payment_method || !cart) {
       return res.status(400).json({ success: false, error: "All fields are required!" });
     }
@@ -330,7 +322,7 @@ app.post("/save-order", async (req, res) => {
       FROM (
         SELECT
           CAST(
-            regexp_replace(subitem, '^.*\\(x([0-9]+)\\)\\s*$', '\\1')
+            regexp_replace(subitem, '.*\\(x(\\d+)\\).*', '\\1')
             AS INTEGER
           ) AS quantity
         FROM (
@@ -338,18 +330,18 @@ app.post("/save-order", async (req, res) => {
           FROM orders
           WHERE pickup_day = $1
         ) AS unwrapped
-        WHERE subitem ~ '\\(x[0-9]+\\)'
+        WHERE subitem ~ '\\(x\\d+\\)'
       ) AS counted;
       `,
       [pickup_day]
     );
 
     const itemsAlreadyOrdered = parseInt(itemCountResult.rows[0].total_items || 0);
-
-    // ✅ Count items in this cart (excluding flour)
     const cartItemTotal = cart.reduce((sum, item) => {
       return item.isFlour ? sum : sum + item.quantity;
     }, 0);
+
+
 
     const remainingSlots = pickupLimit - itemsAlreadyOrdered;
 
@@ -368,18 +360,16 @@ app.post("/save-order", async (req, res) => {
       [email, pickup_day, items, total_price, payment_method, emailOptInValue]
     );
 
-    // ✅ Always send confirmation email
-    await sendOrderConfirmationEmail(email, items, pickup_day, total_price, payment_method);
+    if (emailOptInValue) {
+      await sendOrderConfirmationEmail(email, items, pickup_day, total_price, payment_method);
+    }
 
     res.json({ success: true, order: result.rows[0] });
-
   } catch (error) {
     console.error("❌ Error saving order:", error);
     res.status(500).json({ success: false, error: error.message || "Failed to save order." });
   }
 });
-
-
 
 
 
@@ -400,89 +390,85 @@ app.get("/get-orders", async (req, res) => {
 
 
 
-// ✅ Send Order Confirmation Email (hardened version)
+// ✅ Send Order Confirmation Email
 async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, paymentMethod) {
   if (!email) {
     console.error("❌ Email is missing. Cannot send confirmation.");
     return;
   }
 
-  // --- Sanitize total amount ---
-  let total = 0.00;
-  try {
-    if (totalAmount !== undefined && totalAmount !== null) {
-      // Works for numbers, strings with "$", etc.
-      total = Number(totalAmount.toString().replace(/[^0-9.-]+/g, "")) || 0.00;
-    }
-  } catch (err) {
-    console.error("❌ Failed to sanitize totalAmount:", totalAmount, err);
-  }
-
-  // --- Format items nicely ---
-  let orderDetails = "";
-  try {
-    orderDetails = items
-      .split(",")
-      .map(item => `• ${item.trim()}`)
-      .join("<br>");
-  } catch (err) {
-    console.error("❌ Failed to format items:", items, err);
-    orderDetails = items; // fallback
-  }
-
-  // --- Build email body ---
-  let emailBody = `
-    <p>Thank you for your order!</p>
-    <p><strong>You have purchased:</strong></p>
-    <p>${orderDetails}</p>
-    <p><strong>Pickup Date:</strong> ${pickupDay}*</p>
-    <p>*Please pickup your bread within your pickup window. All unclaimed bread will be donated at the end of the day.</p>
-    <p>You can pickup your order from the porch at 1508 Cooper Dr., Irving, Texas 75061.</p>
-  `;
+  const orderDetails = items.split(", ").map(item => `• ${item}`).join("<br>");
+  let emailBody;
 
   if (paymentMethod === "Venmo") {
-    emailBody += `
-      <p><strong>Total after Venmo discount:</strong> $${total.toFixed(2)}</p>
+    emailBody = `
+      <p>Thank you for your order!</p>
+      <p><strong>You have purchased:</strong></p>
+      <p>${orderDetails}</p>
+      <p><strong>Pickup Date:</strong> ${pickupDay}*</p>
+      <p>*Please pickup your bread within your pickup window. All unclaimed bread will be donated at the end of the day. 
+</p>
+      <p> You can pickup your order from the porch at 1508 Cooper Dr., Irving, Texas 75061. 
+      <p></p>
+      <p><strong>Total after Venmo discount:</strong> $${parseFloat(totalAmount).toFixed(2)}</p>
       <p style="color: red; font-weight: bold;">⚠️ Your order will not be fulfilled until payment is received via Venmo. Please complete your payment as soon as possible.</p>
+      <br>
+      <p>Thank you,</p>
+      <p>Margaret</p>
+      <br></br>
+      
+      <strong>Notes about bread storage: </strong> This bread is extremely fresh and free from all preservatives, which means it has a shorter shelf life than grocery store bread. 
+<ul>
+<li>Bread is best when consumed within 3-5 days.</li>
+<li>Store bread in an airtight bag or beeswax bag.</li>
+<li>Bread will keep well in the freezer for up to 1 month. </li>
+<li>Slice the bread prior to freezing and use a toaster oven to reheat individual slices.</li>
+<li>To reheat a whole frozen loaf, spritz with water and place in the oven at 400 for 20 minutes.</li> </ul>
+
+    `;
+  } else {
+    emailBody = `
+      <p>Thank you for your order!</p>
+      <p><strong>You have purchased:</strong></p>
+      <p>${orderDetails}</p>
+      <p><strong>Pickup Date:</strong> ${pickupDay}*</p>
+      <p>*Please pickup your bread within your pickup window. All unclaimed bread will be donated at the end of the day. 
+</p>
+      <p> You can pickup your order from the porch at 1508 Cooper Dr., Irving, Texas 75061. 
+      <p></p>
+      <br>
+      <p>Thank you,</p>
+      <p>Margaret</p>
+      <br></br>
+      
+      <strong>Notes about bread storage: </strong> This bread is extremely fresh and free from all preservatives, which means it has a shorter shelf life than grocery store bread. 
+<ul>
+<li>Bread is best when consumed within 3-5 days.</li>
+<li>Store bread in an airtight bag or beeswax bag.</li>
+<li>Bread will keep well in the freezer for up to 1 month. </li>
+<li>Slice the bread prior to freezing and use a toaster oven to reheat individual slices.</li>
+<li>To reheat a whole frozen loaf, spritz with water and place in the oven at 400 for 20 minutes.</li> </ul>
+
     `;
   }
 
-  emailBody += `
-    <br>
-    <p>Thank you,</p>
-    <p>Margaret</p>
-    <br>
-    <strong>Notes about bread storage:</strong> This bread is extremely fresh and free from all preservatives, which means it has a shorter shelf life than grocery store bread. 
-    <ul>
-      <li>Bread is best when consumed within 3-5 days.</li>
-      <li>Store bread in an airtight bag or beeswax bag.</li>
-      <li>Bread will keep well in the freezer for up to 1 month.</li>
-      <li>Slice the bread prior to freezing and use a toaster oven to reheat individual slices.</li>
-      <li>To reheat a whole frozen loaf, spritz with water and place in the oven at 400 for 20 minutes.</li>
-    </ul>
-  `;
-
   const mailOptions = {
     from: process.env.EMAIL_USER,
-    to: email,
-    cc: "bascombreadco@gmail.com",
+    to: email, // ✅ Ensure `email` is valid before sending
+    cc: "bascombreadco@gmail.com", 
     subject: "Your Bascom Bread Order Confirmation",
     html: emailBody,
   };
 
   try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log("✅ Order confirmation email sent:", {
-      to: email,
-      messageId: info.messageId,
-      response: info.response
-    });
+    await transporter.sendMail(mailOptions);
+    console.log("✅ Order confirmation email sent to:", email);
   } catch (error) {
-    console.error("❌ Error sending confirmation email:", error);
-    console.error("❌ Mail Options were:", mailOptions);
+    console.error("❌ Error sending email:", error);
+    console.error("❌ Mail Options:", mailOptions);
   }
+  
 }
-
 
 
 // ✅ Stripe Checkout API
