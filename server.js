@@ -185,6 +185,15 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+// 🔎 Verify transporter immediately on startup
+transporter.verify((err, success) => {
+  if (err) {
+    console.error("❌ Email transporter not ready:", err);
+  } else {
+    console.log("✅ Email transporter ready");
+  }
+});
+
 // ✅ Connect to Railway PostgreSQL
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
@@ -463,12 +472,12 @@ async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, 
   };
 
   try {
-    await transporter.sendMail(mailOptions);
-    console.log("✅ Order confirmation email sent to:", email);
-  } catch (error) {
-    console.error("❌ Error sending email:", error);
-    console.error("❌ Mail Options:", mailOptions);
-  }
+  let info = await transporter.sendMail(mailOptions);
+  console.log("✅ Order confirmation email sent:", info.messageId);
+} catch (error) {
+  console.error("❌ Error sending email:", error.message);
+  console.error("❌ Full error object:", error);
+}
   
 }
 
