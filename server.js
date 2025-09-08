@@ -56,16 +56,11 @@ app.post("/webhook", express.raw({ type: "application/json" }), async (req, res)
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  // Process only successful payments
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
-
-    console.log("✅ Payment received! Processing order:", session);
-
     const email = session.customer_email;
     const metadata = session.metadata;
 
-    // ✅ Safe parsing of totalAmount
     const rawAmount = parseFloat(metadata.totalAmount);
     const total_price = isNaN(rawAmount) ? 0.00 : parseFloat(rawAmount.toFixed(2));
 
@@ -75,14 +70,23 @@ app.post("/webhook", express.raw({ type: "application/json" }), async (req, res)
       items: JSON.parse(metadata.cart).map(item => `${item.name} (x${item.quantity})`).join(", "),
       total_price,
       payment_method: metadata.payment_method,
-      email_opt_in: metadata.emailOptIn && metadata.emailOptIn === "true"
+      email_opt_in: metadata.emailOptIn === "true"   // only for marketing
     };
 
     try {
       await saveOrderToDatabase(orderData);
-      console.log("✅ Order saved successfully to database!");
-      await sendOrderConfirmationEmail(orderData.email, orderData.items, orderData.pickup_day, orderData.total_price, orderData.payment_method);
-      console.log("✅ Confirmation email sent successfully!");
+      console.log("✅ Order saved to database!");
+
+      // ALWAYS send confirmation
+      await sendOrderConfirmationEmail(
+        orderData.email,
+        orderData.items,
+        orderData.pickup_day,
+        orderData.total_price,
+        orderData.payment_method
+      );
+      console.log("✅ Confirmation email sent!");
+
     } catch (error) {
       console.error("❌ Error processing order:", error);
       return res.status(500).send("Error processing order.");
@@ -91,6 +95,9 @@ app.post("/webhook", express.raw({ type: "application/json" }), async (req, res)
 
   res.json({ received: true });
 });
+
+
+
 
 app.use(express.json());
 
@@ -307,40 +314,28 @@ app.post("/save-order", async (req, res) => {
       return res.status(400).json({ success: false, error: "All fields are required!" });
     }
 
-    // ✅ Fetch limit from Google Sheets
     const pickupLimit = await getPickupLimitFromGoogleSheets(pickup_day);
     if (!pickupLimit) {
       return res.status(400).json({ success: false, error: `Pickup day '${pickup_day}' not found in availability.` });
     }
 
-    // ✅ Get total items already ordered for that day
-    const itemCountResult = await pool.query(
-      `
+    // get current total items
+    const itemCountResult = await pool.query(`
       SELECT COALESCE(SUM(quantity), 0) AS total_items
       FROM (
         SELECT
-          CAST(
-            regexp_replace(subitem, '.*\\(x(\\d+)\\).*', '\\1')
-            AS INTEGER
-          ) AS quantity
+          CAST(regexp_replace(subitem, '.*\\(x(\\d+)\\).*', '\\1') AS INTEGER) AS quantity
         FROM (
           SELECT unnest(string_to_array(items, ',')) AS subitem
           FROM orders
           WHERE pickup_day = $1
         ) AS unwrapped
-        WHERE subitem ~ '\\(x\\d+\\)'
+        WHERE subitem ~ '\\(x\\d+)'
       ) AS counted;
-      `,
-      [pickup_day]
-    );
+    `, [pickup_day]);
 
     const itemsAlreadyOrdered = parseInt(itemCountResult.rows[0].total_items || 0);
-    const cartItemTotal = cart.reduce((sum, item) => {
-      return item.isFlour ? sum : sum + item.quantity;
-    }, 0);
-
-
-
+    const cartItemTotal = cart.reduce((sum, item) => item.isFlour ? sum : sum + item.quantity, 0);
     const remainingSlots = pickupLimit - itemsAlreadyOrdered;
 
     if (cartItemTotal > remainingSlots) {
@@ -358,16 +353,17 @@ app.post("/save-order", async (req, res) => {
       [email, pickup_day, items, total_price, payment_method, emailOptInValue]
     );
 
-    if (emailOptInValue) {
-      await sendOrderConfirmationEmail(email, items, pickup_day, total_price, payment_method);
-    }
+    // ALWAYS send confirmation email
+    await sendOrderConfirmationEmail(email, items, pickup_day, total_price, payment_method);
 
     res.json({ success: true, order: result.rows[0] });
+
   } catch (error) {
     console.error("❌ Error saving order:", error);
     res.status(500).json({ success: false, error: error.message || "Failed to save order." });
   }
 });
+
 
 
 
