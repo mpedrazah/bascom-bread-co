@@ -307,35 +307,49 @@ FROM (
 
 
 // ✅ API Endpoint to Save Orders
+// ✅ API Endpoint to Save Orders (patched regex)
 app.post("/save-order", async (req, res) => {
   try {
     const { email, pickup_day, items, total_price, payment_method, email_opt_in, cart } = req.body;
+
     if (!email || !pickup_day || !items || !total_price || !payment_method || !cart) {
       return res.status(400).json({ success: false, error: "All fields are required!" });
     }
 
+    // ✅ Fetch limit from Google Sheets
     const pickupLimit = await getPickupLimitFromGoogleSheets(pickup_day);
     if (!pickupLimit) {
       return res.status(400).json({ success: false, error: `Pickup day '${pickup_day}' not found in availability.` });
     }
 
-    // get current total items
-    const itemCountResult = await pool.query(`
+    // ✅ Get total items already ordered for that day
+    const itemCountResult = await pool.query(
+      `
       SELECT COALESCE(SUM(quantity), 0) AS total_items
       FROM (
         SELECT
-          CAST(regexp_replace(subitem, '.*\\(x(\\d+)\\).*', '\\1') AS INTEGER) AS quantity
+          CAST(
+            regexp_replace(subitem, '^.*\\(x([0-9]+)\\)\\s*$', '\\1')
+            AS INTEGER
+          ) AS quantity
         FROM (
           SELECT unnest(string_to_array(items, ',')) AS subitem
           FROM orders
           WHERE pickup_day = $1
         ) AS unwrapped
-        WHERE subitem ~ '\\(x\\d+)'
+        WHERE subitem ~ '\\(x[0-9]+\\)'
       ) AS counted;
-    `, [pickup_day]);
+      `,
+      [pickup_day]
+    );
 
     const itemsAlreadyOrdered = parseInt(itemCountResult.rows[0].total_items || 0);
-    const cartItemTotal = cart.reduce((sum, item) => item.isFlour ? sum : sum + item.quantity, 0);
+
+    // ✅ Count items in this cart (excluding flour)
+    const cartItemTotal = cart.reduce((sum, item) => {
+      return item.isFlour ? sum : sum + item.quantity;
+    }, 0);
+
     const remainingSlots = pickupLimit - itemsAlreadyOrdered;
 
     if (cartItemTotal > remainingSlots) {
@@ -353,7 +367,7 @@ app.post("/save-order", async (req, res) => {
       [email, pickup_day, items, total_price, payment_method, emailOptInValue]
     );
 
-    // ALWAYS send confirmation email
+    // ✅ Always send confirmation email
     await sendOrderConfirmationEmail(email, items, pickup_day, total_price, payment_method);
 
     res.json({ success: true, order: result.rows[0] });
@@ -363,6 +377,7 @@ app.post("/save-order", async (req, res) => {
     res.status(500).json({ success: false, error: error.message || "Failed to save order." });
   }
 });
+
 
 
 
