@@ -281,24 +281,25 @@ app.get("/remaining-slots", async (req, res) => {
   const pickupLimit = await getPickupLimitFromGoogleSheets(pickup_day);
   if (!pickupLimit) return res.status(404).json({ error: "Date not found" });
 
-  const itemCountResult = await pool.query(`
-    SELECT COALESCE(SUM(quantity), 0) AS total_items
-FROM (
-  SELECT
-    CAST(
-      regexp_replace(subitem, '.*\\(x(\\d+)\\).*', '\\1')
-      AS INTEGER
-    ) AS quantity
+  const itemCountResult = await pool.query(
+  `
+  SELECT COALESCE(SUM(quantity), 0) AS total_items
   FROM (
-    SELECT unnest(string_to_array(items, ',')) AS subitem
-    FROM orders
-    WHERE pickup_day = $1
-  ) AS unwrapped
-  WHERE subitem ~ '\\(x\\d+\\)'
-    AND subitem NOT ILIKE '%Flour%'
-) AS counted;
-
-  `, [pickup_day]);
+    SELECT
+      CAST(
+        substring(subitem from '\\(x([0-9]+)\\)$')
+        AS INTEGER
+      ) AS quantity
+    FROM (
+      SELECT unnest(string_to_array(items, ',')) AS subitem
+      FROM orders
+      WHERE pickup_day = $1
+    ) AS unwrapped
+    WHERE subitem ~ '\\(x[0-9]+\\)'
+  ) AS counted;
+  `,
+  [pickup_day]
+);
 
   const itemsAlreadyOrdered = parseInt(itemCountResult.rows[0].total_items || 0);
   res.json({ pickupLimit, itemsAlreadyOrdered });
