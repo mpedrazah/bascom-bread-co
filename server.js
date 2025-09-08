@@ -384,85 +384,89 @@ app.get("/get-orders", async (req, res) => {
 
 
 
-// ✅ Send Order Confirmation Email
+// ✅ Send Order Confirmation Email (hardened version)
 async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, paymentMethod) {
   if (!email) {
     console.error("❌ Email is missing. Cannot send confirmation.");
     return;
   }
 
-  const orderDetails = items.split(", ").map(item => `• ${item}`).join("<br>");
-  let emailBody;
+  // --- Sanitize total amount ---
+  let total = 0.00;
+  try {
+    if (totalAmount !== undefined && totalAmount !== null) {
+      // Works for numbers, strings with "$", etc.
+      total = Number(totalAmount.toString().replace(/[^0-9.-]+/g, "")) || 0.00;
+    }
+  } catch (err) {
+    console.error("❌ Failed to sanitize totalAmount:", totalAmount, err);
+  }
+
+  // --- Format items nicely ---
+  let orderDetails = "";
+  try {
+    orderDetails = items
+      .split(",")
+      .map(item => `• ${item.trim()}`)
+      .join("<br>");
+  } catch (err) {
+    console.error("❌ Failed to format items:", items, err);
+    orderDetails = items; // fallback
+  }
+
+  // --- Build email body ---
+  let emailBody = `
+    <p>Thank you for your order!</p>
+    <p><strong>You have purchased:</strong></p>
+    <p>${orderDetails}</p>
+    <p><strong>Pickup Date:</strong> ${pickupDay}*</p>
+    <p>*Please pickup your bread within your pickup window. All unclaimed bread will be donated at the end of the day.</p>
+    <p>You can pickup your order from the porch at 1508 Cooper Dr., Irving, Texas 75061.</p>
+  `;
 
   if (paymentMethod === "Venmo") {
-    emailBody = `
-      <p>Thank you for your order!</p>
-      <p><strong>You have purchased:</strong></p>
-      <p>${orderDetails}</p>
-      <p><strong>Pickup Date:</strong> ${pickupDay}*</p>
-      <p>*Please pickup your bread within your pickup window. All unclaimed bread will be donated at the end of the day. 
-</p>
-      <p> You can pickup your order from the porch at 1508 Cooper Dr., Irving, Texas 75061. 
-      <p></p>
-      <p><strong>Total after Venmo discount:</strong> $${parseFloat(totalAmount).toFixed(2)}</p>
+    emailBody += `
+      <p><strong>Total after Venmo discount:</strong> $${total.toFixed(2)}</p>
       <p style="color: red; font-weight: bold;">⚠️ Your order will not be fulfilled until payment is received via Venmo. Please complete your payment as soon as possible.</p>
-      <br>
-      <p>Thank you,</p>
-      <p>Margaret</p>
-      <br></br>
-      
-      <strong>Notes about bread storage: </strong> This bread is extremely fresh and free from all preservatives, which means it has a shorter shelf life than grocery store bread. 
-<ul>
-<li>Bread is best when consumed within 3-5 days.</li>
-<li>Store bread in an airtight bag or beeswax bag.</li>
-<li>Bread will keep well in the freezer for up to 1 month. </li>
-<li>Slice the bread prior to freezing and use a toaster oven to reheat individual slices.</li>
-<li>To reheat a whole frozen loaf, spritz with water and place in the oven at 400 for 20 minutes.</li> </ul>
-
-    `;
-  } else {
-    emailBody = `
-      <p>Thank you for your order!</p>
-      <p><strong>You have purchased:</strong></p>
-      <p>${orderDetails}</p>
-      <p><strong>Pickup Date:</strong> ${pickupDay}*</p>
-      <p>*Please pickup your bread within your pickup window. All unclaimed bread will be donated at the end of the day. 
-</p>
-      <p> You can pickup your order from the porch at 1508 Cooper Dr., Irving, Texas 75061. 
-      <p></p>
-      <br>
-      <p>Thank you,</p>
-      <p>Margaret</p>
-      <br></br>
-      
-      <strong>Notes about bread storage: </strong> This bread is extremely fresh and free from all preservatives, which means it has a shorter shelf life than grocery store bread. 
-<ul>
-<li>Bread is best when consumed within 3-5 days.</li>
-<li>Store bread in an airtight bag or beeswax bag.</li>
-<li>Bread will keep well in the freezer for up to 1 month. </li>
-<li>Slice the bread prior to freezing and use a toaster oven to reheat individual slices.</li>
-<li>To reheat a whole frozen loaf, spritz with water and place in the oven at 400 for 20 minutes.</li> </ul>
-
     `;
   }
 
+  emailBody += `
+    <br>
+    <p>Thank you,</p>
+    <p>Margaret</p>
+    <br>
+    <strong>Notes about bread storage:</strong> This bread is extremely fresh and free from all preservatives, which means it has a shorter shelf life than grocery store bread. 
+    <ul>
+      <li>Bread is best when consumed within 3-5 days.</li>
+      <li>Store bread in an airtight bag or beeswax bag.</li>
+      <li>Bread will keep well in the freezer for up to 1 month.</li>
+      <li>Slice the bread prior to freezing and use a toaster oven to reheat individual slices.</li>
+      <li>To reheat a whole frozen loaf, spritz with water and place in the oven at 400 for 20 minutes.</li>
+    </ul>
+  `;
+
   const mailOptions = {
     from: process.env.EMAIL_USER,
-    to: email, // ✅ Ensure `email` is valid before sending
-    cc: "bascombreadco@gmail.com", 
+    to: email,
+    cc: "bascombreadco@gmail.com",
     subject: "Your Bascom Bread Order Confirmation",
     html: emailBody,
   };
 
   try {
-    await transporter.sendMail(mailOptions);
-    console.log("✅ Order confirmation email sent to:", email);
+    const info = await transporter.sendMail(mailOptions);
+    console.log("✅ Order confirmation email sent:", {
+      to: email,
+      messageId: info.messageId,
+      response: info.response
+    });
   } catch (error) {
-    console.error("❌ Error sending email:", error);
-    console.error("❌ Mail Options:", mailOptions);
+    console.error("❌ Error sending confirmation email:", error);
+    console.error("❌ Mail Options were:", mailOptions);
   }
-  
 }
+
 
 
 // ✅ Stripe Checkout API
