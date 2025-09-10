@@ -1266,3 +1266,10 @@ body.blog-post .post-hero { margin-top: 20px; }
 @media (max-width: 768px) {
   body.blog-post { padding-top: 140px; }
 }
+.seasonal .product-card {
+  padding: 20px;           /* match .product-card */
+  border-radius: 12px;     /* match .product-card */
+  box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+}
+.seasonal .product-card:hover { transform: scale(1.03); }
+.seasonal { display: block; }  /* let .grid-container handle layout */
