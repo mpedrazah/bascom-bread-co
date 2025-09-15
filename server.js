@@ -387,7 +387,10 @@ async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, 
     return;
   }
 
-  const orderDetails = items.split(", ").map(item => `• ${item}`).join("<br>");
+  const orderDetails = items
+    .split(", ")
+    .map(item => `• ${item}`)
+    .join("<br>");
 
   const msg = {
     to: email,
@@ -396,14 +399,36 @@ async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, 
     subject: "Your Bascom Bread Order Confirmation",
     html: `
       <p>Thank you for your order!</p>
+
       <p><strong>You have purchased:</strong></p>
       <p>${orderDetails}</p>
-      <p><strong>Pickup Date:</strong> ${pickupDay}</p>
-      <p><strong>Total:</strong> $${parseFloat(totalAmount).toFixed(2)}</p>
-      <p>Payment Method: ${paymentMethod}</p>
+
+      <p><strong>Pickup Date:</strong> ${pickupDay}*</p>
+      <p>*Please pickup your bread within your pickup window. All unclaimed bread will be donated at the end of the day.</p>
+
+      <p>You can pickup your order from the porch at <strong>1508 Cooper Dr., Irving, Texas 75061</strong>.</p>
+
+      <p><strong>Total after Venmo discount:</strong> $${parseFloat(totalAmount).toFixed(2)}</p>
+
+      ${
+        paymentMethod.toLowerCase() === "venmo"
+          ? `<p style="color: red; font-weight: bold;">⚠️ Your order will not be fulfilled until payment is received via Venmo. Please complete your payment as soon as possible.</p>`
+          : `<p><strong>Payment Method:</strong> ${paymentMethod}</p>`
+      }
+
       <br>
       <p>Thank you,</p>
       <p>Margaret</p>
+      <br>
+
+      <strong>Notes about bread storage:</strong> This bread is extremely fresh and free from all preservatives, which means it has a shorter shelf life than grocery store bread.
+      <ul>
+        <li>Bread is best when consumed within 3-5 days.</li>
+        <li>Store bread in an airtight bag or beeswax bag.</li>
+        <li>Bread will keep well in the freezer for up to 1 month.</li>
+        <li>Slice the bread prior to freezing and use a toaster oven to reheat individual slices.</li>
+        <li>To reheat a whole frozen loaf, spritz with water and place in the oven at 400 for 20 minutes.</li>
+      </ul>
     `,
   };
 
@@ -414,6 +439,7 @@ async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, 
     console.error("❌ Error sending email:", error.response ? error.response.body : error);
   }
 }
+
 
 
 
