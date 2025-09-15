@@ -1,7 +1,6 @@
 require("dotenv").config();
 const fs = require("fs");
 const path = require("path");
-const nodemailer = require("nodemailer");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const createCsvWriter = require("csv-writer").createObjectCsvWriter;
 
@@ -39,8 +38,7 @@ console.log("🧪 ENV: ", {
   PORT: process.env.PORT,
   STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY ? "✅ set" : "❌ missing",
   STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET ? "✅ set" : "❌ missing",
-  DATABASE_URL: process.env.DATABASE_URL ? "✅ set" : "❌ missing",
-  EMAIL_USER: process.env.EMAIL_USER ? "✅ set" : "❌ missing",
+  DATABASE_URL: process.env.DATABASE_URL ? "✅ set" : "❌ missing"
 });
 
 app.post("/webhook", express.raw({ type: "application/json" }), async (req, res) => {
@@ -75,7 +73,8 @@ app.post("/webhook", express.raw({ type: "application/json" }), async (req, res)
       items: JSON.parse(metadata.cart).map(item => `${item.name} (x${item.quantity})`).join(", "),
       total_price,
       payment_method: metadata.payment_method,
-      email_opt_in: metadata.emailOptIn && metadata.emailOptIn === "true"
+      email_opt_in: metadata.emailOptIn === true || metadata.emailOptIn === "true"
+
     };
 
     try {
@@ -171,28 +170,6 @@ app.get('/api/posts/:id', async (req, res) => {
 });
 
 
-
-
-
-// ✅ Setup Email Transporter (For Order Confirmation)
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false, // use STARTTLS
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS, // <-- your 16-digit App Password
-  },
-});
-
-// 🔎 Verify transporter immediately on startup
-transporter.verify((err, success) => {
-  if (err) {
-    console.error("❌ Email transporter not ready:", err);
-  } else {
-    console.log("✅ Email transporter ready");
-  }
-});
 
 // ✅ Connect to Railway PostgreSQL
 const pool = new Pool({
@@ -363,7 +340,7 @@ app.post("/save-order", async (req, res) => {
       });
     }
 
-    const emailOptInValue = email_opt_in === true;
+    const emailOptInValue = email_opt_in === true || email_opt_in === "true";
 
     const result = await pool.query(
       `INSERT INTO orders (email, pickup_day, items, total_price, payment_method, email_opt_in, order_date)
@@ -371,9 +348,7 @@ app.post("/save-order", async (req, res) => {
       [email, pickup_day, items, total_price, payment_method, emailOptInValue]
     );
 
-    if (emailOptInValue) {
-      await sendOrderConfirmationEmail(email, items, pickup_day, total_price, payment_method);
-    }
+    await sendOrderConfirmationEmail(email, items, pickup_day, total_price, payment_method);
 
     res.json({ success: true, order: result.rows[0] });
   } catch (error) {
@@ -401,7 +376,11 @@ app.get("/get-orders", async (req, res) => {
 
 
 
-// ✅ Send Order Confirmation Email
+const sgMail = require("@sendgrid/mail");
+
+// ✅ Initialize
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
 async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, paymentMethod) {
   if (!email) {
     console.error("❌ Email is missing. Cannot send confirmation.");
@@ -409,77 +388,33 @@ async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, 
   }
 
   const orderDetails = items.split(", ").map(item => `• ${item}`).join("<br>");
-  let emailBody;
 
-  if (paymentMethod === "Venmo") {
-    emailBody = `
-      <p>Thank you for your order!</p>
-      <p><strong>You have purchased:</strong></p>
-      <p>${orderDetails}</p>
-      <p><strong>Pickup Date:</strong> ${pickupDay}*</p>
-      <p>*Please pickup your bread within your pickup window. All unclaimed bread will be donated at the end of the day. 
-</p>
-      <p> You can pickup your order from the porch at 1508 Cooper Dr., Irving, Texas 75061. 
-      <p></p>
-      <p><strong>Total after Venmo discount:</strong> $${parseFloat(totalAmount).toFixed(2)}</p>
-      <p style="color: red; font-weight: bold;">⚠️ Your order will not be fulfilled until payment is received via Venmo. Please complete your payment as soon as possible.</p>
-      <br>
-      <p>Thank you,</p>
-      <p>Margaret</p>
-      <br></br>
-      
-      <strong>Notes about bread storage: </strong> This bread is extremely fresh and free from all preservatives, which means it has a shorter shelf life than grocery store bread. 
-<ul>
-<li>Bread is best when consumed within 3-5 days.</li>
-<li>Store bread in an airtight bag or beeswax bag.</li>
-<li>Bread will keep well in the freezer for up to 1 month. </li>
-<li>Slice the bread prior to freezing and use a toaster oven to reheat individual slices.</li>
-<li>To reheat a whole frozen loaf, spritz with water and place in the oven at 400 for 20 minutes.</li> </ul>
-
-    `;
-  } else {
-    emailBody = `
-      <p>Thank you for your order!</p>
-      <p><strong>You have purchased:</strong></p>
-      <p>${orderDetails}</p>
-      <p><strong>Pickup Date:</strong> ${pickupDay}*</p>
-      <p>*Please pickup your bread within your pickup window. All unclaimed bread will be donated at the end of the day. 
-</p>
-      <p> You can pickup your order from the porch at 1508 Cooper Dr., Irving, Texas 75061. 
-      <p></p>
-      <br>
-      <p>Thank you,</p>
-      <p>Margaret</p>
-      <br></br>
-      
-      <strong>Notes about bread storage: </strong> This bread is extremely fresh and free from all preservatives, which means it has a shorter shelf life than grocery store bread. 
-<ul>
-<li>Bread is best when consumed within 3-5 days.</li>
-<li>Store bread in an airtight bag or beeswax bag.</li>
-<li>Bread will keep well in the freezer for up to 1 month. </li>
-<li>Slice the bread prior to freezing and use a toaster oven to reheat individual slices.</li>
-<li>To reheat a whole frozen loaf, spritz with water and place in the oven at 400 for 20 minutes.</li> </ul>
-
-    `;
-  }
-
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: email, // ✅ Ensure `email` is valid before sending
-    cc: "bascombreadco@gmail.com", 
+  const msg = {
+    to: email,
+    from: process.env.EMAIL_FROM, // must be verified in SendGrid
+    cc: "bascombreadco@gmail.com",
     subject: "Your Bascom Bread Order Confirmation",
-    html: emailBody,
+    html: `
+      <p>Thank you for your order!</p>
+      <p><strong>You have purchased:</strong></p>
+      <p>${orderDetails}</p>
+      <p><strong>Pickup Date:</strong> ${pickupDay}</p>
+      <p><strong>Total:</strong> $${parseFloat(totalAmount).toFixed(2)}</p>
+      <p>Payment Method: ${paymentMethod}</p>
+      <br>
+      <p>Thank you,</p>
+      <p>Margaret</p>
+    `,
   };
 
   try {
-  let info = await transporter.sendMail(mailOptions);
-  console.log("✅ Order confirmation email sent:", info.messageId);
-} catch (error) {
-  console.error("❌ Error sending email:", error.message);
-  console.error("❌ Full error object:", error);
+    const response = await sgMail.send(msg);
+    console.log("✅ Order confirmation email sent:", response[0].statusCode);
+  } catch (error) {
+    console.error("❌ Error sending email:", error.response ? error.response.body : error);
+  }
 }
-  
-}
+
 
 
 // ✅ Stripe Checkout API
