@@ -389,46 +389,63 @@ async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, 
 
   const orderDetails = items
     .split(", ")
-    .map(item => `• ${item}`)
+    .map(item => `🍞 ${item}`)
     .join("<br>");
 
   const msg = {
     to: email,
     from: process.env.EMAIL_FROM, // must be verified in SendGrid
     cc: "bascombreadco@gmail.com",
-    subject: "Your Bascom Bread Order Confirmation",
+    subject: "🥖 Your Fresh Bascom Bread Order Confirmation",
     html: `
-      <p>Thank you for your order!</p>
+      <div style="font-family: Georgia, 'Times New Roman', serif; max-width: 600px; margin: auto; border: 1px solid #eee; border-radius: 12px; padding: 20px; background: #fff8f0; color: #4a2c2a;">
+        
+        <h2 style="text-align:center; color:#8b4513;">Bascom Bread Co.</h2>
+        <p style="text-align:center; font-size:14px; color:#666;">
+          Baked fresh, just for you 🍞
+        </p>
+        <hr style="border:none; border-top:1px solid #e0c9a6; margin:20px 0;">
+        
+        <p>Thank you for your order! We're so happy to bake for you.</p>
 
-      <p><strong>You have purchased:</strong></p>
-      <p>${orderDetails}</p>
+        <p><strong>You have purchased:</strong></p>
+        <p style="margin-left:15px;">${orderDetails}</p>
 
-      <p><strong>Pickup Date:</strong> ${pickupDay}*</p>
-      <p>*Please pickup your bread within your pickup window. All unclaimed bread will be donated at the end of the day.</p>
+        <p><strong>Pickup Date:</strong> ${pickupDay}*</p>
+        <p style="font-size:13px; color:#666;">*Please pickup your bread within your pickup window. Any unclaimed loaves will be donated the same day.</p>
 
-      <p>You can pickup your order from the porch at <strong>1508 Cooper Dr., Irving, Texas 75061</strong>.</p>
+        <p><strong>Pickup Location:</strong><br>
+        1508 Cooper Dr.<br>
+        Irving, Texas 75061</p>
 
-      <p><strong>Total after Venmo discount:</strong> $${parseFloat(totalAmount).toFixed(2)}</p>
+        <p><strong>Total:</strong> $${parseFloat(totalAmount).toFixed(2)}</p>
 
-      ${
-        paymentMethod.toLowerCase() === "venmo"
-          ? `<p style="color: red; font-weight: bold;">⚠️ Your order will not be fulfilled until payment is received via Venmo. Please complete your payment as soon as possible.</p>`
-          : `<p><strong>Payment Method:</strong> ${paymentMethod}</p>`
-      }
+        ${
+          paymentMethod.toLowerCase() === "venmo"
+            ? `<p style="color: #b22222; font-weight: bold;">⚠️ This order will not be fulfilled until payment is received via Venmo. Please complete your payment as soon as possible.</p>`
+            : `<p><strong>Payment Method:</strong> ${paymentMethod}</p>`
+        }
 
-      <br>
-      <p>Thank you,</p>
-      <p>Margaret</p>
-      <br>
+        <br>
+        <p>Thank you,</p>
+        <p style="font-style:italic;">Margaret<br>
+        Bascom Bread Co.</p>
+        
+        <hr style="border:none; border-top:1px solid #e0c9a6; margin:20px 0;">
 
-      <strong>Notes about bread storage:</strong> This bread is extremely fresh and free from all preservatives, which means it has a shorter shelf life than grocery store bread.
-      <ul>
-        <li>Bread is best when consumed within 3-5 days.</li>
-        <li>Store bread in an airtight bag or beeswax bag.</li>
-        <li>Bread will keep well in the freezer for up to 1 month.</li>
-        <li>Slice the bread prior to freezing and use a toaster oven to reheat individual slices.</li>
-        <li>To reheat a whole frozen loaf, spritz with water and place in the oven at 400 for 20 minutes.</li>
-      </ul>
+        <h4 style="color:#8b4513;">Notes about bread storage:</h4>
+        <ul style="padding-left:20px; font-size:14px;">
+          <li>Bread is best enjoyed within 3–5 days.</li>
+          <li>Store in an airtight bag or beeswax wrap.</li>
+          <li>Freezes well for up to 1 month.</li>
+          <li>Slice before freezing for easy toasting.</li>
+          <li>To refresh a whole frozen loaf, spritz with water and warm at 400°F for 20 minutes.</li>
+        </ul>
+
+        <p style="text-align:center; font-size:12px; color:#aaa;">
+          Bascom Bread Co. — Made with love in Irving, Texas 🧡
+        </p>
+      </div>
     `,
   };
 
