@@ -788,3 +788,33 @@ function addFlourToCart(type) {
   updateCartCount();
   showToast(`${itemName} added to cart.`);
 }
+
+// swap preview image when the user changes the dropdown
+document.addEventListener('DOMContentLoaded', () => {
+  const sel  = document.getElementById('pumpkin-style');
+  const img  = document.getElementById('pumpkin-image');
+
+  if (!sel || !img) return;
+
+  const updateImg = () => {
+    const opt = sel.options[sel.selectedIndex];
+    img.src = opt.dataset.img;
+    img.alt = opt.value === 'pumpkin'
+      ? 'Rustic Pumpkin (pumpkin-shaped) Loaf'
+      : 'Rustic Pumpkin Boule Loaf';
+  };
+
+  sel.addEventListener('change', updateImg);
+  updateImg(); // set initial image/alt
+});
+
+// add to cart using the selected variant's image (price stays the same)
+function addPumpkinToCart() {
+  const sel = document.getElementById('pumpkin-style');
+  const opt = sel.options[sel.selectedIndex];
+  const variantLabel = opt.text.split('–')[0].trim(); // "Boule Loaf" or "Pumpkin Loaf"
+  const imgPath = opt.dataset.img;
+
+  // your existing addToCart(name, price, imagePath)
+  addToCart(`Rustic Pumpkin Loaf (${variantLabel})`, 13.00, imgPath);
+}

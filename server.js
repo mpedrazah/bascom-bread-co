@@ -396,7 +396,7 @@ async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, 
     to: email,
     from: process.env.EMAIL_FROM, // must be verified in SendGrid
     cc: "bascombreadco@gmail.com",
-    subject: "🥖 Your Fresh Bascom Bread Order Confirmation",
+    subject: "🥖Your Fresh Bascom Bread Order Confirmation",
     html: `
       <div style="font-family: Georgia, 'Times New Roman', serif; max-width: 600px; margin: auto; border: 1px solid #eee; border-radius: 12px; padding: 20px; background: #fff8f0; color: #4a2c2a;">
         
