@@ -1273,3 +1273,30 @@ body.blog-post .post-hero { margin-top: 20px; }
 }
 .seasonal .product-card:hover { transform: scale(1.03); }
 .seasonal { display: block; }  /* let .grid-container handle layout */
+
+/* Fall Specials — match other sections */
+#specials {
+  padding: 2rem 1rem;              /* same outer spacing as others */
+}
+
+#specials h2 {
+  text-align: center;               /* center the title */
+  margin-bottom: 1.25rem;
+}
+
+/* Center the product card(s) */
+#specials .grid-container {
+  max-width: 1100px;                /* constrain width like the rest */
+  margin: 0 auto;                   /* center the whole row */
+  display: flex;                    /* easy centering for 1+ cards */
+  justify-content: center;          /* center cards horizontally */
+  align-items: stretch;
+  gap: 1.5rem;
+  flex-wrap: wrap;                  /* wrap nicely on mobile */
+}
+
+/* Keep cards from getting too wide */
+#specials .product-card {
+  width: 100%;
+  max-width: 340px;                 /* match your other product cards */
+}
