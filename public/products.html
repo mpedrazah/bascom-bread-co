@@ -247,31 +247,54 @@
         </div>
       </div>-->
 
-      <!-- Fall Specials  -->
-       <section class="seasonal" id="specials">
+  <!-- Fall Specials -->
+<section class="seasonal" id="specials">
   <h2>🍂 Fall Specials 🍂</h2>
   <div class="grid-container">
-        <div class="product-card" id="pumpkin-card">
-          <img id="pumpkin-image" src="images/pumpkinloaf.jpg" alt="Rustic Pumpkin Boule" class="product-image">
+    
+    <!-- Pumpkin Loaf Card -->
+    <div class="product-card" id="pumpkin-card">
+      <img id="pumpkin-image" src="images/pumpkinloaf.jpg" alt="Rustic Pumpkin Boule" class="product-image">
 
-          <div class="product-info">
-            <h3>Rustic Pumpkin Loaf</h3>
-            <p>Warm, hearty, and delightfully earthy. Our Rustic Pumpkin Loaf is a perfect, yet subtle, introduction into fall. It goes great alongside a cozy bowl of soup or simply slathered with warm butter for a snack that feels like fall in every bite.</p>
+      <div class="product-info">
+        <h3>Rustic Pumpkin Loaf</h3>
+        <p>
+          Warm, hearty, and delightfully earthy. Our Rustic Pumpkin Loaf is a perfect, yet subtle, introduction into fall.
+          It goes great alongside a cozy bowl of soup or simply slathered with warm butter for a snack that feels like fall in every bite.
+        </p>
 
-            <p class="price">$13.00</p>
+        <p class="price">$13.00</p>
 
-            <!-- style selector just switches the preview image -->
-            <label for="pumpkin-style">Style:</label>
-            <select id="pumpkin-style">
-              <option value="boule"   data-img="images/pumpkinloaf.jpg">Boule Loaf – $13</option>
-              <option value="pumpkin" data-img="images/pumpkinshape.jpg">Pumpkin Loaf – $13</option>
-            </select>
+        <!-- style selector just switches the preview image -->
+        <label for="pumpkin-style">Style:</label>
+        <select id="pumpkin-style">
+          <option value="boule" data-img="images/pumpkinloaf.jpg">Boule Loaf – $13</option>
+          <option value="pumpkin" data-img="images/pumpkinshape.jpg">Pumpkin Loaf – $13</option>
+        </select>
 
-            <button class="add-to-cart" onclick="addPumpkinToCart()">Add to Cart 🛒</button>
-          </div>
-        </div>
+        <button class="add-to-cart" onclick="addPumpkinToCart()">Add to Cart 🛒</button>
       </div>
-  </section>
+    </div>
+
+    <!-- Maple Rolls Card -->
+    <div class="product-card">
+      <img src="images/maplerolls.jpeg" alt="Maple Walnut Caramel Rolls" class="product-image">
+      <div class="product-info">
+        <h3>Maple Walnut Caramel Rolls</h3>
+        <p>
+          A tender, buttery cinnamon roll drizzled with a rich maple-caramel glaze and studded with walnuts for irresistible warmth and crunch.
+          4 for $11.
+        </p>
+        <p class="price">$11.00</p>
+        <button class="add-to-cart" onclick="addToCart('Maple Walnut Caramel Rolls', 11.00, 'images/maplerolls.jpeg')">
+          Add to Cart 🛒
+        </button>
+      </div>
+    </div>
+
+  </div>
+</section>
+
 
   <section class="product-grid">
   <h2>Our Fresh Milled Flours</h2>
