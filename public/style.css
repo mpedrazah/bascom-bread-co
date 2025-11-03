@@ -1273,3 +1273,23 @@ body.blog-post .post-hero { margin-top: 20px; }
 }
 .seasonal .product-card:hover { transform: scale(1.03); }
 .seasonal { display: block; }  /* let .grid-container handle layout */
+
+/* Make November Specials match Products spacing/alignment */
+#specials.product-grid {
+  display: block;          /* cancel flex from .seasonal */
+  text-align: center;      /* same as .product-grid */
+}
+
+#specials.product-grid > h2 {
+  display: block;
+  width: 100%;
+  text-align: center;
+  margin: 0 0 30px;        /* match .product-grid h2 spacing */
+}
+
+/* Ensure the cards use the same grid layout as Products */
+#specials .grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
