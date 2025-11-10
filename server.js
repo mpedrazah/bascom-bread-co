@@ -8,7 +8,7 @@ const { Pool } = require("pg");
 const express = require("express");
 const cors = require("cors");
 const app = express();
-import { Resend } from "resend";
+const { Resend } = require("resend");
 app.use(cors({
   origin: ["https://www.bascombreadco.com", "https://bascombreadco.up.railway.app"],
   methods: ["GET", "POST"],
