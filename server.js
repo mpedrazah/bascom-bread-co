@@ -8,7 +8,7 @@ const { Pool } = require("pg");
 const express = require("express");
 const cors = require("cors");
 const app = express();
-
+import { Resend } from "resend";
 app.use(cors({
   origin: ["https://www.bascombreadco.com", "https://bascombreadco.up.railway.app"],
   methods: ["GET", "POST"],
@@ -376,10 +376,9 @@ app.get("/get-orders", async (req, res) => {
 
 
 
-const sgMail = require("@sendgrid/mail");
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // ✅ Initialize
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, paymentMethod) {
   if (!email) {
@@ -392,71 +391,71 @@ async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, 
     .map(item => `🍞 ${item}`)
     .join("<br>");
 
-  const msg = {
-    to: email,
-    from: process.env.EMAIL_FROM, // must be verified in SendGrid
-    cc: "bascombreadco@gmail.com",
-    subject: "🥖Your Fresh Bascom Bread Order Confirmation",
-    html: `
-      <div style="font-family: Georgia, 'Times New Roman', serif; max-width: 600px; margin: auto; border: 1px solid #eee; border-radius: 12px; padding: 20px; background: #fff8f0; color: #4a2c2a;">
-        
-        <h2 style="text-align:center; color:#8b4513;">Bascom Bread Co.</h2>
-        <p style="text-align:center; font-size:14px; color:#666;">
-          Baked fresh, just for you 🍞
-        </p>
-        <hr style="border:none; border-top:1px solid #e0c9a6; margin:20px 0;">
-        
-        <p>Thank you for your order! We're so happy to bake for you.</p>
+  const htmlContent = `
+    <div style="font-family: Georgia, 'Times New Roman', serif; max-width: 600px; margin: auto; border: 1px solid #eee; border-radius: 12px; padding: 20px; background: #fff8f0; color: #4a2c2a;">
+      
+      <h2 style="text-align:center; color:#8b4513;">Bascom Bread Co.</h2>
+      <p style="text-align:center; font-size:14px; color:#666;">
+        Baked fresh, just for you 🍞
+      </p>
+      <hr style="border:none; border-top:1px solid #e0c9a6; margin:20px 0;">
+      
+      <p>Thank you for your order! We're so happy to bake for you.</p>
 
-        <p><strong>You have purchased:</strong></p>
-        <p style="margin-left:15px;">${orderDetails}</p>
+      <p><strong>You have purchased:</strong></p>
+      <p style="margin-left:15px;">${orderDetails}</p>
 
-        <p><strong>Pickup Date:</strong> ${pickupDay}*</p>
-        <p style="font-size:13px; color:#666;">*Please pickup your bread within your pickup window. Any unclaimed loaves will be donated the same day.</p>
+      <p><strong>Pickup Date:</strong> ${pickupDay}*</p>
+      <p style="font-size:13px; color:#666;">*Please pick up your bread within your pickup window. Any unclaimed loaves will be donated the same day.</p>
 
-        <p><strong>Pickup Location:</strong><br>
-        1508 Cooper Dr.<br>
-        Irving, Texas 75061</p>
+      <p><strong>Pickup Location:</strong><br>
+      1508 Cooper Dr.<br>
+      Irving, Texas 75061</p>
 
-        <p><strong>Total:</strong> $${parseFloat(totalAmount).toFixed(2)}</p>
+      <p><strong>Total:</strong> $${parseFloat(totalAmount).toFixed(2)}</p>
 
-        ${
-          paymentMethod.toLowerCase() === "venmo"
-            ? `<p style="color: #b22222; font-weight: bold;">⚠️ This order will not be fulfilled until payment is received via Venmo. Please complete your payment as soon as possible.</p>`
-            : `<p><strong>Payment Method:</strong> ${paymentMethod}</p>`
-        }
+      ${
+        paymentMethod.toLowerCase() === "venmo"
+          ? `<p style="color: #b22222; font-weight: bold;">⚠️ This order will not be fulfilled until payment is received via Venmo. Please complete your payment as soon as possible.</p>`
+          : `<p><strong>Payment Method:</strong> ${paymentMethod}</p>`
+      }
 
-        <br>
-        <p>Thank you,</p>
-        <p style="font-style:italic;">Margaret<br>
-        Bascom Bread Co.</p>
-        
-        <hr style="border:none; border-top:1px solid #e0c9a6; margin:20px 0;">
+      <br>
+      <p>Thank you,</p>
+      <p style="font-style:italic;">Margaret<br>
+      Bascom Bread Co.</p>
+      
+      <hr style="border:none; border-top:1px solid #e0c9a6; margin:20px 0;">
 
-        <h4 style="color:#8b4513;">Notes about bread storage:</h4>
-        <ul style="padding-left:20px; font-size:14px;">
-          <li>Bread is best enjoyed within 3–5 days.</li>
-          <li>Store in an airtight bag or beeswax wrap.</li>
-          <li>Freezes well for up to 1 month.</li>
-          <li>Slice before freezing for easy toasting.</li>
-          <li>To refresh a whole frozen loaf, spritz with water and warm at 400°F for 20 minutes.</li>
-        </ul>
+      <h4 style="color:#8b4513;">Notes about bread storage:</h4>
+      <ul style="padding-left:20px; font-size:14px;">
+        <li>Bread is best enjoyed within 3–5 days.</li>
+        <li>Store in an airtight bag or beeswax wrap.</li>
+        <li>Freezes well for up to 1 month.</li>
+        <li>Slice before freezing for easy toasting.</li>
+        <li>To refresh a whole frozen loaf, spritz with water and warm at 400°F for 20 minutes.</li>
+      </ul>
 
-        <p style="text-align:center; font-size:12px; color:#aaa;">
-          Bascom Bread Co. — Made with love in Irving, Texas 🧡
-        </p>
-      </div>
-    `,
-  };
+      <p style="text-align:center; font-size:12px; color:#aaa;">
+        Bascom Bread Co. — Made with love in Irving, Texas 🧡
+      </p>
+    </div>
+  `;
 
   try {
-    const response = await sgMail.send(msg);
-    console.log("✅ Order confirmation email sent:", response[0].statusCode);
+    const data = await resend.emails.send({
+      from: "orders@bascombread.com", // Must be verified in Resend
+      to: email,
+      cc: "bascombreadco@gmail.com",
+      subject: "🥖 Your Fresh Bascom Bread Order Confirmation",
+      html: htmlContent,
+    });
+
+    console.log("✅ Order confirmation email sent:", data);
   } catch (error) {
-    console.error("❌ Error sending email:", error.response ? error.response.body : error);
+    console.error("❌ Error sending email:", error);
   }
 }
-
 
 
 
