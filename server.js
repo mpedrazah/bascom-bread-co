@@ -444,7 +444,7 @@ async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, 
 
   try {
     const data = await resend.emails.send({
-      from: "orders@bascombread.com", // Must be verified in Resend
+      from: "orders@bascombreadco.com", // Must be verified in Resend
       to: email,
       cc: "bascombreadco@gmail.com",
       subject: "🥖 Your Fresh Bascom Bread Order Confirmation",
