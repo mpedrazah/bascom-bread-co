@@ -818,3 +818,11 @@ function addPumpkinToCart() {
   // your existing addToCart(name, price, imagePath)
   addToCart(`Rustic Pumpkin Loaf (${variantLabel})`, 13.00, imgPath);
 }
+
+function addChristmasCookiesToCart() {
+  const select = document.getElementById('cookie-size');
+  const count = select.value; // "8" or "12"
+  const price = parseFloat(select.selectedOptions[0].dataset.price);
+  const name = `Christmas Cookie Box (${count})`;
+  addToCart(name, price, 'images/christmas-cookies.jpg');
+}
