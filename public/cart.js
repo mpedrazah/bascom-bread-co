@@ -824,5 +824,5 @@ function addChristmasCookiesToCart() {
   const count = select.value; // "8" or "12"
   const price = parseFloat(select.selectedOptions[0].dataset.price);
   const name = `Christmas Cookie Box (${count})`;
-  addToCart(name, price, 'images/christmas-cookies.jpg');
+  addToCart(name, price, 'images/xmascookies.jpg');
 }
