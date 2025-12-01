@@ -25,7 +25,7 @@ async function fetchOrders() {
 // ✅ Display Orders in HTML
 function displayOrders(orders) {
   const ordersContainer = document.getElementById("orders-list");
-  ordersContainer.innerHTML = ""; // Clear existing content
+  ordersContainer.innerHTML = "";
 
   orders.forEach(order => {
     const orderElement = document.createElement("div");
@@ -34,14 +34,39 @@ function displayOrders(orders) {
       <p><strong>Email:</strong> ${order.email}</p>
       <p><strong>Pickup Date:</strong> ${order.pickup_day || "N/A"}</p>
       <p><strong>Items:</strong> ${order.items}</p>
-      <p><strong>Total:</strong> ${order.total_price}</p>
-      <p><strong>Payment Method:</strong> ${order.payment_method}</p> 
+      <p><strong>Total:</strong> $${parseFloat(order.total_price).toFixed(2)}</p>
+      <p><strong>Payment:</strong> ${order.payment_method}</p>
+      <button class="resend-btn" onclick="resendEmail(${order.id})">Resend Confirmation</button>
       <hr>
     `;
     ordersContainer.appendChild(orderElement);
   });
 }
 
+
+// ✅ Resend confirmation email for a specific order
+async function resendEmail(orderId) {
+  const adminToken = prompt("Enter admin token to resend confirmation:");
+  if (!adminToken) return alert("❌ Token required.");
+
+  try {
+    const res = await fetch(`${API_BASE}/resend-confirmation`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId, adminToken })
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      alert("✅ Confirmation email resent successfully!");
+    } else {
+      alert(`❌ ${data.error || "Failed to resend email."}`);
+    }
+  } catch (err) {
+    console.error("❌ Error resending email:", err);
+    alert("❌ Failed to resend email.");
+  }
+}
 
 // ✅ Ensure the DOM is fully loaded before attaching event listeners
 document.addEventListener("DOMContentLoaded", () => {

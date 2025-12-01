@@ -458,6 +458,29 @@ async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, 
 }
 
 
+// ✅ Resend Order Confirmation (Admin Protected)
+app.post("/resend-confirmation", async (req, res) => {
+  const { orderId, adminToken } = req.body;
+
+  // Simple security check
+  if (adminToken !== process.env.ADMIN_TOKEN) {
+    return res.status(403).json({ success: false, error: "Unauthorized" });
+  }
+
+  try {
+    const result = await pool.query("SELECT * FROM orders WHERE id = $1", [orderId]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, error: "Order not found" });
+    }
+
+    const order = result.rows[0];
+    await sendOrderConfirmationEmail(order.email, order.items, order.pickup_day, order.total_price, order.payment_method);
+    res.json({ success: true, message: "Confirmation email resent successfully!" });
+  } catch (error) {
+    console.error("❌ Error resending confirmation:", error);
+    res.status(500).json({ success: false, error: "Failed to resend email." });
+  }
+});
 
 // ✅ Stripe Checkout API
 app.post("/create-checkout-session", async (req, res) => {
