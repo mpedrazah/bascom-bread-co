@@ -22,6 +22,12 @@ async function fetchOrders() {
   }
 }
 
+function cleanPrice(value) {
+  if (!value) return 0;
+  return parseFloat(String(value).replace(/[^0-9.]/g, "")) || 0;
+}
+
+
 // ✅ Display Orders in HTML
 function displayOrders(orders) {
   const ordersContainer = document.getElementById("orders-list");
@@ -34,7 +40,8 @@ function displayOrders(orders) {
       <p><strong>Email:</strong> ${order.email}</p>
       <p><strong>Pickup Date:</strong> ${order.pickup_day || "N/A"}</p>
       <p><strong>Items:</strong> ${order.items}</p>
-      <p><strong>Total:</strong> $${parseFloat(order.total_price).toFixed(2)}</p>
+      <p><strong>Total:</strong> $${cleanPrice(order.total_price).toFixed(2)}</p>
+
       <p><strong>Payment:</strong> ${order.payment_method}</p>
       <button class="resend-btn" onclick="resendEmail(${order.id})">Resend Confirmation</button>
       <hr>
