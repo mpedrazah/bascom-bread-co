@@ -65,7 +65,8 @@ app.post("/webhook", express.raw({ type: "application/json" }), async (req, res)
 
     // ✅ Safe parsing of totalAmount
     const rawAmount = parseFloat(metadata.totalAmount);
-    const total_price = isNaN(rawAmount) ? 0.00 : parseFloat(rawAmount.toFixed(2));
+    const total_price = cleanPrice(metadata.totalAmount);
+
 
     const orderData = {
       email,
@@ -412,7 +413,7 @@ async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, 
       1508 Cooper Dr.<br>
       Irving, Texas 75061</p>
 
-      <p><strong>Total:</strong> $${parseFloat(totalAmount).toFixed(2)}</p>
+      <p><strong>Total:</strong> $${cleanPrice(totalAmount).toFixed(2)}</p>
 
       ${
         paymentMethod.toLowerCase() === "venmo"
@@ -455,6 +456,11 @@ async function sendOrderConfirmationEmail(email, items, pickupDay, totalAmount, 
   } catch (error) {
     console.error("❌ Error sending email:", error);
   }
+}
+
+function cleanPrice(value) {
+  if (!value) return 0;
+  return parseFloat(String(value).replace(/[^0-9.]/g, "")) || 0;
 }
 
 
@@ -622,7 +628,7 @@ app.get("/export-orders", async (req, res) => {
     // Format fields if needed
     const formattedRows = result.rows.map(row => ({
       ...row,
-      total_price: parseFloat(row.total_price).toFixed(2),
+      total_price: cleanPrice(row.total_price).toFixed(2),
       order_date: row.order_date?.toISOString() || ""
     }));
 
